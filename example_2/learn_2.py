@@ -101,7 +101,6 @@ def _collect_observations_for_sensitivity(target_beta, n_episodes):
 
 
 def print_all_beta_estimates_table(n_episodes_per_sensitivity=N_ESTIMATION_EPISODES):
-    table_start_time = time.perf_counter()
 
     observations_by_sensitivity = {
         "low": _collect_observations_for_sensitivity(
@@ -123,27 +122,21 @@ def print_all_beta_estimates_table(n_episodes_per_sensitivity=N_ESTIMATION_EPISO
         tol=1e-7,
     )
 
-    elapsed_sec = time.perf_counter() - table_start_time
-
     print("\n=== EM Beta Estimates (All Methods, Both Sensitivities) ===")
     print(
-        f"{'Sensitivity':<12} {'Method':<14} {'Beta(est)':>12} {'Beta(target)':>13} "
-        f"{'AbsErr':>10} {'Lambda':>10} {'Iter':>6}"
+        f"{'Sensitivity':<12} {'Method':<14} {'Beta(est)':>12} "
+        f"{'Lambda':>10} {'Iter':>6}"
     )
     for sensitivity in ("low", "high"):
-        target_beta = SENSITIVITY_BETA_TARGETS[sensitivity]
         for method in ALL_METHODS:
             result = estimation_results[sensitivity][method]
             beta_est = float(result["beta"])
             lambda_est = float(result["lambda"])
             iterations = int(result["iterations"])
-            abs_err = abs(beta_est - target_beta)
             print(
-                f"{sensitivity:<12} {method:<14} {beta_est:>12.6f} {target_beta:>13.6f} "
-                f"{abs_err:>10.6f} {lambda_est:>10.4f} {iterations:>6d}"
+                f"{sensitivity:<12} {method:<14} {beta_est:>12.6f} "
+                f"{lambda_est:>10.4f} {iterations:>6d}"
             )
-
-    print(f"Table estimation total time: {elapsed_sec:.2f} sec")
 
 
 def train_model(algorithm_name):
