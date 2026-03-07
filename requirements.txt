@@ -1,0 +1,4 @@
+stable-baselines3[extra]>=2.0.0
+sb3_contrib
+gymnasium>=0.29.0
+numpy>=1.21.0
