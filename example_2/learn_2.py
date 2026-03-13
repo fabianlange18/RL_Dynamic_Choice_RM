@@ -1,5 +1,6 @@
 from stable_baselines3 import PPO, DQN, A2C
 from sb3_contrib import ARS, QRDQN, TRPO
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import DummyVecEnv
 from example_2 import TalluriExample2
@@ -11,11 +12,16 @@ from em_estimation import (
 )
 from config import OPT_MODEL as CONFIG_OPT_MODEL, TOTAL_TIMESTEPS as CONFIG_TOTAL_TIMESTEPS
 import numpy as np
+import os
 import time
 
 N_EVAL_EPISODES = 100
 N_TRAIN_RUNS = 5
 N_ESTIMATION_EPISODES = 50
+LEARNING_CURVE_ENABLED = False
+LEARNING_CURVE_EVAL_FREQ = 100
+LEARNING_CURVE_EVAL_EPISODES = 30
+LEARNING_CURVE_OUTPUT_DIR = "example_2"
 
 
 ALGORITHMS = {
@@ -26,6 +32,44 @@ ALGORITHMS = {
     "TRPO": TRPO,
     "PPO": PPO,
 }
+
+
+class PercentOptimalCallback(BaseCallback):
+    def __init__(self, eval_env, v, pi, eval_freq, n_eval_episodes, verbose=0):
+        super().__init__(verbose)
+        self.eval_env = eval_env
+        self.v = v
+        self.pi = pi
+        self.eval_freq = int(eval_freq)
+        self.n_eval_episodes = int(n_eval_episodes)
+        self.timesteps = []
+        self.pct_optimal_mean = []
+        self.pct_optimal_std = []
+
+    def _on_step(self):
+        if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
+            pct_values = []
+            for _ in range(self.n_eval_episodes):
+                obs, _ = self.eval_env.reset()
+                dp_reward, _ = self.eval_env.optimal(self.v, self.pi)
+
+                total_reward = 0.0
+                for _ in range(self.eval_env.T):
+                    action, _ = self.model.predict(obs, deterministic=True)
+                    obs, reward, done, truncated, _ = self.eval_env.step(action)
+                    total_reward += float(reward)
+                    if done or truncated:
+                        break
+
+                if dp_reward != 0:
+                    pct_values.append(100.0 * total_reward / float(dp_reward))
+
+            if pct_values:
+                self.timesteps.append(int(self.num_timesteps))
+                self.pct_optimal_mean.append(float(np.mean(pct_values)))
+                self.pct_optimal_std.append(float(np.std(pct_values)))
+
+        return True
 
 
 def create_train_env():
@@ -139,14 +183,76 @@ def print_all_beta_estimates_table(n_episodes_per_sensitivity=N_ESTIMATION_EPISO
             )
 
 
-def train_model(algorithm_name):
+def train_model(algorithm_name, callback=None):
     env = create_train_env()
     start_time = time.perf_counter()
     model = ALGORITHMS[algorithm_name]("MlpPolicy", env)
-    model.learn(total_timesteps=CONFIG_TOTAL_TIMESTEPS, progress_bar=True)
+    model.learn(total_timesteps=CONFIG_TOTAL_TIMESTEPS, progress_bar=True, callback=callback)
     elapsed = time.perf_counter() - start_time
     env.close()
     return model, elapsed
+
+
+def monitor_learning_curve(algorithm_name, output_path):
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("matplotlib is required for plotting. Install it with: pip install matplotlib")
+        return
+
+    em_result = estimate_beta_via_em(CONFIG_OPT_MODEL)
+    estimated_beta = float(em_result["beta"])
+
+    eval_env = TalluriExample2()
+    v, pi = eval_env.solve_by_dp(estimated_beta)
+
+    callback = PercentOptimalCallback(
+        eval_env=eval_env,
+        v=v,
+        pi=pi,
+        eval_freq=LEARNING_CURVE_EVAL_FREQ,
+        n_eval_episodes=LEARNING_CURVE_EVAL_EPISODES,
+    )
+
+    print(
+        f"\nLearning curve run: {algorithm_name} | eval every {LEARNING_CURVE_EVAL_FREQ} timesteps "
+        f"| {LEARNING_CURVE_EVAL_EPISODES} episodes per eval"
+    )
+    train_model(algorithm_name, callback=callback)
+
+    if not callback.timesteps:
+        print("No evaluation points were collected. Increase total timesteps or lower LEARNING_CURVE_EVAL_FREQ.")
+        eval_env.close()
+        return
+
+    plt.figure(figsize=(8, 5))
+    x = np.asarray(callback.timesteps, dtype=float)
+    y = np.asarray(callback.pct_optimal_mean, dtype=float)
+    y_std = np.asarray(callback.pct_optimal_std, dtype=float)
+    plt.plot(x, y, marker="o", label="Mean % of optimal")
+    plt.fill_between(x, y - y_std, y + y_std, alpha=0.2, label="±1 SD")
+    plt.xlabel("Training timesteps")
+    plt.ylabel("% of DP optimal reward")
+    plt.title(f"Learning performance over training ({algorithm_name})")
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+    print(f"Saved learning curve plot to: {output_path}")
+    eval_env.close()
+
+
+def monitor_learning_curves_all_algorithms():
+    os.makedirs(LEARNING_CURVE_OUTPUT_DIR, exist_ok=True)
+
+    for algorithm_name in ALGORITHMS:
+        output_path = os.path.join(
+            LEARNING_CURVE_OUTPUT_DIR,
+            f"pct_optimal_learning_curve_{algorithm_name}.png",
+        )
+        monitor_learning_curve(algorithm_name=algorithm_name, output_path=output_path)
 
 
 def evaluate_model(model, eval_env, v, pi):
@@ -320,9 +426,11 @@ def print_summary(results):
         )
 
 def main():
-    print_all_beta_estimates_table()
-    # results = benchmark_algorithms()
-    # print_summary(results)
+    if LEARNING_CURVE_ENABLED:
+        monitor_learning_curves_all_algorithms()
+
+    results = benchmark_algorithms()
+    print_summary(results)
 
 
 if __name__ == "__main__":

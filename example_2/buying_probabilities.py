@@ -1,4 +1,17 @@
 import numpy as np
+from functools import lru_cache
+
+
+@lru_cache(maxsize=32)
+def _subset_membership_matrix(k):
+	"""Return a boolean matrix with all subset memberships for k items.
+
+	Row s corresponds to subset bitmask s, column i indicates whether item i
+	is present in subset s.
+	"""
+	masks = np.arange(1 << k, dtype=np.uint32)
+	bits = np.arange(k, dtype=np.uint32)
+	return ((masks[:, None] >> bits[None, :]) & 1).astype(bool)
 
 def _mnl_probabilities(action_binary, prices, beta):
 	"""Compute MNL choice probabilities via softmax over active products plus outside option.
@@ -37,10 +50,10 @@ def _mmnl_probabilities(action_binary, prices, beta):
 	return mix_probabilities
 
 
-def _probit_probabilities(action_binary, prices, beta):
+def _probit_probabilities(action_binary, prices, beta, n_draws=1):
 	"""Estimate Probit probabilities by Monte Carlo simulation.
 
-	Across 100 draws, product utility is beta*price_i + Normal(0,1) for active items,
+	Across n_draws draws, product utility is beta*price_i + Normal(0,1) for active items,
 	and outside utility is Normal(0,1). The chosen alternative is the max utility; if
 	the best product beats outside utility it gets the count, otherwise outside gets it.
 	Final probabilities are normalized choice counts.
@@ -55,8 +68,8 @@ def _probit_probabilities(action_binary, prices, beta):
 		counts[-1] = 1.0
 		return counts
 
-	for _ in range(int(100)):
-		outside_utility = rng.normal(0.0, 1.0)
+	for _ in range(n_draws):
+		outside_utility = rng.normal(0, 1.0)
 
 		utilities = np.full(len(prices), -np.inf, dtype=float)
 		utilities[active_indices] = beta * prices[active_indices] + rng.normal(0.0, 1.0, size=len(active_indices))
@@ -66,6 +79,8 @@ def _probit_probabilities(action_binary, prices, beta):
 			counts[chosen] += 1.0
 		else:
 			counts[-1] += 1.0
+
+	# print(counts)
 
 	return counts / max(1.0, float(np.sum(counts)))
 
@@ -103,25 +118,45 @@ def _mnl_ref_price_probabilities(
 
 
 def _mnl_consideration_probabilities(action_binary, prices, beta=None):
-	"""Compute MNL probabilities weighted by consideration-set likelihood.
+	"""Compute MNL consideration-set probabilities with latent consideration sets.
 
-	Each product gets a consideration weight sigmoid((300-price_i)/80), equivalently
-	1/(1+exp((price_i-300)/80)). Active utility is this weight times exp(beta*price_i),
-	then probabilities are normalized with the outside option as in MNL.
+	`action_binary` encodes the offered set A, not the realized consideration set C.
+	For each offered product i, consideration is Bernoulli with probability
+	q_i = 1 / (1 + exp((price_i - 300)/80)). We then integrate the piecewise
+	MNL probabilities P(j|C) over all C subseteq A.
 	"""
 	prices = np.asarray(prices, dtype=float)
+	action_binary = np.asarray(action_binary, dtype=int)
+	n_products = len(prices)
 
-	consideration_prob = 1.0 / (1.0 + np.exp((prices - 300.0) / 80.0))
+	offered_indices = np.where(action_binary == 1)[0]
+	probabilities = np.zeros(n_products + 1, dtype=float)
 
-	utilities = np.zeros(len(prices), dtype=float)
-	for idx in range(len(prices)):
-		if action_binary[idx] == 1:
-			utilities[idx] = consideration_prob[idx] * np.exp(beta * prices[idx])
+	if len(offered_indices) == 0:
+		probabilities[-1] = 1.0
+		return probabilities
 
-	denominator = 1.0 + np.sum(utilities)
-	probabilities = np.zeros(len(prices) + 1, dtype=float)
-	probabilities[:-1] = utilities / denominator
-	probabilities[-1] = 1.0 / denominator
+	consideration_prob = 1.0 / (1.0 + np.exp(prices * -0.0125))
+	k = len(offered_indices)
+	q = consideration_prob[offered_indices]
+	one_minus_q = 1.0 - q
+	exp_utility_offered = np.exp(beta * prices[offered_indices])
+
+	subset_matrix = _subset_membership_matrix(k)
+	subset_matrix_float = subset_matrix.astype(float)
+
+	set_probabilities = np.prod(
+		np.where(subset_matrix, q[None, :], one_minus_q[None, :]),
+		axis=1,
+	)
+
+	denominators = 1.0 + subset_matrix_float.dot(exp_utility_offered)
+	weights = set_probabilities / denominators
+
+	offered_probabilities = exp_utility_offered * subset_matrix_float.T.dot(weights)
+	probabilities[offered_indices] = offered_probabilities
+	probabilities[-1] = float(np.sum(weights))
+
 	return probabilities
 
 
