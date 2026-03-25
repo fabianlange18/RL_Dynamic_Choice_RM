@@ -1,0 +1,89 @@
+import contextlib
+import numpy as np
+import gymnasium as gym
+
+import config as c
+import constants as C
+from buying_probabilities import get_buying_probabilities_by_model
+
+
+class TalluriExample2(gym.Env):
+
+    def __init__(self, efficient_sets = None, use_multibinary_action_space: bool = False):
+
+        self.use_multibinary_action_space = use_multibinary_action_space and efficient_sets is None
+
+        self.possible_sets = tuple(range(2 ** C.n)) if efficient_sets is None else tuple(efficient_sets)
+        
+        self.action_space = (
+            gym.spaces.MultiBinary(C.n)
+            if self.use_multibinary_action_space
+            else gym.spaces.Discrete(len(self.possible_sets))
+        )
+        self.observation_space = gym.spaces.MultiDiscrete([C.T + 1, C.C + 1])
+        
+        self._probit_seed = None    
+
+    def reset(self, seed=None, options=None):
+        self.rng = np.random.default_rng(seed)
+        self._probit_seed = seed
+        self.s = (0, C.C)
+        self.arrival_xi = self.rng.choice([0, 1], C.T, p=[1.0 - C.ARRIVAL_PROB, C.ARRIVAL_PROB])
+        self.buying_xi = self.rng.uniform(0, 1, C.T)
+        return self.s, {}
+
+    def step(self, action):
+        action = self._action_to_binary(action)
+
+        t, inventory = self.s
+
+        if self.arrival_xi[t] == 0:
+            t += 1
+            self.s = (t, inventory)
+            return self.s, 0, t == C.T, False, {}
+
+        buying_probabilities = get_buying_probabilities_by_model(
+            action_binary=action,
+            prices=C.r,
+            beta=C.SENSITIVITY_BETA_GT["high"] if c.HIGH_SENSITIVITY else C.SENSITIVITY_BETA_GT["low"],
+            model=c.GT_MODEL,
+            probit_seed=self._probit_seed,
+        )
+
+        cumulative_probs = np.cumsum(buying_probabilities)
+        choice = np.searchsorted(cumulative_probs, self.buying_xi[t])
+
+        reward = C.r[choice] if choice < C.n else 0
+
+        if choice < C.n:
+            inventory -= 1
+
+        t += 1
+        done = t == C.T or inventory == 0
+        self.s = (t, inventory)
+        return self.s, reward, done, False, {}
+
+    
+    def _action_to_binary(self, action):
+        """Convert action input to binary offer-set vector of length C.n.
+
+        Accepted inputs:
+        - MultiBinary action arrays of shape (C.n,)
+        - Discrete RL action indices (mapped through self.possible_sets)
+        - Integer bitmasks (used directly)
+        """
+        if isinstance(action, np.ndarray):
+            if action.shape == (C.n,):
+                return action.astype(int)
+            if action.shape == ():
+                action_int = int(action.item())
+            elif action.shape == (1,):
+                action_int = int(action[0])
+            else:
+                raise ValueError(f"Unsupported action shape {action.shape}")
+        else:
+            action_int = int(action)
+
+        action_int = int(self.possible_sets[action_int])
+
+        return np.array([(action_int >> i) & 1 for i in range(C.n)], dtype=int)

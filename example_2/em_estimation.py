@@ -1,21 +1,15 @@
 import numpy as np
-
 from buying_probabilities import get_buying_probabilities_by_model
+import config as c
+import constants as C
+from env_example_2 import TalluriExample2
 
 
-ALL_METHODS = (
-	"MNL",
-	"MMNL",
-	"Probit",
-	"MNLrefPrice",
-	"MNLConsidSet",
-	"NLogit",
-)
-
-SENSITIVITY_BETA_TARGETS = {
-	"low": -0.0015,
-	"high": -0.005,
-}
+EM_BETA_INIT = -0.002
+EM_LAMBDA_INIT = 0.5
+EM_BETA_BOUNDS = (-0.05, -1e-6)
+EM_MAX_ITER = 200
+EM_TOL = 1e-7
 
 
 def _safe_log(probability, eps=1e-12):
@@ -50,17 +44,7 @@ def _maximize_scalar_bounded(objective_fn, lower, upper, iterations=70):
 	return x2, f2
 
 
-def estimate_beta_and_arrival_em(
-	observations,
-	prices,
-	model="MNL",
-	beta_init=-0.002,
-	lambda_init=0.5,
-	beta_bounds=(-0.05, 0.0),
-	reference_price=None,
-	max_iter=500,
-	tol=1e-7,
-):
+def estimate_beta_and_arrival_em(observations):
 	"""Estimate beta and arrival probability via EM for incomplete transaction data.
 
 	Each observation must be a dict with:
@@ -74,9 +58,8 @@ def estimate_beta_and_arrival_em(
 	if len(observations) == 0:
 		raise ValueError("observations must not be empty")
 
-	prices = np.asarray(prices, dtype=float)
-	n_products = len(prices)
-	beta_low, beta_high = float(beta_bounds[0]), float(beta_bounds[1])
+	n_products = len(C.r)
+	beta_low, beta_high = float(EM_BETA_BOUNDS[0]), float(EM_BETA_BOUNDS[1])
 
 	if beta_low >= beta_high:
 		raise ValueError("beta_bounds must satisfy lower < upper")
@@ -106,8 +89,8 @@ def estimate_beta_and_arrival_em(
 	P = [obs for obs in processed if obs["purchase_index"] is not None]
 	Pbar = [obs for obs in processed if obs["purchase_index"] is None]
 
-	lambda_hat = float(np.clip(lambda_init, 1e-6, 1.0 - 1e-6))
-	beta_hat = float(np.clip(beta_init, beta_low, beta_high))
+	lambda_hat = float(np.clip(EM_LAMBDA_INIT, 1e-6, 1.0 - 1e-6))
+	beta_hat = float(np.clip(EM_BETA_INIT, beta_low, beta_high))
 
 	history = []
 
@@ -135,10 +118,9 @@ def estimate_beta_and_arrival_em(
 		for idx, group in enumerate(group_list):
 			probs = get_buying_probabilities_by_model(
 				group["action_binary"],
-				prices,
+				C.r,
 				beta_value,
-				model=model,
-				reference_price=reference_price,
+				model=c.OPT_MODEL,
 				include_outside=True,
 			)
 
@@ -158,7 +140,7 @@ def estimate_beta_and_arrival_em(
 
 		return float(result)
 
-	for iteration in range(max_iter):
+	for iteration in range(EM_MAX_ITER):
 		a_hats = np.zeros(len(group_list), dtype=float)
 		for idx, group in enumerate(group_list):
 			if group["no_purchase_count"] <= 0:
@@ -166,10 +148,9 @@ def estimate_beta_and_arrival_em(
 
 			p0 = get_buying_probabilities_by_model(
 				group["action_binary"],
-				prices,
+				C.r,
 				beta_hat,
-				model=model,
-				reference_price=reference_price,
+				model=c.OPT_MODEL,
 				include_outside=True,
 			)[-1]
 			numerator = lambda_hat * p0
@@ -188,10 +169,9 @@ def estimate_beta_and_arrival_em(
 			for idx, group in enumerate(group_list):
 				probs = get_buying_probabilities_by_model(
 					group["action_binary"],
-					prices,
+					C.r,
 					beta_candidate,
-					model=model,
-					reference_price=reference_price,
+					model=c.OPT_MODEL,
 					include_outside=True,
 				)
 
@@ -222,7 +202,7 @@ def estimate_beta_and_arrival_em(
 		delta = np.sqrt((beta_new - beta_hat) ** 2 + (lambda_new - lambda_hat) ** 2)
 		beta_hat, lambda_hat = float(beta_new), float(lambda_new)
 
-		if delta < tol or abs(ll_new - ll_old) < tol:
+		if delta < EM_TOL or abs(ll_new - ll_old) < EM_TOL:
 			break
 
 	return {
@@ -236,103 +216,57 @@ def estimate_beta_and_arrival_em(
 	}
 
 
-def estimate_betas_for_all_methods(
-	observations,
-	prices,
-	methods=None,
-	beta_init=-0.002,
-	lambda_init=0.5,
-	beta_bounds=(-0.05, 0.0),
-	reference_price=None,
-	max_iter=500,
-	tol=1e-7,
-):
-	"""Estimate beta/lambda with EM for every requested choice method.
+def _reward_to_purchase_index(reward):
+	if reward <= 0:
+		return None
 
-	Returns a dictionary keyed by method name.
+	matching = np.where(np.isclose(C.r, reward))[0]
+	if len(matching) == 0:
+		return None
+	return int(matching[0])
+
+
+def collect_incomplete_transaction_data(env, n_episodes=C.N_ESTIMATION_EPISODES):
+	"""Collect incomplete transaction observations from random interaction."""
+	observations = []
+
+	for _ in range(int(n_episodes)):
+		env.reset()
+
+		while True:
+			sampled_action = env.action_space.sample()
+			action_binary = env._action_to_binary(sampled_action)
+
+			_, reward, done, truncated, _ = env.step(sampled_action)
+
+			observations.append(
+				{
+					"action_binary": action_binary,
+					"purchase_index": _reward_to_purchase_index(reward),
+				}
+			)
+
+			if done or truncated:
+				break
+
+	return observations
+
+
+def run_em():
+	"""Collect N episodes of incomplete transactions and run EM estimation.
+
+	Returns a dictionary with both collected observations and EM output.
 	"""
-	if methods is None:
-		methods = ALL_METHODS
 
-	results = {}
-	for method in methods:
-		results[method] = estimate_beta_and_arrival_em(
-			observations=observations,
-			prices=prices,
-			model=method,
-			beta_init=beta_init,
-			lambda_init=lambda_init,
-			beta_bounds=beta_bounds,
-			reference_price=reference_price,
-			max_iter=max_iter,
-			tol=tol,
-		)
+	env = TalluriExample2(efficient_sets=None)
 
-	return results
-
-
-def estimate_betas_for_both_sensitivities_all_methods(
-	observations_by_sensitivity,
-	prices,
-	methods=None,
-	beta_init_by_sensitivity=None,
-	lambda_init=0.5,
-	beta_bounds=(-0.05, 0.0),
-	reference_price=None,
-	max_iter=500,
-	tol=1e-7,
-):
-	"""Estimate beta/lambda for low/high sensitivities across all methods.
-
-	Parameters
-	----------
-	observations_by_sensitivity : dict
-		Expected keys are "low" and "high", each mapping to a list of observations
-		compatible with ``estimate_beta_and_arrival_em``.
-
-	Returns
-	-------
-	dict
-		{
-		  "low":  {method: em_result, ...},
-		  "high": {method: em_result, ...}
+	try:
+		observations = collect_incomplete_transaction_data(env)
+		em_result = estimate_beta_and_arrival_em(observations)
+		return {
+			"observations": observations,
+			"em_result": em_result,
+			"n_estimation_episodes": C.N_ESTIMATION_EPISODES,
 		}
-		Each ``em_result`` also includes ``target_beta`` for quick comparison.
-	"""
-	if methods is None:
-		methods = ALL_METHODS
-
-	if beta_init_by_sensitivity is None:
-		beta_init_by_sensitivity = {
-			"low": -0.0015,
-			"high": -0.005,
-		}
-
-	missing = [key for key in ("low", "high") if key not in observations_by_sensitivity]
-	if missing:
-		raise ValueError(f"observations_by_sensitivity is missing keys: {missing}")
-
-	results = {}
-	for sensitivity in ("low", "high"):
-		observations = observations_by_sensitivity[sensitivity]
-		beta_init = float(beta_init_by_sensitivity.get(sensitivity, -0.002))
-
-		sensitivity_results = estimate_betas_for_all_methods(
-			observations=observations,
-			prices=prices,
-			methods=methods,
-			beta_init=beta_init,
-			lambda_init=lambda_init,
-			beta_bounds=beta_bounds,
-			reference_price=reference_price,
-			max_iter=max_iter,
-			tol=tol,
-		)
-
-		target_beta = SENSITIVITY_BETA_TARGETS[sensitivity]
-		for method in sensitivity_results:
-			sensitivity_results[method]["target_beta"] = target_beta
-
-		results[sensitivity] = sensitivity_results
-
-	return results
+	finally:
+		env.close()

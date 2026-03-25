@@ -22,11 +22,8 @@ def _mnl_probabilities(action_binary, prices, beta):
 	where the leading 1 is the outside (no-purchase) option.
 	"""
 	prices = np.asarray(prices, dtype=float)
-	utilities = np.zeros(len(prices), dtype=float)
-
-	for idx in range(len(prices)):
-		if action_binary[idx] == 1:
-			utilities[idx] = np.exp(beta * prices[idx])
+	action_binary = np.asarray(action_binary, dtype=bool)
+	utilities = np.where(action_binary, np.exp(beta * prices), 0.0)
 
 	denominator = 1.0 + np.sum(utilities)
 	probabilities = np.zeros(len(prices) + 1, dtype=float)
@@ -38,51 +35,43 @@ def _mnl_probabilities(action_binary, prices, beta):
 def _mmnl_probabilities(action_binary, prices, beta):
 	"""Compute mixed-logit probabilities as an average of two MNL segments.
 
-	Uses two taste draws (0.7*beta and 1.3*beta), computes MNL probabilities for each,
-	then returns their equal-weight (0.5/0.5) mixture.
+	Uses five taste draws (0.6*beta, 0.8*beta, 1.0*beta, 1.2*beta, 1.4*beta),
+	computes MNL probabilities for each, then returns their equal-weight mixture.
 	"""
-	beta_candidates = np.array([0.7 * beta, 1.3 * beta], dtype=float)
-
-	mix_probabilities = np.zeros(len(prices) + 1, dtype=float)
-	for beta_draw in beta_candidates:
-		mix_probabilities += 0.5 * _mnl_probabilities(action_binary, prices, beta_draw)
-
-	return mix_probabilities
+	beta_candidates = [0.6 * beta, 0.8 * beta, 1.0 * beta, 1.2 * beta, 1.4 * beta]
+	return np.mean(
+		[_mnl_probabilities(action_binary, prices, b) for b in beta_candidates],
+		axis=0,
+	)
 
 
-def _probit_probabilities(action_binary, prices, beta, n_draws=1):
-	"""Estimate Probit probabilities by Monte Carlo simulation.
+def _probit_probabilities(action_binary, prices, beta, seed=None):
+	"""Return one-draw Probit outcome probabilities.
 
-	Across n_draws draws, product utility is beta*price_i + Normal(0,1) for active items,
-	and outside utility is Normal(0,1). The chosen alternative is the max utility; if
-	the best product beats outside utility it gets the count, otherwise outside gets it.
-	Final probabilities are normalized choice counts.
+	This intentionally performs exactly one utility draw.
+	- seed is None: stochastic draw (training)
+	- seed is int: deterministic draw for repeatable evaluation
 	"""
 	prices = np.asarray(prices, dtype=float)
-	rng = np.random.default_rng(12345)
-
-	counts = np.zeros(len(prices) + 1, dtype=float)
 	active_indices = np.where(action_binary == 1)[0]
 
+	counts = np.zeros(len(prices) + 1, dtype=float)
 	if len(active_indices) == 0:
 		counts[-1] = 1.0
 		return counts
 
-	for _ in range(n_draws):
-		outside_utility = rng.normal(0, 1.0)
+	rng = np.random.default_rng() if seed is None else np.random.default_rng(int(seed))
+	outside_utility = float(rng.normal(0.0, 1.0))
+	utilities = np.full(len(prices), -np.inf, dtype=float)
+	utilities[active_indices] = beta * prices[active_indices] + rng.normal(0.0, 1.0, size=len(active_indices))
 
-		utilities = np.full(len(prices), -np.inf, dtype=float)
-		utilities[active_indices] = beta * prices[active_indices] + rng.normal(0.0, 1.0, size=len(active_indices))
+	chosen = int(np.argmax(utilities))
+	if utilities[chosen] > outside_utility:
+		counts[chosen] = 1.0
+	else:
+		counts[-1] = 1.0
 
-		chosen = int(np.argmax(utilities))
-		if utilities[chosen] > outside_utility:
-			counts[chosen] += 1.0
-		else:
-			counts[-1] += 1.0
-
-	# print(counts)
-
-	return counts / max(1.0, float(np.sum(counts)))
+	return counts
 
 
 def _mnl_ref_price_probabilities(
@@ -98,17 +87,15 @@ def _mnl_ref_price_probabilities(
 	Probabilities are then the standard MNL normalization with an outside option.
 	"""
 	prices = np.asarray(prices, dtype=float)
+	action_binary = np.asarray(action_binary, dtype=bool)
 
 	if reference_price is None:
 		reference_price = float(np.mean(prices))
 
 	beta_ref = 0.0025
 
-	utilities = np.zeros(len(prices), dtype=float)
-	for idx in range(len(prices)):
-		if action_binary[idx] == 1:
-			ref_adjustment = beta_ref * (reference_price - prices[idx])
-			utilities[idx] = np.exp(beta * prices[idx] + ref_adjustment)
+	ref_adjustment = beta_ref * (reference_price - prices)
+	utilities = np.where(action_binary, np.exp(beta * prices + ref_adjustment), 0.0)
 
 	denominator = 1.0 + np.sum(utilities)
 	probabilities = np.zeros(len(prices) + 1, dtype=float)
@@ -169,15 +156,16 @@ def _nested_logit_probabilities(action_binary, prices, beta=None):
 	Product probability = P(nest) * P(product|nest), and outside is 1/denominator.
 	"""
 	prices = np.asarray(prices, dtype=float)
+	action_binary = np.asarray(action_binary, dtype=int)
 	n_products = len(prices)
 
-	nest_a = np.array([idx for idx in range(n_products) if idx < n_products // 2], dtype=int)
-	nest_b = np.array([idx for idx in range(n_products) if idx >= n_products // 2], dtype=int)
+	nest_a = np.arange(n_products // 2)
+	nest_b = np.arange(n_products // 2, n_products)
 	mu_a = 0.7
 	mu_b = 0.8
 
 	def _nest_terms(indices, mu):
-		active = np.array([idx for idx in indices if action_binary[idx] == 1], dtype=int)
+		active = indices[action_binary[indices] == 1]
 		if len(active) == 0:
 			return 0.0, active, np.array([], dtype=float)
 
@@ -187,8 +175,8 @@ def _nested_logit_probabilities(action_binary, prices, beta=None):
 	d_a, active_a, scaled_a = _nest_terms(nest_a, mu_a)
 	d_b, active_b, scaled_b = _nest_terms(nest_b, mu_b)
 
-	g_a = d_a ** mu_a if d_a > 0 else 0.0
-	g_b = d_b ** mu_b if d_b > 0 else 0.0
+	g_a = d_a ** mu_a
+	g_b = d_b ** mu_b
 	denominator = 1.0 + g_a + g_b
 
 	probabilities = np.zeros(n_products + 1, dtype=float)
@@ -212,6 +200,7 @@ def get_buying_probabilities_by_model(
 	model,
 	reference_price=None,
 	include_outside=False,
+	probit_seed=None,
 ):
 	"""Dispatch to the selected demand model and return product-only probabilities.
 
@@ -225,7 +214,7 @@ def get_buying_probabilities_by_model(
 		case "MMNL":
 			probabilities = _mmnl_probabilities(action_binary, prices, beta=beta)
 		case "Probit":
-			probabilities = _probit_probabilities(action_binary, prices, beta=beta)
+			probabilities = _probit_probabilities(action_binary, prices, beta=beta, seed=probit_seed)
 		case "MNLrefPrice":
 			probabilities = _mnl_ref_price_probabilities(action_binary, prices, beta=beta, reference_price=reference_price)
 		case "MNLConsidSet":

@@ -1,1 +1,7 @@
 *.pyc
+*.png
+*.md
+*.log
+*.zip
+
+outdated_example_2/*
