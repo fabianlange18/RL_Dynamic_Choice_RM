@@ -1,0 +1,13 @@
+Run MNLConsidSet - High Sensitivity: False
+Train Runs: 5, Training on all available sets (if false only on efficient sets): True
+RL Training Steps: [20000, 100000, 500000, 1000000], Evaluation Episodes: 15, Estimation Episodes: 50
+
+Observation sampling time: 0.4260 seconds
+EM_MNL  time: 47.7084s | beta: -0.001229, lambda: 0.477231
+EM_MMNL time: 475.3468s | betas: ['-0.050000', '-0.050000', '-0.001720', '-0.001008', '-0.001007'], lambda: 0.796831
+
+DP_MNL  time: 774.7630s | V(0,C): 66718.91
+DP_MMNL time: 2919.3685s | V(0,C): 66580.47
+
+Cumulative time — DP_MNL: 822.8974s | DP_MMNL: 3395.1413s
+

@@ -1,0 +1,13 @@
+Run Probit - High Sensitivity: False
+Train Runs: 5, Training on all available sets (if false only on efficient sets): True
+RL Training Steps: [20000, 100000, 500000, 1000000], Evaluation Episodes: 15, Estimation Episodes: 50
+
+Observation sampling time: 0.4820 seconds
+EM_MNL  time: 53.8805s | beta: -0.002352, lambda: 0.507587
+EM_MMNL time: 471.8259s | betas: ['-0.045953', '-0.024713', '-0.003002', '-0.002077', '-0.001911'], lambda: 0.837169
+
+DP_MNL  time: 773.5578s | V(0,C): 57795.31
+DP_MMNL time: 2949.2780s | V(0,C): 57399.87
+
+Cumulative time — DP_MNL: 827.9203s | DP_MMNL: 3421.5859s
+

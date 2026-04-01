@@ -1,0 +1,13 @@
+Run NLogit - High Sensitivity: True
+Train Runs: 5, Training on all available sets (if false only on efficient sets): True
+RL Training Steps: [20000, 100000, 500000, 1000000], Evaluation Episodes: 15, Estimation Episodes: 50
+
+Observation sampling time: 0.3429 seconds
+EM_MNL  time: 125.4115s | beta: -0.005577, lambda: 0.493075
+EM_MMNL time: 476.0078s | betas: ['-0.050000', '-0.020198', '-0.005388', '-0.005370', '-0.005367'], lambda: 0.776733
+
+DP_MNL  time: 774.9101s | V(0,C): 33823.39
+DP_MMNL time: 2907.5245s | V(0,C): 33765.62
+
+Cumulative time — DP_MNL: 900.6645s | DP_MMNL: 3383.8752s
+

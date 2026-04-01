@@ -1,8 +1,8 @@
 *.pyc
 *.png
-*.log
 *.zip
 *.pkl
 .env
 
 outdated_example_2/*
+.rl_venv/*
