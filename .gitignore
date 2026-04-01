@@ -3,5 +3,7 @@
 *.md
 *.log
 *.zip
+*.pkl
+.env
 
 outdated_example_2/*

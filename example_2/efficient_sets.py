@@ -11,8 +11,9 @@ def _action_int_to_binary(action_int):
 
 
 @lru_cache(maxsize=8)
-def _identify_efficient_sets(beta, model):
-    beta = float(beta)
+def _identify_efficient_sets(model, beta=None, segment_betas=None):
+    beta = None if beta is None else float(beta)
+    segment_betas = None if segment_betas is None else tuple(float(b) for b in segment_betas)
     offer_set_metrics = []
 
     for action_int in range(2 ** C.n):
@@ -23,6 +24,7 @@ def _identify_efficient_sets(beta, model):
                 C.r,
                 beta,
                 model=model,
+                segment_betas=segment_betas if model == "MMNL" else None,
             ),
             dtype=float,
         )
@@ -78,8 +80,12 @@ def _identify_efficient_sets(beta, model):
     return tuple(efficient_sequence)
 
 
-def compute_efficient_sets(beta=None):
-    if beta is None:
+def compute_efficient_sets(model, beta=None, segment_betas=None):
+    if beta is None and segment_betas is None:
         beta = C.SENSITIVITY_BETA_GT["high"] if c.HIGH_SENSITIVITY else C.SENSITIVITY_BETA_GT["low"]
 
-    return _identify_efficient_sets(beta=float(beta), model=c.OPT_MODEL)
+    # Convert segment_betas to tuple for lru_cache hashability
+    if segment_betas is not None and isinstance(segment_betas, list):
+        segment_betas = tuple(segment_betas)
+
+    return _identify_efficient_sets(model=model, beta=beta, segment_betas=segment_betas)

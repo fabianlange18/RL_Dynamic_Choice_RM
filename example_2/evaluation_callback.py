@@ -10,8 +10,9 @@ class PercentOptimalCallback(BaseCallback):
         super().__init__(verbose)
         self.possible_sets = possible_sets
         self.pi = pi
-        self.eval_freq = C.TOTAL_TIMESTEPS // 20
-        self._next_eval_timestep = C.TOTAL_TIMESTEPS // 20
+        total_timesteps = int(max(C.TOTAL_TIMESTEPS))
+        self.eval_freq = total_timesteps // 20
+        self._next_eval_timestep = total_timesteps // 20
         self.timesteps = []
         self.pct_optimal_mean = []
         self.pct_optimal_std = []

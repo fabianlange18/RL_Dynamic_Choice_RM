@@ -7,7 +7,7 @@ from sb3_contrib import ARS, QRDQN, TRPO
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-TOTAL_TIMESTEPS = 1_000_000 if c.TRAIN_ON_ALL_SETS else 100_000
+TOTAL_TIMESTEPS = [20_000, 100_000, 500_000, 1_000_000] if c.TRAIN_ON_ALL_SETS else [20_000, 100_000, 500_000]
 N_EVAL_EPISODES = 15
 N_ESTIMATION_EPISODES = 50
 
@@ -18,6 +18,7 @@ ARRIVAL_PROB = 0.5
 r = np.asarray([600, 550, 475, 400, 300, 280, 240, 200, 185, 175], dtype=float)
 
 LEARNING_CURVE_ENABLED = True
+PROGRESS_BAR_ENABLED = True
 
 DEMAND_MODELS = (
     "MNL",
@@ -29,6 +30,12 @@ DEMAND_MODELS = (
 )
 
 RL_ALGORITHMS = {
+    "DQN": DQN,
+    "ARS": ARS,
+    "A2C": A2C,
+    "TRPO": TRPO,
+    "PPO": PPO,
+} if c.TRAIN_ON_ALL_SETS else {
     "DQN": DQN,
     "QRDQN": QRDQN,
     "ARS": ARS,
@@ -51,5 +58,5 @@ SENSITIVITY_BETA_GT = {
 OUTPUT_DIR = os.path.join(
     BASE_DIR,
     "results",
-    f"{c.GT_MODEL}_{c.OPT_MODEL}_{'high' if c.HIGH_SENSITIVITY else 'low'}_{'all' if c.TRAIN_ON_ALL_SETS else 'effsets'}",
+    f"{c.GT_MODEL}_{'high' if c.HIGH_SENSITIVITY else 'low'}_{'all' if c.TRAIN_ON_ALL_SETS else 'effsets'}",
 )

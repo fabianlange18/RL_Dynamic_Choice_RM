@@ -1,7 +1,5 @@
 import numpy as np
-from tqdm import tqdm
 
-import config as c
 import constants as C
 from buying_probabilities import get_buying_probabilities_by_model
 
@@ -10,14 +8,14 @@ def _action_int_to_binary(action_int):
     return np.array([(int(action_int) >> i) & 1 for i in range(C.n)], dtype=int)
 
 
-def solve_by_dp(estimated_beta, estimated_lambda, efficient_sets = None):
+def solve_by_dp(estimated_beta, estimated_lambda, efficient_sets=None, model="MNL", segment_betas=None):
     arrival_prob = float(C.ARRIVAL_PROB if estimated_lambda is None else np.clip(estimated_lambda, 0.0, 1.0))
     no_arrival_prob = 1.0 - arrival_prob
 
     v = np.zeros((C.T + 1, C.C + 1))
     pi = np.zeros((C.T, C.C + 1), dtype=int)
 
-    for t in tqdm(range(C.T - 1, -1, -1), desc="DP", total=C.T):
+    for t in range(C.T - 1, -1, -1):
         for x in range(C.C + 1):
             if x <= 0:
                 continue
@@ -34,7 +32,8 @@ def solve_by_dp(estimated_beta, estimated_lambda, efficient_sets = None):
                         action_binary=action_binary,
                         prices=C.r,
                         beta=estimated_beta,
-                        model=c.OPT_MODEL,
+                        model=model,
+                        segment_betas=segment_betas,
                     )
 
                     immediate_reward = float(np.dot(C.r, buying_probabilities))

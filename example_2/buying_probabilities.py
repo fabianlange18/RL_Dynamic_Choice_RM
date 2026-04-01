@@ -32,17 +32,34 @@ def _mnl_probabilities(action_binary, prices, beta):
 	return probabilities
 
 
-def _mmnl_probabilities(action_binary, prices, beta):
-	"""Compute mixed-logit probabilities as an average of two MNL segments.
+def _mmnl_probabilities(action_binary, prices, beta=None, segment_betas=None, return_components=False):
+	"""Compute mixed-logit probabilities as an equal-weight mixture of MNL segments.
 
-	Uses five taste draws (0.6*beta, 0.8*beta, 1.0*beta, 1.2*beta, 1.4*beta),
-	computes MNL probabilities for each, then returns their equal-weight mixture.
+	If segment_betas is provided, those segment-specific betas are used directly.
+	Otherwise, beta must be provided and the default five scaled segments are used.
+
+	When return_components is True, returns a tuple:
+		(component_probabilities, mixture_probabilities)
+	where component_probabilities has shape (K, n_products + 1).
 	"""
-	beta_candidates = [0.6 * beta, 0.8 * beta, 1.0 * beta, 1.2 * beta, 1.4 * beta]
-	return np.mean(
-		[_mnl_probabilities(action_binary, prices, b) for b in beta_candidates],
-		axis=0,
+	if segment_betas is None:
+		if beta is None:
+			raise ValueError("Either beta or segment_betas must be provided for MMNL")
+		segment_betas = [0.6 * beta, 0.8 * beta, 1.0 * beta, 1.2 * beta, 1.4 * beta]
+
+	segment_betas = np.asarray(segment_betas, dtype=float)
+	if segment_betas.size == 0:
+		raise ValueError("segment_betas must contain at least one value")
+
+	component_probabilities = np.array(
+		[_mnl_probabilities(action_binary, prices, b) for b in segment_betas],
+		dtype=float,
 	)
+	mixture_probabilities = np.mean(component_probabilities, axis=0)
+
+	if return_components:
+		return component_probabilities, mixture_probabilities
+	return mixture_probabilities
 
 
 def _probit_probabilities(action_binary, prices, beta, seed=None):
@@ -198,6 +215,8 @@ def get_buying_probabilities_by_model(
 	prices,
 	beta,
 	model,
+	segment_betas=None,
+	return_components=False,
 	reference_price=None,
 	include_outside=False,
 	probit_seed=None,
@@ -212,7 +231,13 @@ def get_buying_probabilities_by_model(
 		case "MNL":
 			probabilities = _mnl_probabilities(action_binary, prices, beta=beta)
 		case "MMNL":
-			probabilities = _mmnl_probabilities(action_binary, prices, beta=beta)
+			probabilities = _mmnl_probabilities(
+				action_binary,
+				prices,
+				beta=beta,
+				segment_betas=segment_betas,
+				return_components=return_components,
+			)
 		case "Probit":
 			probabilities = _probit_probabilities(action_binary, prices, beta=beta, seed=probit_seed)
 		case "MNLrefPrice":
@@ -223,6 +248,12 @@ def get_buying_probabilities_by_model(
 			probabilities = _nested_logit_probabilities(action_binary, prices, beta=beta)
 		case _:
 			raise ValueError(f"Unsupported model '{model}'")
+
+	if model == "MMNL" and return_components:
+		component_probabilities, mixture_probabilities = probabilities
+		if include_outside:
+			return component_probabilities, mixture_probabilities
+		return component_probabilities[:, :-1], mixture_probabilities[:-1]
 
 	return probabilities if include_outside else probabilities[:-1]
 
