@@ -1,52 +1,5 @@
 Run Probit - High Sensitivity: False
-Train Runs: 5, Training on all available sets (if false only on efficient sets): False
-RL Training Steps: [20000, 100000, 500000], Evaluation Episodes: 15, Estimation Episodes: 50
+Training on all available sets (if false only on efficient sets): False
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000], Estimation Episodes: 50
 
-Observation sampling time: 0.4983 seconds
-EM_MNL  time: 56.3101s | beta: -0.002449, lambda: 0.513542
-EM_MMNL time: 474.7469s | betas: ['-0.038252', '-0.021105', '-0.003215', '-0.002048', '-0.001913'], lambda: 0.837165
-
-MNL  efficient sets time: 0.0103s | sets: (0, 1, 3, 7, 15, 31, 63)
-MMNL efficient sets time: 0.0377s | sets: (0, 1, 3, 7, 15, 31, 63)
-
-DP_MNL  time: 5.1880s | V(0,C): 57582.73
-DP_MMNL time: 19.7055s | V(0,C): 56897.11
-
-Cumulative time — DP_MNL: 62.0067s | DP_MMNL: 494.9884s
-
-
-=== 20,000 training timesteps ===
-Method  | TrainTimeMean(s) | TrainTimeStd(s) | RewardMean | RewardStdAcrossRuns | PctOfDP(%) | PctOfDPStd(%) | LoadFactorMean(%) | LoadFactorStdAcrossRuns(%)
---------+------------------+-----------------+------------+---------------------+------------+---------------+-------------------+---------------------------
-DQN     | 3.13             | 0.02            | 39005.60   | 9086.33             | 79.18      | 18.44         | 48.11             | 15.17                     
-QRDQN   | 17.56            | 0.44            | 38011.33   | 10420.73            | 77.16      | 21.15         | 42.67             | 17.18                     
-ARS     | 2.00             | 0.03            | 46422.67   | 1487.38             | 94.23      | 3.02          | 61.33             | 4.99                      
-A2C     | 4.28             | 0.02            | 45912.13   | 1186.20             | 93.19      | 2.41          | 58.70             | 5.00                      
-TRPO    | 5.68             | 0.01            | 46073.20   | 1744.41             | 93.52      | 3.54          | 58.55             | 5.92                      
-PPO     | 9.86             | 0.01            | 45055.47   | 983.88              | 91.46      | 2.00          | 56.41             | 5.05                      
-DP_MNL  | 5.19             | 0.00            | 49264.67   | 0.00                | 100.00     | 0.00          | 66.45             | 0.00                      
-DP_MMNL | 19.71            | 0.00            | 49261.33   | 0.00                | 99.99      | 0.00          | 66.45             | 0.00                      
-
-=== 100,000 training timesteps ===
-Method  | TrainTimeMean(s) | TrainTimeStd(s) | RewardMean | RewardStdAcrossRuns | PctOfDP(%) | PctOfDPStd(%) | LoadFactorMean(%) | LoadFactorStdAcrossRuns(%)
---------+------------------+-----------------+------------+---------------------+------------+---------------+-------------------+---------------------------
-DQN     | 15.80            | 0.03            | 47061.47   | 1433.91             | 95.53      | 2.91          | 64.27             | 2.95                      
-QRDQN   | 88.34            | 2.45            | 38011.33   | 10420.73            | 77.16      | 21.15         | 42.67             | 17.18                     
-ARS     | 10.11            | 0.08            | 45781.33   | 1244.14             | 92.93      | 2.53          | 60.00             | 4.22                      
-A2C     | 21.44            | 0.02            | 46422.67   | 1487.38             | 94.23      | 3.02          | 61.33             | 4.99                      
-TRPO    | 25.67            | 0.06            | 46175.40   | 1126.66             | 93.73      | 2.29          | 57.73             | 5.46                      
-PPO     | 42.79            | 0.03            | 45188.67   | 267.71              | 91.73      | 0.54          | 58.24             | 2.59                      
-DP_MNL  | 5.19             | 0.00            | 49264.67   | 0.00                | 100.00     | 0.00          | 66.45             | 0.00                      
-DP_MMNL | 19.71            | 0.00            | 49261.33   | 0.00                | 99.99      | 0.00          | 66.45             | 0.00                      
-
-=== 500,000 training timesteps ===
-Method  | TrainTimeMean(s) | TrainTimeStd(s) | RewardMean | RewardStdAcrossRuns | PctOfDP(%) | PctOfDPStd(%) | LoadFactorMean(%) | LoadFactorStdAcrossRuns(%)
---------+------------------+-----------------+------------+---------------------+------------+---------------+-------------------+---------------------------
-DQN     | 78.91            | 0.21            | 47041.20   | 1452.89             | 95.49      | 2.95          | 64.28             | 2.93                      
-QRDQN   | 436.03           | 12.22           | 38011.33   | 10420.73            | 77.16      | 21.15         | 42.67             | 17.18                     
-ARS     | 43.10            | 0.13            | 45386.67   | 302.10              | 92.13      | 0.61          | 56.00             | 3.27                      
-A2C     | 111.08           | 0.44            | 46422.67   | 1487.38             | 94.23      | 3.02          | 61.33             | 4.99                      
-TRPO    | 124.91           | 0.19            | 45352.40   | 397.33              | 92.06      | 0.81          | 53.43             | 0.13                      
-PPO     | 209.16           | 0.44            | 45133.87   | 256.18              | 91.62      | 0.52          | 58.37             | 2.59                      
-DP_MNL  | 5.19             | 0.00            | 49264.67   | 0.00                | 100.00     | 0.00          | 66.45             | 0.00                      
-DP_MMNL | 19.71            | 0.00            | 49261.33   | 0.00                | 99.99      | 0.00          | 66.45             | 0.00                      
+Observation sampling time: 0.7043 seconds
