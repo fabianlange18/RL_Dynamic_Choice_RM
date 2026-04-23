@@ -1,5 +1,6 @@
 # %%
 import os
+import gc
 import time
 import pickle
 import logging
@@ -105,6 +106,10 @@ log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_2pt]}\n")
 
 log_message(f"Estimation_MMNL_CONT time: {estimation_mmnl_cont_time:.4f}s | mu: {mu_mmnl_cont:.6f}, sigma: {sigma_mmnl_cont:.6f}, lambda: {lambda_mmnl_cont:.6f}")
 log_message(f"  LL: {ll_mmnl_cont:.6f}, AIC: {aic_mmnl_cont:.3f}, BIC: {bic_mmnl_cont:.3f}\n")
+
+
+del observations
+gc.collect()
 
 # %%
 # -- Efficient sets ---------------------------------------------------

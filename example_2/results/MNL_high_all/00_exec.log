@@ -1,5 +1,0 @@
-Run MNL - High Sensitivity: True
-Training on all available sets (if false only on efficient sets): True
-RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000, 1000000], Estimation Episodes: 50
-
-Observation sampling time: 0.4651 seconds
