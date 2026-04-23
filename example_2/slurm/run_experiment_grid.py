@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-GT_MODELS = ("MNL", "MMNL", "Probit", "MNLrefPrice", "MNLConsidSet", "NLogit")
+GT_MODELS = ("MNL", "MMNL_5PT", "MMNL_2PT", "MMNLcont", "Probit", "MNLrefPrice", "MNLConsidSet", "TMNL", "NLogit") 
 SENSITIVITIES = (False, True)
 TRAIN_ON_ALL_SETS_OPTIONS = (False, True)
 
