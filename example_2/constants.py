@@ -34,6 +34,12 @@ DEMAND_MODELS = (
 
 RL_ALGORITHMS = {
     "DQN": DQN,
+    "ARS": ARS,
+    "A2C": A2C,
+    "TRPO": TRPO,
+    "PPO": PPO,
+} if c.TRAIN_ON_ALL_SETS else {
+    "DQN": DQN,
     "QRDQN": QRDQN,
     "ARS": ARS,
     "A2C": A2C,
