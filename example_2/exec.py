@@ -303,29 +303,18 @@ data = {
     "v_mmnl_cont": v_mmnl_cont,
     "pi_mmnl_cont": pi_mmnl_cont,
     "time_results": time_results,
-    # "training_times_by_step": training_times_by_step,
-    # "evaluation_results_by_step": evaluation_results_by_step,
+    "training_times_by_step": training_times_by_step,
+    "evaluation_results_by_step": evaluation_results_by_step,
 }
 
 with open(f"{C.OUTPUT_DIR}/results.pkl", "wb") as f:
     pickle.dump(data, f)
 
 # %%
-import pickle
-from simulation import simulate
-import constants as C
-
-with open(f"{C.OUTPUT_DIR}/results.pkl", "rb") as f:
-    _cached = pickle.load(f)
-
-efficient_sets_mnl = _cached["efficient_sets_mnl"]
-pi_mnl = _cached["pi_mnl"]
-
 rewards = []
 
 for i in range(1000):
     reward, _ = simulate(efficient_sets_mnl, pi_mnl, seed=i)
     rewards.append(reward)
 
-log_message(f"Average reward over {len(rewards)} episodes: {sum(rewards) / len(rewards):.2f}")
-# %%
+log_message(f"Average MNL reward over {len(rewards)} episodes: {sum(rewards) / len(rewards):.2f}")
