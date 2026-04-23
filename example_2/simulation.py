@@ -1,5 +1,4 @@
 import constants as C
-import config as c
 
 from env_example_2 import TalluriExample2
 

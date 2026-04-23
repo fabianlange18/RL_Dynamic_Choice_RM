@@ -1,6 +1,8 @@
 import numpy as np
 from functools import lru_cache
 
+import constants as C
+
 
 @lru_cache(maxsize=32)
 def _subset_membership_matrix(k):
@@ -13,7 +15,7 @@ def _subset_membership_matrix(k):
 	bits = np.arange(k, dtype=np.uint32)
 	return ((masks[:, None] >> bits[None, :]) & 1).astype(bool)
 
-def _mnl_probabilities(action_binary, prices, beta):
+def _mnl_probabilities(action_binary, beta):
 	"""Compute MNL choice probabilities via softmax over active products plus outside option.
 
 	For each offered product i, utility contribution is exp(beta * price_i); inactive
@@ -21,7 +23,7 @@ def _mnl_probabilities(action_binary, prices, beta):
 		denominator = 1 + sum_i exp(beta * price_i),
 	where the leading 1 is the outside (no-purchase) option.
 	"""
-	prices = np.asarray(prices, dtype=float)
+	prices = np.asarray(C.r, dtype=float)
 	action_binary = np.asarray(action_binary, dtype=bool)
 	utilities = np.where(action_binary, np.exp(beta * prices), 0.0)
 
@@ -32,44 +34,80 @@ def _mnl_probabilities(action_binary, prices, beta):
 	return probabilities
 
 
-def _mmnl_probabilities(action_binary, prices, beta=None, segment_betas=None, return_components=False):
-	"""Compute mixed-logit probabilities as an equal-weight mixture of MNL segments.
+def _mmnl_probabilities(action_binary, beta=None, segment_betas=None, segment_weights=None, _2pt=False):
+	"""Compute mixed-logit probabilities as a weighted mixture of MNL segments.
 
 	If segment_betas is provided, those segment-specific betas are used directly.
 	Otherwise, beta must be provided and the default five scaled segments are used.
-
-	When return_components is True, returns a tuple:
-		(component_probabilities, mixture_probabilities)
-	where component_probabilities has shape (K, n_products + 1).
 	"""
 	if segment_betas is None:
 		if beta is None:
 			raise ValueError("Either beta or segment_betas must be provided for MMNL")
-		segment_betas = [0.6 * beta, 0.8 * beta, 1.0 * beta, 1.2 * beta, 1.4 * beta]
+		segment_betas = [0.5 * beta, 1.5 * beta] if _2pt else [0.6 * beta, 0.8 * beta, 1.0 * beta, 1.2 * beta, 1.4 * beta]
 
 	segment_betas = np.asarray(segment_betas, dtype=float)
 	if segment_betas.size == 0:
 		raise ValueError("segment_betas must contain at least one value")
 
+	if segment_weights is None:
+		segment_weights = np.full(segment_betas.size, 1.0 / segment_betas.size, dtype=float)
+	else:
+		segment_weights = np.asarray(segment_weights, dtype=float)
+		if segment_weights.shape != segment_betas.shape:
+			raise ValueError("segment_weights must have the same shape as segment_betas")
+		if np.any(segment_weights < 0):
+			raise ValueError("segment_weights must be non-negative")
+		weight_sum = float(np.sum(segment_weights))
+		if weight_sum <= 0:
+			raise ValueError("segment_weights must sum to a positive value")
+		segment_weights = segment_weights / weight_sum
+
 	component_probabilities = np.array(
-		[_mnl_probabilities(action_binary, prices, b) for b in segment_betas],
+		[_mnl_probabilities(action_binary, b) for b in segment_betas],
 		dtype=float,
 	)
-	mixture_probabilities = np.mean(component_probabilities, axis=0)
-
-	if return_components:
-		return component_probabilities, mixture_probabilities
+	mixture_probabilities = np.average(component_probabilities, axis=0, weights=segment_weights)
 	return mixture_probabilities
 
 
-def _probit_probabilities(action_binary, prices, beta, seed=None):
+def _mmnl_continuous_probabilities(
+	action_binary,
+	beta=None,
+	mu_b=None,
+	sigma_b=None,
+	seed=None,
+	n_draws=1,
+):
+	"""Compute continuous-MMNL probabilities via Monte Carlo integration.
+
+	The random coefficient is beta_draw ~ -exp(mu_b + sigma_b * N(0,1)).
+	"""
+	if mu_b is None:
+		if beta is None:
+			raise ValueError("Either mu_b or beta must be provided for MMNLcont")
+		mu_b = float(np.log(-beta))
+	else:
+		mu_b = float(mu_b)
+	sigma_b = float(sigma_b) if sigma_b is not None else 0.3
+	rng = np.random.default_rng(seed)
+	draw_betas = -np.exp(mu_b + sigma_b * rng.standard_normal(int(n_draws)))
+
+	component_probabilities = np.array(
+		[_mnl_probabilities(action_binary, draw_beta) for draw_beta in draw_betas],
+		dtype=float,
+	)
+	mixture_probabilities = np.mean(component_probabilities, axis=0)
+	return mixture_probabilities
+
+
+def _probit_probabilities(action_binary, beta, seed=None):
 	"""Return one-draw Probit outcome probabilities.
 
 	This intentionally performs exactly one utility draw.
 	- seed is None: stochastic draw (training)
 	- seed is int: deterministic draw for repeatable evaluation
 	"""
-	prices = np.asarray(prices, dtype=float)
+	prices = np.asarray(C.r, dtype=float)
 	active_indices = np.where(action_binary == 1)[0]
 
 	counts = np.zeros(len(prices) + 1, dtype=float)
@@ -91,19 +129,14 @@ def _probit_probabilities(action_binary, prices, beta, seed=None):
 	return counts
 
 
-def _mnl_ref_price_probabilities(
-	action_binary,
-	prices,
-	beta=None,
-	reference_price=None,
-):
+def _mnl_ref_price_probabilities(action_binary, beta=None, reference_price=None):
 	"""Compute MNL probabilities with a reference-price adjustment.
 
 	Active-product utility exponent is beta*price_i + beta_ref*(reference_price-price_i).
 	This shifts utility up when price is below the reference and down when above it.
 	Probabilities are then the standard MNL normalization with an outside option.
 	"""
-	prices = np.asarray(prices, dtype=float)
+	prices = np.asarray(C.r, dtype=float)
 	action_binary = np.asarray(action_binary, dtype=bool)
 
 	if reference_price is None:
@@ -121,7 +154,7 @@ def _mnl_ref_price_probabilities(
 	return probabilities
 
 
-def _mnl_consideration_probabilities(action_binary, prices, beta=None):
+def _mnl_consideration_probabilities(action_binary, beta=None):
 	"""Compute MNL consideration-set probabilities with latent consideration sets.
 
 	`action_binary` encodes the offered set A, not the realized consideration set C.
@@ -129,7 +162,7 @@ def _mnl_consideration_probabilities(action_binary, prices, beta=None):
 	q_i = 1 / (1 + exp((price_i - 300)/80)). We then integrate the piecewise
 	MNL probabilities P(j|C) over all C subseteq A.
 	"""
-	prices = np.asarray(prices, dtype=float)
+	prices = np.asarray(C.r, dtype=float)
 	action_binary = np.asarray(action_binary, dtype=int)
 	n_products = len(prices)
 
@@ -164,7 +197,49 @@ def _mnl_consideration_probabilities(action_binary, prices, beta=None):
 	return probabilities
 
 
-def _nested_logit_probabilities(action_binary, prices, beta=None):
+def _tmnl_probabilities(action_binary, beta, delta=0.5):
+	"""Compute Threshold MNL choice probabilities (Wang 2022).
+
+	Consideration set Psi(S+; delta) = {i in S+ : u_i >= max_j u_j - delta},
+	where u_i = beta * price_i and u_0 = 0 for the outside option.
+	Choice probabilities are then standard MNL over the consideration set.
+	"""
+	prices = np.asarray(C.r, dtype=float)
+	action_binary = np.asarray(action_binary, dtype=bool)
+
+	offered_indices = np.where(action_binary)[0]
+	probabilities = np.zeros(len(prices) + 1, dtype=float)
+
+	if len(offered_indices) == 0:
+		probabilities[-1] = 1.0
+		return probabilities
+
+	u_products = beta * prices  # shape (n,)
+	u_outside = -1
+
+	# max utility over offered products and outside option
+	u_max = max(float(np.max(u_products[offered_indices])), u_outside)
+	threshold = u_max - delta
+
+	# consideration set mask over offered products
+	in_consideration = action_binary & (u_products >= threshold)
+	outside_considered = u_outside >= threshold
+
+	exp_u_considered = np.where(in_consideration, np.exp(u_products), 0.0)
+	denom = np.sum(exp_u_considered)
+	if outside_considered:
+		denom += np.exp(u_outside)
+
+	if denom == 0.0:
+		probabilities[-1] = 1.0
+		return probabilities
+
+	probabilities[:-1] = exp_u_considered / denom
+	probabilities[-1] = np.exp(u_outside) / denom if outside_considered else 0.0
+	return probabilities
+
+
+def _nested_logit_probabilities(action_binary, beta=None):
 	"""Compute nested-logit probabilities with two nests and nest-specific scales.
 
 	Products are split into nest A (first half) and nest B (second half). Within each
@@ -172,7 +247,7 @@ def _nested_logit_probabilities(action_binary, prices, beta=None):
 	G_nest=(sum scaled utilities)^mu_nest. Overall denominator is 1 + G_A + G_B.
 	Product probability = P(nest) * P(product|nest), and outside is 1/denominator.
 	"""
-	prices = np.asarray(prices, dtype=float)
+	prices = np.asarray(C.r, dtype=float)
 	action_binary = np.asarray(action_binary, dtype=int)
 	n_products = len(prices)
 
@@ -212,48 +287,65 @@ def _nested_logit_probabilities(action_binary, prices, beta=None):
 
 def get_buying_probabilities_by_model(
 	action_binary,
-	prices,
 	beta,
 	model,
 	segment_betas=None,
-	return_components=False,
+	segment_weights=None,
+	mu_b=None,
+	sigma_b=None,
 	reference_price=None,
+	seed=None,
 	include_outside=False,
-	probit_seed=None,
 ):
 	"""Dispatch to the selected demand model and return product-only probabilities.
 
 	Computes full probabilities including outside option for the chosen model, then
 	returns only product probabilities (drops the last outside-option entry).
+
+	Additional MMNL variants:
+	- `MMNL_5PT`: five-point discrete MMNL
+	- `MMNL_2PT`: `segment_betas=[beta_1, beta_2]`, `segment_weights=[w_1, 1-w_1]`
+	- `MMNLcont`: `mu_b=mu_b`, `sigma_b=sigma_b`
 	"""
 	
 	match model:
 		case "MNL":
-			probabilities = _mnl_probabilities(action_binary, prices, beta=beta)
-		case "MMNL":
+			probabilities = _mnl_probabilities(action_binary, beta=beta)
+		case "MMNL_5PT":
 			probabilities = _mmnl_probabilities(
 				action_binary,
-				prices,
 				beta=beta,
 				segment_betas=segment_betas,
-				return_components=return_components,
+				segment_weights=segment_weights,
 			)
 		case "Probit":
-			probabilities = _probit_probabilities(action_binary, prices, beta=beta, seed=probit_seed)
+			probabilities = _probit_probabilities(action_binary, beta=beta, seed=seed)
 		case "MNLrefPrice":
-			probabilities = _mnl_ref_price_probabilities(action_binary, prices, beta=beta, reference_price=reference_price)
+			probabilities = _mnl_ref_price_probabilities(action_binary, beta=beta, reference_price=reference_price)
 		case "MNLConsidSet":
-			probabilities = _mnl_consideration_probabilities(action_binary, prices, beta=beta)
+			probabilities = _mnl_consideration_probabilities(action_binary, beta=beta)
 		case "NLogit":
-			probabilities = _nested_logit_probabilities(action_binary, prices, beta=beta)
+			probabilities = _nested_logit_probabilities(action_binary, beta=beta)
+		case "TMNL":
+			probabilities = _tmnl_probabilities(action_binary, beta=beta)
+		case "MMNL_2PT":
+			probabilities = _mmnl_probabilities(
+				action_binary,
+				beta=beta,
+				segment_betas=segment_betas,
+				segment_weights=segment_weights,
+				_2pt=True,
+			)
+		case "MMNLcont":
+			probabilities = _mmnl_continuous_probabilities(
+				action_binary,
+				beta=beta,
+				mu_b=mu_b,
+				sigma_b=sigma_b,
+				seed=seed,
+			)
 		case _:
 			raise ValueError(f"Unsupported model '{model}'")
-
-	if model == "MMNL" and return_components:
-		component_probabilities, mixture_probabilities = probabilities
-		if include_outside:
-			return component_probabilities, mixture_probabilities
-		return component_probabilities[:, :-1], mixture_probabilities[:-1]
 
 	return probabilities if include_outside else probabilities[:-1]
 

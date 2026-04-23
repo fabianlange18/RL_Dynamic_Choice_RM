@@ -17,25 +17,22 @@ n = 10
 ARRIVAL_PROB = 0.5
 r = np.asarray([600, 550, 475, 400, 300, 280, 240, 200, 185, 175], dtype=float)
 
-LEARNING_CURVE_ENABLED = True
+LEARNING_CURVE_ENABLED = False
 PROGRESS_BAR_ENABLED = True
 
 DEMAND_MODELS = (
     "MNL",
-	"MMNL",
+    "MMNL_2PT",
+    "MMNL_5PT",
+	"MMNLcont",
 	"Probit",
 	"MNLrefPrice",
 	"MNLConsidSet",
-	"NLogit",
+    "TMNL",
+	"NLogit"
 )
 
 RL_ALGORITHMS = {
-    "DQN": DQN,
-    "ARS": ARS,
-    "A2C": A2C,
-    "TRPO": TRPO,
-    "PPO": PPO,
-} if c.TRAIN_ON_ALL_SETS else {
     "DQN": DQN,
     "QRDQN": QRDQN,
     "ARS": ARS,
@@ -52,7 +49,7 @@ MULTIBINARY_ALGORITHMS = {
 
 SENSITIVITY_BETA_GT = {
 	"low": -0.0015,
-	"high": -0.005,
+	"high": -0.005
 }
 
 OUTPUT_DIR = os.path.join(

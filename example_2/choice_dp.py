@@ -8,7 +8,7 @@ def _action_int_to_binary(action_int):
     return np.array([(int(action_int) >> i) & 1 for i in range(C.n)], dtype=int)
 
 
-def solve_by_dp(estimated_beta, estimated_lambda, efficient_sets=None, model="MNL", segment_betas=None):
+def solve_by_dp(estimated_beta, estimated_lambda, efficient_sets=None, model="MNL", segment_betas=None, segment_weights=None, mu_b=None, sigma_b=None):
     arrival_prob = float(C.ARRIVAL_PROB if estimated_lambda is None else np.clip(estimated_lambda, 0.0, 1.0))
     no_arrival_prob = 1.0 - arrival_prob
 
@@ -30,10 +30,12 @@ def solve_by_dp(estimated_beta, estimated_lambda, efficient_sets=None, model="MN
                 if arrival_prob > 0:
                     buying_probabilities = get_buying_probabilities_by_model(
                         action_binary=action_binary,
-                        prices=C.r,
                         beta=estimated_beta,
                         model=model,
                         segment_betas=segment_betas,
+                        segment_weights=segment_weights,
+                        mu_b=mu_b,
+                        sigma_b=sigma_b,
                     )
 
                     immediate_reward = float(np.dot(C.r, buying_probabilities))

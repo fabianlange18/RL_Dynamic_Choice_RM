@@ -1,6 +1,6 @@
-import contextlib
 import numpy as np
 import gymnasium as gym
+from collections import deque
 
 import config as c
 import constants as C
@@ -22,18 +22,27 @@ class TalluriExample2(gym.Env):
         )
         self.observation_space = gym.spaces.MultiDiscrete([C.T + 1, C.C + 1])
         
-        self._probit_seed = None    
+        self._seed = None
+        self._recent_timestep_offer_means = deque(maxlen=5)
 
     def reset(self, seed=None, options=None):
         self.rng = np.random.default_rng(seed)
-        self._probit_seed = seed
+        self._seed = seed
+        self._recent_timestep_offer_means.clear()
         self.s = (0, C.C)
         self.arrival_xi = self.rng.choice([0, 1], C.T, p=[1.0 - C.ARRIVAL_PROB, C.ARRIVAL_PROB])
         self.buying_xi = self.rng.uniform(0, 1, C.T)
         return self.s, {}
 
     def step(self, action):
+        
         action = self._action_to_binary(action)
+        reference_price = float(np.mean(self._recent_timestep_offer_means)) if self._recent_timestep_offer_means else float(np.mean(C.r))
+
+        # Update reference price buffer
+        offered_indices = np.where(action == 1)[0]
+        current_offer_mean = float(np.mean(C.r[offered_indices])) if offered_indices.size else float(np.mean(C.r))
+        self._recent_timestep_offer_means.append(current_offer_mean)
 
         t, inventory = self.s
 
@@ -44,10 +53,10 @@ class TalluriExample2(gym.Env):
 
         buying_probabilities = get_buying_probabilities_by_model(
             action_binary=action,
-            prices=C.r,
             beta=C.SENSITIVITY_BETA_GT["high"] if c.HIGH_SENSITIVITY else C.SENSITIVITY_BETA_GT["low"],
             model=c.GT_MODEL,
-            probit_seed=self._probit_seed,
+            reference_price=reference_price,
+            seed=self._seed,
         )
 
         cumulative_probs = np.cumsum(buying_probabilities)
@@ -61,6 +70,7 @@ class TalluriExample2(gym.Env):
         t += 1
         done = t == C.T or inventory == 0
         self.s = (t, inventory)
+
         return self.s, reward, done, False, {}
 
     

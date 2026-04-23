@@ -30,14 +30,14 @@ def train_rl(dp_pi, efficient_sets=None):
     checkpoints = list(C.TOTAL_TIMESTEPS)
     training_times_by_step = {step: [] for step in checkpoints}
 
-    for run_id in range(c.N_TRAIN_RUNS):
-        run_times_by_step = {step: {} for step in checkpoints}
+    for seed in range(C.N_EVAL_EPISODES):
+        seed_times_by_step = {step: {} for step in checkpoints}
 
         for algorithm_name, algorithm_cls in C.RL_ALGORITHMS.items():
             if C.LEARNING_CURVE_ENABLED:
                 eval_callback = PercentOptimalCallback(dp_pi, efficient_sets)
 
-            print(f"Training {algorithm_name} (run {run_id + 1}/{c.N_TRAIN_RUNS})")
+            print(f"Training {algorithm_name} (seed {seed + 1}/{C.N_EVAL_EPISODES})")
             train_env = _create_train_env(algorithm_name, efficient_sets)
             model = algorithm_cls("MlpPolicy", train_env, verbose=0)
 
@@ -53,8 +53,8 @@ def train_rl(dp_pi, efficient_sets=None):
                     reset_num_timesteps=(i == 0),
                 )
                 cumulative_time += time.perf_counter() - start_time
-                model.save(f"{C.OUTPUT_DIR}/{algorithm_name}_model_run{run_id + 1}_step{total_steps}")
-                run_times_by_step[total_steps][algorithm_name] = cumulative_time
+                model.save(f"{C.OUTPUT_DIR}/{algorithm_name}_model_seed{seed}_step{total_steps}")
+                seed_times_by_step[total_steps][algorithm_name] = cumulative_time
                 prev_steps = total_steps
 
             if C.LEARNING_CURVE_ENABLED:
@@ -75,7 +75,7 @@ def train_rl(dp_pi, efficient_sets=None):
 
         if not C.LEARNING_CURVE_ENABLED:
             for step in checkpoints:
-                training_times_by_step[step].append(run_times_by_step[step])
+                training_times_by_step[step].append(seed_times_by_step[step])
 
         C.LEARNING_CURVE_ENABLED = False
 

@@ -11,9 +11,12 @@ def _action_int_to_binary(action_int):
 
 
 @lru_cache(maxsize=8)
-def _identify_efficient_sets(model, beta=None, segment_betas=None):
+def _identify_efficient_sets(model, beta=None, segment_betas=None, segment_weights=None, mu_b=None, sigma_b=None):
     beta = None if beta is None else float(beta)
     segment_betas = None if segment_betas is None else tuple(float(b) for b in segment_betas)
+    segment_weights = None if segment_weights is None else tuple(float(w) for w in segment_weights)
+    mu_b = None if mu_b is None else float(mu_b)
+    sigma_b = None if sigma_b is None else float(sigma_b)
     offer_set_metrics = []
 
     for action_int in range(2 ** C.n):
@@ -21,10 +24,12 @@ def _identify_efficient_sets(model, beta=None, segment_betas=None):
         buying_probabilities = np.asarray(
             get_buying_probabilities_by_model(
                 action_binary,
-                C.r,
                 beta,
                 model=model,
-                segment_betas=segment_betas if model == "MMNL" else None,
+                segment_betas=segment_betas if model in {"MMNL_5PT", "MMNL_2PT"} else None,
+                segment_weights=segment_weights if model in {"MMNL_5PT", "MMNL_2PT"} else None,
+                mu_b=mu_b if model == "MMNLcont" else None,
+                sigma_b=sigma_b if model == "MMNLcont" else None,
             ),
             dtype=float,
         )
@@ -80,12 +85,21 @@ def _identify_efficient_sets(model, beta=None, segment_betas=None):
     return tuple(efficient_sequence)
 
 
-def compute_efficient_sets(model, beta=None, segment_betas=None):
+def compute_efficient_sets(model, beta=None, segment_betas=None, segment_weights=None, mu_b=None, sigma_b=None):
     if beta is None and segment_betas is None:
         beta = C.SENSITIVITY_BETA_GT["high"] if c.HIGH_SENSITIVITY else C.SENSITIVITY_BETA_GT["low"]
 
     # Convert segment_betas to tuple for lru_cache hashability
     if segment_betas is not None and isinstance(segment_betas, list):
         segment_betas = tuple(segment_betas)
+    if segment_weights is not None and isinstance(segment_weights, list):
+        segment_weights = tuple(segment_weights)
 
-    return _identify_efficient_sets(model=model, beta=beta, segment_betas=segment_betas)
+    return _identify_efficient_sets(
+        model=model,
+        beta=beta,
+        segment_betas=segment_betas,
+        segment_weights=segment_weights,
+        mu_b=mu_b,
+        sigma_b=sigma_b,
+    )

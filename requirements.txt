@@ -3,3 +3,4 @@ sb3_contrib
 gymnasium>=0.29.0
 numpy>=1.21.0
 matplotlib
+biogeme>=3.3.0
