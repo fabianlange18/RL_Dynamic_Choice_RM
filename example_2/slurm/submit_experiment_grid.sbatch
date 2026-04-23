@@ -2,9 +2,9 @@
 #SBATCH --partition=cpu
 #SBATCH --job-name=rl_choice_grid
 #SBATCH --array=0-35
-#SBATCH --time=24:00:00
+#SBATCH --time=36:00:00
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=2G
+#SBATCH --mem=4G
 #SBATCH --output=example_2/slurm/logs/%x_%A_%a.out
 #SBATCH --error=example_2/slurm/logs/%x_%A_%a.err
 #SBATCH --mail-user=fabian.lange@uni-mannheim.de
