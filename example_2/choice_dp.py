@@ -4,55 +4,143 @@ import constants as C
 from buying_probabilities import get_buying_probabilities_by_model
 
 
-def _action_int_to_binary(action_int):
-    return np.array([(int(action_int) >> i) & 1 for i in range(C.n)], dtype=int)
+def _precompute_actions(n: int):
+    """
+    Returns:
+        action_ints: shape (A,)
+        action_binary: shape (A, n)
+    """
+    A = 2 ** n
+    action_ints = np.arange(A, dtype=np.int32)
+
+    # Bit-decode all actions at once
+    action_binary = ((action_ints[:, None] >> np.arange(n)) & 1).astype(np.int8)
+
+    return action_ints, action_binary
 
 
-def solve_by_dp(estimated_beta, estimated_lambda, efficient_sets=None, model="MNL", segment_betas=None, segment_weights=None, mu_b=None, sigma_b=None):
-    arrival_prob = float(C.ARRIVAL_PROB if estimated_lambda is None else np.clip(estimated_lambda, 0.0, 1.0))
+def _precompute_action_stats(
+    action_binary,
+    estimated_beta,
+    model="MNL",
+    segment_betas=None,
+    segment_weights=None,
+    mu_b=None,
+    sigma_b=None,
+):
+    """
+    Precompute for every action:
+        reward[a]        = expected immediate reward
+        purchase_prob[a] = probability any purchase occurs
+    """
+    A = action_binary.shape[0]
+
+    reward = np.zeros(A, dtype=np.float64)
+    purchase_prob = np.zeros(A, dtype=np.float64)
+
+    for a in range(A):
+        probs = get_buying_probabilities_by_model(
+            action_binary=action_binary[a],
+            beta=estimated_beta,
+            model=model,
+            segment_betas=segment_betas,
+            segment_weights=segment_weights,
+            mu_b=mu_b,
+            sigma_b=sigma_b,
+        )
+
+        probs = np.asarray(probs, dtype=np.float64)
+
+        reward[a] = np.dot(C.r, probs)
+        purchase_prob[a] = probs.sum()
+
+    return reward, purchase_prob
+
+
+def solve_by_dp(
+    estimated_beta,
+    estimated_lambda,
+    efficient_sets=None,
+    model="MNL",
+    segment_betas=None,
+    segment_weights=None,
+    mu_b=None,
+    sigma_b=None,
+):
+    """
+    Faster DP solver:
+      - precomputes all actions once
+      - precomputes reward + purchase probs once
+      - vectorized action argmax at each state
+    """
+
+    arrival_prob = float(
+        C.ARRIVAL_PROB
+        if estimated_lambda is None
+        else np.clip(estimated_lambda, 0.0, 1.0)
+    )
     no_arrival_prob = 1.0 - arrival_prob
 
-    v = np.zeros((C.T + 1, C.C + 1))
-    pi = np.zeros((C.T, C.C + 1), dtype=int)
+    # ----------------------------
+    # Build action space
+    # ----------------------------
+    all_action_ints, all_action_binary = _precompute_actions(C.n)
 
+    if efficient_sets is not None:
+        idx = np.asarray(list(efficient_sets), dtype=np.int32)
+        action_ints = all_action_ints[idx]
+        action_binary = all_action_binary[idx]
+    else:
+        action_ints = all_action_ints
+        action_binary = all_action_binary
+
+    A = len(action_ints)
+
+    # ----------------------------
+    # Precompute action stats ONCE
+    # ----------------------------
+    reward, purchase_prob = _precompute_action_stats(
+        action_binary=action_binary,
+        estimated_beta=estimated_beta,
+        model=model,
+        segment_betas=segment_betas,
+        segment_weights=segment_weights,
+        mu_b=mu_b,
+        sigma_b=sigma_b,
+    )
+
+    # ----------------------------
+    # DP arrays
+    # ----------------------------
+    v = np.zeros((C.T + 1, C.C + 1), dtype=np.float64)
+    pi = np.zeros((C.T, C.C + 1), dtype=np.int32)
+
+    # ----------------------------
+    # Backward recursion
+    # ----------------------------
     for t in range(C.T - 1, -1, -1):
-        for x in range(C.C + 1):
-            if x <= 0:
-                continue
 
-            best_value = 0.0
-            best_action = 0
+        next_v = v[t + 1]
 
-            for action_idx, action_int in enumerate(efficient_sets if efficient_sets is not None else range(2 ** C.n)):
-                action_binary = _action_int_to_binary(action_int)
-                expected_value = no_arrival_prob * v[t + 1, x]
+        for x in range(1, C.C + 1):
 
-                if arrival_prob > 0:
-                    buying_probabilities = get_buying_probabilities_by_model(
-                        action_binary=action_binary,
-                        beta=estimated_beta,
-                        model=model,
-                        segment_betas=segment_betas,
-                        segment_weights=segment_weights,
-                        mu_b=mu_b,
-                        sigma_b=sigma_b,
-                    )
+            stay_value = next_v[x]
+            buy_value = next_v[x - 1]
 
-                    immediate_reward = float(np.dot(C.r, buying_probabilities))
-                    purchase_prob = float(np.sum(buying_probabilities))
+            # value for all actions simultaneously
+            vals = (
+                no_arrival_prob * stay_value
+                + arrival_prob
+                * (
+                    reward
+                    + purchase_prob * buy_value
+                    + (1.0 - purchase_prob) * stay_value
+                )
+            )
 
-                    expected_future_value = 0.0
-                    if purchase_prob > 0:
-                        expected_future_value += purchase_prob * v[t + 1, x - 1]
+            best_idx = np.argmax(vals)
 
-                    expected_future_value += (1.0 - purchase_prob) * v[t + 1, x]
-                    expected_value += arrival_prob * (immediate_reward + expected_future_value)
-
-                if expected_value > best_value:
-                    best_value = expected_value
-                    best_action = action_idx
-
-            v[t, x] = best_value
-            pi[t, x] = best_action
+            v[t, x] = vals[best_idx]
+            pi[t, x] = best_idx
 
     return v, pi

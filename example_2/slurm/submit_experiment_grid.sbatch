@@ -15,6 +15,11 @@ set -euo pipefail
 # Run from repository root
 cd "${SLURM_SUBMIT_DIR}"
 
+export XDG_CACHE_HOME=$TMPDIR/.cache
+mkdir -p $XDG_CACHE_HOME/arviz
+
+export PYTHONWARNINGS="ignore::FutureWarning"
+
 mkdir -p example_2/slurm/logs
 
 source .rl_venv/bin/activate
