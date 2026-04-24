@@ -232,89 +232,90 @@ time_results = {
 }
 
 # %%
+rewards = []
+
+for i in range(1000):
+    reward, _ = simulate(efficient_sets_mnl, pi_mnl, seed=i)
+    rewards.append(reward)
+
+log_message(f"Average MNL reward over {len(rewards)} episodes: {sum(rewards) / len(rewards):.2f}")
+
+
+# %%
 # RL always trains against MNL policy using MNL efficient sets
-# training_times_by_step = train_rl(dp_pi=pi_mnl, efficient_sets=efficient_sets_rl)
+training_times_by_step = train_rl(dp_pi=pi_mnl, efficient_sets=efficient_sets_rl)
 
-# # %%
-# for step in C.TOTAL_TIMESTEPS:
-#     training_times_by_step[step].append(
-#         {
-#             "DP_MNL": dp_mnl_time,
-#             "DP_MMNL_5PT": dp_mmnl_5pt_time,
-#             "DP_MMNL_2PT": dp_mmnl_2pt_time,
-#             "DP_MMNL_CONT": dp_mmnl_cont_time,
-#         }
-#     )
+# %%
+for step in C.TOTAL_TIMESTEPS:
+    training_times_by_step[step].append(
+        {
+            "DP_MNL": dp_mnl_time,
+            "DP_MMNL_5PT": dp_mmnl_5pt_time,
+            "DP_MMNL_2PT": dp_mmnl_2pt_time,
+            "DP_MMNL_CONT": dp_mmnl_cont_time,
+        }
+    )
 
-# # %%
-# dp_policy_configs = {
-#     "DP_MNL": {
-#         "pi": pi_mnl,
-#         "efficient_sets": efficient_sets_mnl,
-#     },
-#     "DP_MMNL_5PT": {
-#         "pi": pi_mmnl_5pt,
-#         "efficient_sets": efficient_sets_mmnl_5pt,
-#     },
-#     "DP_MMNL_2PT": {
-#         "pi": pi_mmnl_2pt,
-#         "efficient_sets": efficient_sets_mmnl_2pt,
-#     },
-#     "DP_MMNL_CONT": {
-#         "pi": pi_mmnl_cont,
-#         "efficient_sets": efficient_sets_mmnl_cont,
-#     },
-# }
+# %%
+dp_policy_configs = {
+    "DP_MNL": {
+        "pi": pi_mnl,
+        "efficient_sets": efficient_sets_mnl,
+    },
+    "DP_MMNL_5PT": {
+        "pi": pi_mmnl_5pt,
+        "efficient_sets": efficient_sets_mmnl_5pt,
+    },
+    "DP_MMNL_2PT": {
+        "pi": pi_mmnl_2pt,
+        "efficient_sets": efficient_sets_mmnl_2pt,
+    },
+    "DP_MMNL_CONT": {
+        "pi": pi_mmnl_cont,
+        "efficient_sets": efficient_sets_mmnl_cont,
+    },
+}
 
-# evaluation_results_by_step = evaluate_saved_models(
-#     dp_policy_configs=dp_policy_configs,
-#     rl_efficient_sets=efficient_sets_rl,
-# )
+evaluation_results_by_step = evaluate_saved_models(
+    dp_policy_configs=dp_policy_configs,
+    rl_efficient_sets=efficient_sets_rl,
+)
 
-# # %%
-# for step in C.TOTAL_TIMESTEPS:
-#     table_str = print_evaluation_table(training_times_by_step[step], evaluation_results_by_step[step])
-#     log_message(f"\n=== {step:,} training timesteps ===\n{table_str}")
+# %%
+for step in C.TOTAL_TIMESTEPS:
+    table_str = print_evaluation_table(training_times_by_step[step], evaluation_results_by_step[step])
+    log_message(f"\n=== {step:,} training timesteps ===\n{table_str}")
 
-# # %%
-# data = {
-#     "beta_mnl": beta_mnl,
-#     "lambda_mnl": lambda_mnl,
-#     "betas_mmnl_5pt": betas_mmnl_5pt,
-#     "weights_mmnl_5pt": weights_mmnl_5pt,
-#     "betas_mmnl_2pt": betas_mmnl_2pt,
-#     "weights_mmnl_2pt": weights_mmnl_2pt,
-#     "mu_mmnl_cont": mu_mmnl_cont,
-#     "sigma_mmnl_cont": sigma_mmnl_cont,
-#     "lambda_mmnl_5pt": lambda_mmnl_5pt,
-#     "lambda_mmnl_2pt": lambda_mmnl_2pt,
-#     "lambda_mmnl_cont": lambda_mmnl_cont,
-#     "efficient_sets_mnl": efficient_sets_mnl,
-#     "efficient_sets_mmnl_5pt": efficient_sets_mmnl_5pt,
-#     "efficient_sets_mmnl_2pt": efficient_sets_mmnl_2pt,
-#     "efficient_sets_mmnl_cont": efficient_sets_mmnl_cont,
-#     "efficient_sets_rl": efficient_sets_rl,
-#     "v_mnl": v_mnl,
-#     "pi_mnl": pi_mnl,
-#     "v_mmnl_5pt": v_mmnl_5pt,
-#     "pi_mmnl_5pt": pi_mmnl_5pt,
-#     "v_mmnl_2pt": v_mmnl_2pt,
-#     "pi_mmnl_2pt": pi_mmnl_2pt,
-#     "v_mmnl_cont": v_mmnl_cont,
-#     "pi_mmnl_cont": pi_mmnl_cont,
-#     "time_results": time_results,
-#     "training_times_by_step": training_times_by_step,
-#     "evaluation_results_by_step": evaluation_results_by_step,
-# }
+# %%
+data = {
+    "beta_mnl": beta_mnl,
+    "lambda_mnl": lambda_mnl,
+    "betas_mmnl_5pt": betas_mmnl_5pt,
+    "weights_mmnl_5pt": weights_mmnl_5pt,
+    "betas_mmnl_2pt": betas_mmnl_2pt,
+    "weights_mmnl_2pt": weights_mmnl_2pt,
+    "mu_mmnl_cont": mu_mmnl_cont,
+    "sigma_mmnl_cont": sigma_mmnl_cont,
+    "lambda_mmnl_5pt": lambda_mmnl_5pt,
+    "lambda_mmnl_2pt": lambda_mmnl_2pt,
+    "lambda_mmnl_cont": lambda_mmnl_cont,
+    "efficient_sets_mnl": efficient_sets_mnl,
+    "efficient_sets_mmnl_5pt": efficient_sets_mmnl_5pt,
+    "efficient_sets_mmnl_2pt": efficient_sets_mmnl_2pt,
+    "efficient_sets_mmnl_cont": efficient_sets_mmnl_cont,
+    "efficient_sets_rl": efficient_sets_rl,
+    "v_mnl": v_mnl,
+    "pi_mnl": pi_mnl,
+    "v_mmnl_5pt": v_mmnl_5pt,
+    "pi_mmnl_5pt": pi_mmnl_5pt,
+    "v_mmnl_2pt": v_mmnl_2pt,
+    "pi_mmnl_2pt": pi_mmnl_2pt,
+    "v_mmnl_cont": v_mmnl_cont,
+    "pi_mmnl_cont": pi_mmnl_cont,
+    "time_results": time_results,
+    "training_times_by_step": training_times_by_step,
+    "evaluation_results_by_step": evaluation_results_by_step,
+}
 
-# with open(f"{C.OUTPUT_DIR}/results.pkl", "wb") as f:
-#     pickle.dump(data, f)
-
-# # %%
-# rewards = []
-
-# for i in range(1000):
-#     reward, _ = simulate(efficient_sets_mnl, pi_mnl, seed=i)
-#     rewards.append(reward)
-
-# log_message(f"Average MNL reward over {len(rewards)} episodes: {sum(rewards) / len(rewards):.2f}")
+with open(f"{C.OUTPUT_DIR}/results.pkl", "wb") as f:
+    pickle.dump(data, f)
