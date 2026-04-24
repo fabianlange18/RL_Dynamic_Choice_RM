@@ -56,7 +56,7 @@ class TalluriExample2(gym.Env):
             beta=C.SENSITIVITY_BETA_GT["high"] if c.HIGH_SENSITIVITY else C.SENSITIVITY_BETA_GT["low"],
             model=c.GT_MODEL,
             reference_price=reference_price,
-            seed=self._seed,
+            seed=self._seed + t if self._seed is not None else None,
         )
 
         cumulative_probs = np.cumsum(buying_probabilities)

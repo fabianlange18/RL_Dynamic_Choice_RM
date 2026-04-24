@@ -85,7 +85,7 @@ def print_evaluation_table(training_times, evaluation_results):
         if "seed_rewards" in evaluation_results[method]:
             method_seed_rewards = evaluation_results[method]["seed_rewards"]
             pct_vals = [
-                (method_seed_rewards[idx] / dp_seed_rewards_ref[idx]) * 100
+                (method_seed_rewards[idx] / dp_seed_rewards_ref[idx]) * 100 if dp_seed_rewards_ref[idx] != 0 else np.nan
                 for idx in range(C.N_EVAL_EPISODES)
             ]
             pct_dp_mean = float(np.mean(pct_vals))

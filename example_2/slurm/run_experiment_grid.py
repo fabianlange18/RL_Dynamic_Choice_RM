@@ -46,8 +46,8 @@ def run_single(task_id):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run one experiment from the 24-case grid.")
-    parser.add_argument("--task-id", type=int, required=True, help="Index in [0, 23] for the experiment grid")
+    parser = argparse.ArgumentParser(description="Run one experiment from the 36-case grid.")
+    parser.add_argument("--task-id", type=int, required=True, help="Index in [0, 35] for the experiment grid")
     args = parser.parse_args()
 
     run_single(args.task_id)
