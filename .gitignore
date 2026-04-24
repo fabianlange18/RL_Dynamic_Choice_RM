@@ -3,6 +3,7 @@
 *.zip
 *.pkl
 .env
+*.tex
+*.pdf
 
-outdated_example_2/*
 .rl_venv/*
