@@ -60,6 +60,6 @@ SENSITIVITY_BETA_GT = {
 
 OUTPUT_DIR = os.path.join(
     BASE_DIR,
-    "results",
+    "results_opt_res",
     f"{c.GT_MODEL}_{'high' if c.HIGH_SENSITIVITY else 'low'}_{'all' if c.TRAIN_ON_ALL_SETS else 'effsets'}",
 )

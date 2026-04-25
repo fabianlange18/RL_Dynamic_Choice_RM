@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import time
 
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv
 
 import config as c
 import constants as C
@@ -19,7 +19,7 @@ def _create_train_env(algorithm_name, efficient_sets):
     return make_vec_env(
         TalluriExample2,
         n_envs=4,
-        vec_env_cls=DummyVecEnv,
+        vec_env_cls=SubprocVecEnv,
         env_kwargs={
             "efficient_sets": efficient_sets,
             "use_multibinary_action_space": _use_multibinary_action_space(algorithm_name),
