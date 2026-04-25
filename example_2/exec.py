@@ -37,7 +37,7 @@ log_message(f"Training on all available sets (if false only on efficient sets): 
 log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
 # %%
-# -- Shared observations: collect once, estimate both models ----------
+# -- Shared observations: collect once, estimate all models ----------
 t0 = time.perf_counter()
 _env = TalluriExample2(efficient_sets=None)
 observations = collect_transaction_data(_env)
@@ -108,6 +108,7 @@ log_message(f"  LL: {ll_mmnl_cont:.6f}, AIC: {aic_mmnl_cont:.3f}, BIC: {bic_mmnl
 
 
 del observations
+del estimator
 gc.collect()
 
 # %%

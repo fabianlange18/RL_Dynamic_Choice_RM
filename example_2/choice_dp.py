@@ -35,8 +35,8 @@ def _precompute_action_stats(
     """
     A = action_binary.shape[0]
 
-    reward = np.zeros(A, dtype=np.float64)
-    purchase_prob = np.zeros(A, dtype=np.float64)
+    reward = np.zeros(A, dtype=np.float32)
+    purchase_prob = np.zeros(A, dtype=np.float32)
 
     for a in range(A):
         probs = get_buying_probabilities_by_model(
@@ -112,7 +112,7 @@ def solve_by_dp(
     # ----------------------------
     # DP arrays
     # ----------------------------
-    v = np.zeros((C.T + 1, C.C + 1), dtype=np.float64)
+    v = np.zeros((C.T + 1, C.C + 1), dtype=np.float32)
     pi = np.zeros((C.T, C.C + 1), dtype=np.int32)
 
     # ----------------------------
