@@ -14,10 +14,7 @@ if "cxx=" not in _pytensor_flags:
 logging.getLogger("pytensor.configdefaults").setLevel(logging.ERROR)
 
 from estimation_biogeme import (
-    estimate_mnl_biogeme,
-    estimate_mmnl_biogeme,
-    estimate_mmnl_twopoint_biogeme,
-    estimate_mmnl_continuous_biogeme,
+    BiogemeEstimator,
     collect_transaction_data,
 )
 from env_example_2 import TalluriExample2
@@ -48,20 +45,22 @@ _env.close()
 sampling_time = time.perf_counter() - t0
 log_message(f"Observation sampling time: {sampling_time:.4f} seconds")
 
+estimator = BiogemeEstimator(observations)
+
 t0 = time.perf_counter()
-estimation_mnl_result = estimate_mnl_biogeme(observations)
+estimation_mnl_result = estimator.estimate_mnl()
 estimation_mnl_time = time.perf_counter() - t0
 
 t0 = time.perf_counter()
-estimation_mmnl_5pt_result = estimate_mmnl_biogeme(observations)
+estimation_mmnl_5pt_result = estimator.estimate_mmnl()
 estimation_mmnl_5pt_time = time.perf_counter() - t0
 
 t0 = time.perf_counter()
-estimation_mmnl_2pt_result = estimate_mmnl_twopoint_biogeme(observations)
+estimation_mmnl_2pt_result = estimator.estimate_mmnl_twopoint()
 estimation_mmnl_2pt_time = time.perf_counter() - t0
 
 t0 = time.perf_counter()
-estimation_mmnl_cont_result = estimate_mmnl_continuous_biogeme(observations)
+estimation_mmnl_cont_result = estimator.estimate_mmnl_continuous()
 estimation_mmnl_cont_time = time.perf_counter() - t0
 
 beta_mnl   = estimation_mnl_result["beta"]
