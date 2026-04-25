@@ -1,10 +1,11 @@
 import argparse
 import itertools
-import subprocess
-import sys
+import runpy
 import os
+import sys
 from pathlib import Path
 
+import config as c
 
 GT_MODELS = ("MNL", "MMNL_5PT", "MMNL_2PT", "MMNLcont", "Probit", "MNLrefPrice", "MNLConsidSet", "TMNL", "NLogit") 
 SENSITIVITIES = (False, True)
@@ -20,38 +21,28 @@ def run_single(task_id):
     if task_id < 0 or task_id >= len(grid):
         raise ValueError(f"task_id {task_id} out of range [0, {len(grid) - 1}]")
 
-    high_sensitivity, gt_model, train_on_all_sets = grid[task_id]
+    c.HIGH_SENSITIVITY, c.GT_MODEL, c.TRAIN_ON_ALL_SETS = grid[task_id]
 
     repo_root = Path(__file__).resolve().parents[2]
     example2_dir = repo_root / "example_2"
 
+    sys.path.insert(0, str(example2_dir))
+
     print(
         "Running task_id={} with HIGH_SENSITIVITY={}, GT_MODEL={}, TRAIN_ON_ALL_SETS={}".format(
             task_id,
-            high_sensitivity,
-            gt_model,
-            train_on_all_sets,
+            c.HIGH_SENSITIVITY,
+            c.GT_MODEL,
+            c.TRAIN_ON_ALL_SETS,
         )
     )
 
-    # Use subprocess.run to properly execute exec.py with multiprocessing guard
+    # Set TASK_ID in environment for logging
+    os.environ["TASK_ID"] = str(task_id)
+    
+    # Run exec.py
     exec_path = example2_dir / "exec.py"
-    env = os.environ.copy()
-    env.update({
-        "HIGH_SENSITIVITY": str(high_sensitivity),
-        "GT_MODEL": str(gt_model),
-        "TRAIN_ON_ALL_SETS": str(train_on_all_sets),
-    })
-    
-    result = subprocess.run(
-        [sys.executable, str(exec_path)],
-        cwd=str(example2_dir),
-        env=env,
-        capture_output=False,
-    )
-    
-    if result.returncode != 0:
-        raise RuntimeError(f"exec.py failed with return code {result.returncode}")
+    runpy.run_path(str(exec_path), run_name="__main__")
 
 
 if __name__ == "__main__":

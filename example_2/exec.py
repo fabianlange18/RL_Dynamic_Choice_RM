@@ -33,8 +33,14 @@ def log_message(message):
 def main():
     """Main execution function."""
     
-    log_message(f"Run {c.GT_MODEL} - High Sensitivity: {c.HIGH_SENSITIVITY}")
-    log_message(f"Training on all available sets (if false only on efficient sets): {c.TRAIN_ON_ALL_SETS}")
+    # Log task configuration at start
+    task_id = os.environ.get("TASK_ID", "N/A")
+    log_message(f"\n{'='*60}")
+    log_message(f"TASK_ID: {task_id}")
+    log_message(f"GT_MODEL: {c.GT_MODEL}")
+    log_message(f"HIGH_SENSITIVITY: {c.HIGH_SENSITIVITY}")
+    log_message(f"TRAIN_ON_ALL_SETS: {c.TRAIN_ON_ALL_SETS}")
+    log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
     # -- Shared observations: collect once, estimate all models ----------

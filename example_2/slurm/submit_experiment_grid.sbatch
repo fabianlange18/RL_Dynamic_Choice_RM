@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --partition=cpu
 #SBATCH --job-name=rl_choice_grid
-#SBATCH --array=36-71
-#SBATCH --time=36:00:00
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=4G
+#SBATCH --array=0-35
+#SBATCH --time=24:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=20G
 #SBATCH --output=example_2/slurm/logs/%x_%A_%a.out
 #SBATCH --error=example_2/slurm/logs/%x_%A_%a.err
 #SBATCH --mail-user=fabian.lange@uni-mannheim.de
@@ -24,4 +24,4 @@ mkdir -p example_2/slurm/logs
 
 source .rl_venv/bin/activate
 
-python example_2/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID - 36}"
+python example_2/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
