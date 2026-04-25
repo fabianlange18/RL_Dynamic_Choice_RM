@@ -1,7 +1,8 @@
 import argparse
 import itertools
-import runpy
+import subprocess
 import sys
+import os
 from pathlib import Path
 
 
@@ -24,25 +25,33 @@ def run_single(task_id):
     repo_root = Path(__file__).resolve().parents[2]
     example2_dir = repo_root / "example_2"
 
-    sys.path.insert(0, str(example2_dir))
-
-    import config as c
-
-    c.HIGH_SENSITIVITY = bool(high_sensitivity)
-    c.GT_MODEL = str(gt_model)
-    c.TRAIN_ON_ALL_SETS = bool(train_on_all_sets)
-
     print(
         "Running task_id={} with HIGH_SENSITIVITY={}, GT_MODEL={}, TRAIN_ON_ALL_SETS={}".format(
             task_id,
-            c.HIGH_SENSITIVITY,
-            c.GT_MODEL,
-            c.TRAIN_ON_ALL_SETS,
+            high_sensitivity,
+            gt_model,
+            train_on_all_sets,
         )
     )
 
+    # Use subprocess.run to properly execute exec.py with multiprocessing guard
     exec_path = example2_dir / "exec.py"
-    runpy.run_path(str(exec_path), run_name="__main__")
+    env = os.environ.copy()
+    env.update({
+        "HIGH_SENSITIVITY": str(high_sensitivity),
+        "GT_MODEL": str(gt_model),
+        "TRAIN_ON_ALL_SETS": str(train_on_all_sets),
+    })
+    
+    result = subprocess.run(
+        [sys.executable, str(exec_path)],
+        cwd=str(example2_dir),
+        env=env,
+        capture_output=False,
+    )
+    
+    if result.returncode != 0:
+        raise RuntimeError(f"exec.py failed with return code {result.returncode}")
 
 
 if __name__ == "__main__":
