@@ -14,6 +14,23 @@ MODEL_ORDER = ["MNL", "MMNL_5PT", "MMNL_2PT", "MMNLcont", "Probit", "MNLrefPrice
 MODEL_ORDER_MAP = {name.lower(): idx for idx, name in enumerate(MODEL_ORDER)}
 
 
+def _parse_result_folder_name(folder_name: str) -> Tuple[str, str, str]:
+    """Parse folder names like '<model>_<high|low>_<all|effsets>'.
+
+    Works even when <model> itself contains underscores (e.g., MMNL_2PT).
+    Returns: (model, sensitivity, sets_kind)
+    """
+    parts = folder_name.split('_')
+    if len(parts) >= 3:
+        model = '_'.join(parts[:-2])
+        sensitivity = parts[-2]
+        sets_kind = parts[-1]
+        return model, sensitivity, sets_kind
+
+    # Fallback for unexpected names
+    return folder_name, '', ''
+
+
 def parse_exec_log(log_path: str) -> Dict:
     """
     Parse an exec.log file and extract tables by timestep, plus metadata.
@@ -231,8 +248,7 @@ def parse_exec_log(log_path: str) -> Dict:
 
 def extract_model_display_name(folder_name: str) -> str:
     """Extract and map model code in folder name to requested display name."""
-    parts = folder_name.split('_')
-    model_code = parts[0] if parts else folder_name
+    model_code, _, _ = _parse_result_folder_name(folder_name)
 
     model_display_map = {
         'MNL': 'MNL',
@@ -321,10 +337,7 @@ def _format_multiline_values(values_list: List[str], max_per_line: int = 3) -> s
 def _result_folder_sort_key(folder: Path) -> Tuple[int, int, int, str]:
     """Sort folders by requested model order, then sensitivity and set type."""
     name = folder.name
-    parts = name.split('_')
-    model = parts[0] if parts else name
-    sensitivity = parts[1] if len(parts) > 1 else ''
-    sets_type = parts[2] if len(parts) > 2 else ''
+    model, sensitivity, sets_type = _parse_result_folder_name(name)
 
     model_rank = MODEL_ORDER_MAP.get(model.lower(), len(MODEL_ORDER_MAP))
     sensitivity_rank = 0 if sensitivity.lower() == 'high' else 1
@@ -525,11 +538,9 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
 
 
 def create_master_latex_file(result_folders: List[Path], output_path: Path) -> None:
-    """Create an Overleaf-ready master .tex document that includes all result files."""
+    """Create a paper-ready include snippet listing all result tables."""
     def in_group(folder: Path, sensitivity: str, sets_kind: str) -> bool:
-        parts = folder.name.lower().split('_')
-        folder_sensitivity = parts[1] if len(parts) > 1 else ''
-        folder_sets = parts[2] if len(parts) > 2 else ''
+        _, folder_sensitivity, folder_sets = _parse_result_folder_name(folder.name.lower())
         return folder_sensitivity == sensitivity and folder_sets == sets_kind
 
     groups = [
@@ -544,15 +555,6 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
     ]
 
     lines = []
-    lines.append(r'\documentclass[11pt,a4paper]{article}')
-    lines.append(r'\usepackage[margin=1in]{geometry}')
-    lines.append(r'\usepackage{booktabs}')
-    lines.append(r'\usepackage{makecell}')
-    lines.append(r'\usepackage[T1]{fontenc}')
-    lines.append(r'\usepackage[utf8]{inputenc}')
-    lines.append(r'\usepackage{float}')
-    lines.append('')
-    lines.append(r'\begin{document}')
     lines.append(r'\section{Experimental Results}')
     lines.append('')
 
@@ -560,11 +562,8 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
         lines.append(heading)
         lines.append('')
         for folder in folders:
-            lines.append(rf'\input{{{folder.name}/results_table.tex}}')
+            lines.append(rf'\input{{results/{folder.name}/results_table.tex}}')
             lines.append('')
-
-    lines.append(r'\end{document}')
-    lines.append('')
 
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
