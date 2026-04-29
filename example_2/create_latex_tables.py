@@ -522,8 +522,14 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
         else:
             pct_dp_display = f'{pct_dp:.2f}'
         
+        # For DP methods, use -- for training time std (no variability in deterministic algorithm)
+        if row['Method'].startswith('DP_'):
+            train_time_std_display = '   --'
+        else:
+            train_time_std_display = f'{train_time_std:8.2f}'
+        
         # Format numbers
-        line = (f'    {method:12s} & {train_time_mean:8.2f} & {train_time_std:8.2f} & '
+        line = (f'    {method:12s} & {train_time_mean:8.2f} & {train_time_std_display} & '
              f'{reward_mean:10.1f} & {reward_std:10.2f} & {pct_dp_display:>7s} & {pct_dp_std:7.2f} & '
                f'{load_mean:7.2f} & {load_std:7.2f} \\\\')
         latex.append(line)
