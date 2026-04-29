@@ -296,6 +296,28 @@ def _format_decimal(value: str, digits: int) -> str:
         return str(value)
 
 
+def _format_multiline_values(values_list: List[str], max_per_line: int = 3) -> str:
+    """
+    Format a list of values across multiple lines using LaTeX makecell.
+    Distributes values more evenly to avoid wide cells.
+    """
+    if not values_list or len(values_list) == 0:
+        return 'N/A'
+    
+    # For short lists, keep on one line
+    if len(values_list) <= max_per_line:
+        return ', '.join(values_list)
+    
+    # Split into multiple lines
+    lines = []
+    for i in range(0, len(values_list), max_per_line):
+        chunk = values_list[i:i+max_per_line]
+        lines.append(', '.join(chunk))
+    
+    # Use makecell for multi-line support with proper LaTeX line breaks and top-right alignment
+    return r'\makecell[tr]{' + r' \\ '.join(lines) + '}'
+
+
 def _result_folder_sort_key(folder: Path) -> Tuple[int, int, int, str]:
     """Sort folders by requested model order, then sensitivity and set type."""
     name = folder.name
@@ -324,9 +346,9 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     
     # Parse MMNL_5PT betas and weights
     mmnl_5pt_betas = _parse_mmnl_betas(metadata.get('estimation_mmnl_5pt_betas', ''))
-    mmnl_5pt_beta_text = ', '.join(_format_decimal(beta, 4) for beta in mmnl_5pt_betas) if mmnl_5pt_betas else 'N/A'
+    mmnl_5pt_beta_text = _format_multiline_values([_format_decimal(beta, 4) for beta in mmnl_5pt_betas], max_per_line=3) if mmnl_5pt_betas else 'N/A'
     mmnl_5pt_weights = _parse_mmnl_betas(metadata.get('estimation_mmnl_5pt_weights', ''))
-    mmnl_5pt_weights_text = ', '.join(_format_decimal(w, 4) for w in mmnl_5pt_weights) if mmnl_5pt_weights else 'N/A'
+    mmnl_5pt_weights_text = _format_multiline_values([_format_decimal(w, 4) for w in mmnl_5pt_weights], max_per_line=3) if mmnl_5pt_weights else 'N/A'
     
     # Parse MMNL_2PT betas and weights
     mmnl_2pt_betas = _parse_mmnl_betas(metadata.get('estimation_mmnl_2pt_betas', ''))
@@ -350,45 +372,42 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     latex.append(r'  \begin{tabular}{l|r|r|r|r}')
     latex.append(r'    \toprule')
 
-    latex.append(r'    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} & \textbf{MMNL Cont} \\')
+    latex.append(r'    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} & \textbf{MMNL Cont.} \\')
     latex.append(r'    \midrule')
 
     # Sampling time (same for all)
     sampling_time = _format_decimal(metadata.get('sampling_time', 'N/A'), 2)
     latex.append(f"    Obs. Sampling Time & \\multicolumn{{4}}{{c}}{{{sampling_time} s}} \\\\")
 
+    # Estimation lambda (same for all)
+    est_mnl_lambda = _format_decimal(metadata.get('estimation_mnl_lambda', 'N/A'), 6)
+    latex.append(f"    Estim. $\\lambda$ & \\multicolumn{{4}}{{c}}{{{est_mnl_lambda}}} \\\\")
+
     # Estimation times
     est_mnl_time = fmt_seconds(metadata.get('estimation_mnl_time', 'N/A'))
     est_5pt_time = fmt_seconds(metadata.get('estimation_mmnl_5pt_time', 'N/A'))
     est_2pt_time = fmt_seconds(metadata.get('estimation_mmnl_2pt_time', 'N/A'))
     est_cont_time = fmt_seconds(metadata.get('estimation_mmnl_cont_time', 'N/A'))
-    latex.append(f"    Est. Time & {est_mnl_time} & {est_5pt_time} & {est_2pt_time} & {est_cont_time} \\\\")
+    latex.append(f"    Estim. Time & {est_mnl_time} & {est_5pt_time} & {est_2pt_time} & {est_cont_time} \\\\")
 
     # Estimation beta/parameters
     est_mnl_beta = _format_decimal(metadata.get('estimation_mnl_beta', 'N/A'), 6)
-    latex.append(f"    Est. $\\beta$ & {est_mnl_beta} & {mmnl_5pt_beta_text} & {mmnl_2pt_beta_text} & - \\\\")
-
-    # Estimation lambda
-    est_mnl_lambda = _format_decimal(metadata.get('estimation_mnl_lambda', 'N/A'), 6)
-    est_5pt_lambda = _format_decimal(metadata.get('estimation_mmnl_5pt_lambda', 'N/A'), 6)
-    est_2pt_lambda = _format_decimal(metadata.get('estimation_mmnl_2pt_lambda', 'N/A'), 6)
-    est_cont_lambda = _format_decimal(metadata.get('estimation_mmnl_cont_lambda', 'N/A'), 6)
-    latex.append(f"    Est. $\\lambda$ & {est_mnl_lambda} & {est_5pt_lambda} & {est_2pt_lambda} & {est_cont_lambda} \\\\")
+    latex.append(f"    Estim. $\\beta$ & {est_mnl_beta} & {mmnl_5pt_beta_text} & {mmnl_2pt_beta_text} & - \\\\")
 
     # MMNL weights (if applicable)
-    latex.append(f"    Est. Weights & - & {mmnl_5pt_weights_text} & {mmnl_2pt_weights_text} & - \\\\")
+    latex.append(f"    Estim. Weights & - & {mmnl_5pt_weights_text} & {mmnl_2pt_weights_text} & - \\\\")
 
     # MMNL Continuous parameters (mu and sigma)
     est_cont_mu = _format_decimal(metadata.get('estimation_mmnl_cont_mu', 'N/A'), 6)
     est_cont_sigma = _format_decimal(metadata.get('estimation_mmnl_cont_sigma', 'N/A'), 6)
-    latex.append(f"    Est. $\\mu_b$, $\\sigma_b$ & - & - & - & {est_cont_mu}, {est_cont_sigma} \\\\")
+    latex.append(f"    Estim. $\\mu_b$, $\\sigma_b$ & - & - & - & {est_cont_mu}, {est_cont_sigma} \\\\")
 
-    # LL values
+    # Log Likelihood values
     est_mnl_ll = _format_decimal(metadata.get('estimation_mnl_ll', 'N/A'), 2)
     est_5pt_ll = _format_decimal(metadata.get('estimation_mmnl_5pt_ll', 'N/A'), 2)
     est_2pt_ll = _format_decimal(metadata.get('estimation_mmnl_2pt_ll', 'N/A'), 2)
     est_cont_ll = _format_decimal(metadata.get('estimation_mmnl_cont_ll', 'N/A'), 2)
-    latex.append(f"    LL & {est_mnl_ll} & {est_5pt_ll} & {est_2pt_ll} & {est_cont_ll} \\\\")
+    latex.append(f"    Log Likelihood & {est_mnl_ll} & {est_5pt_ll} & {est_2pt_ll} & {est_cont_ll} \\\\")
 
     # AIC values
     est_mnl_aic = _format_decimal(metadata.get('estimation_mnl_aic', 'N/A'), 2)
@@ -405,15 +424,16 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     latex.append(f"    BIC & {est_mnl_bic} & {est_5pt_bic} & {est_2pt_bic} & {est_cont_bic} \\\\")
 
 
-    # Efficient sets times
-    eff_mnl_time = fmt_seconds(metadata.get('mnl_effsets_time', 'N/A'))
-    eff_5pt_time = fmt_seconds(metadata.get('mmnl_5pt_effsets_time', 'N/A'))
-    eff_2pt_time = fmt_seconds(metadata.get('mmnl_2pt_effsets_time', 'N/A'))
-    eff_cont_time = fmt_seconds(metadata.get('mmnl_cont_effsets_time', 'N/A'))
-    latex.append(f"    Eff. Sets Time & {eff_mnl_time} & {eff_5pt_time} & {eff_2pt_time} & {eff_cont_time} \\\\")
+    # Efficient sets times and counts (only show for efficient sets training)
+    if 'effsets' in folder_name.lower():
+        eff_mnl_time = fmt_seconds(metadata.get('mnl_effsets_time', 'N/A'))
+        eff_5pt_time = fmt_seconds(metadata.get('mmnl_5pt_effsets_time', 'N/A'))
+        eff_2pt_time = fmt_seconds(metadata.get('mmnl_2pt_effsets_time', 'N/A'))
+        eff_cont_time = fmt_seconds(metadata.get('mmnl_cont_effsets_time', 'N/A'))
+        latex.append(f"    Eff. Sets Time & {eff_mnl_time} & {eff_5pt_time} & {eff_2pt_time} & {eff_cont_time} \\\\")
 
-    # Number of efficient sets
-    latex.append(f"    \\# Eff. Sets & {mnl_effsets_count} & {mmnl_5pt_effsets_count} & {mmnl_2pt_effsets_count} & {mmnl_cont_effsets_count} \\\\")
+        # Number of efficient sets
+        latex.append(f"    \\# Eff. Sets & {mnl_effsets_count} & {mmnl_5pt_effsets_count} & {mmnl_2pt_effsets_count} & {mmnl_cont_effsets_count} \\\\")
 
     # DP times
     dp_mnl_time = fmt_seconds(metadata.get('dp_mnl_time', 'N/A'))
@@ -483,8 +503,8 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
         load_mean = row['LoadFactorMean']
         load_std = row['LoadFactorStdAcrossRuns']
 
-        # Mark DP methods with a star (reference percentage)
-        if row['Method'].startswith('DP_'):
+        # Mark DP methods with a star (reference percentage), but not for MMNL_2PT, MMNL_CONT, and MMNL_5PT
+        if row['Method'].startswith('DP_') and row['Method'] not in ['DP_MMNL_2PT', 'DP_MMNL_CONT', 'DP_MMNL_5PT']:
             pct_dp_display = f'{pct_dp:.2f}*'
         else:
             pct_dp_display = f'{pct_dp:.2f}'
@@ -497,7 +517,7 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
     
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
-    latex.append(f"  \\caption{{Averaged Training Results over {timestep_label} Steps (n=5)}}")
+    latex.append(f"  \\caption{{Training Results over {timestep_label} Steps (Sample Size: 15)}}")
     latex.append(r'\end{table}')
     latex.append('')
     
@@ -513,13 +533,13 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
         return folder_sensitivity == sensitivity and folder_sets == sets_kind
 
     groups = [
-        (r'\subsection{Model-informed RL - High Sensitivity}',
+        (r'\subsection{Model-Informed RL -- High Sensitivity}',
          [f for f in result_folders if in_group(f, 'high', 'effsets')]),
-        (r'\subsection{Model-informed RL - Low Sensitivity}',
+        (r'\subsection{Model-Informed RL -- Low Sensitivity}',
          [f for f in result_folders if in_group(f, 'low', 'effsets')]),
-        (r'\subsection{Classical RL - High Sensitivity}',
+        (r'\subsection{Classical RL -- High Sensitivity}',
          [f for f in result_folders if in_group(f, 'high', 'all')]),
-        (r'\subsection{Classical RL - Low Sensitivity}',
+        (r'\subsection{Classical RL -- Low Sensitivity}',
          [f for f in result_folders if in_group(f, 'low', 'all')]),
     ]
 
@@ -527,6 +547,7 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
     lines.append(r'\documentclass[11pt,a4paper]{article}')
     lines.append(r'\usepackage[margin=1in]{geometry}')
     lines.append(r'\usepackage{booktabs}')
+    lines.append(r'\usepackage{makecell}')
     lines.append(r'\usepackage[T1]{fontenc}')
     lines.append(r'\usepackage[utf8]{inputenc}')
     lines.append(r'\usepackage{float}')
