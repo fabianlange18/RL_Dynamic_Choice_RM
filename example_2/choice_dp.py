@@ -84,17 +84,13 @@ def solve_by_dp(
     # ----------------------------
     # Build action space
     # ----------------------------
-    all_action_ints, all_action_binary = _precompute_actions(C.n)
+    _, all_action_binary = _precompute_actions(C.n)
 
     if efficient_sets is not None:
         idx = np.asarray(list(efficient_sets), dtype=np.int32)
-        action_ints = all_action_ints[idx]
         action_binary = all_action_binary[idx]
     else:
-        action_ints = all_action_ints
         action_binary = all_action_binary
-
-    A = len(action_ints)
 
     # ----------------------------
     # Precompute action stats ONCE

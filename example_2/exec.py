@@ -19,6 +19,7 @@ from estimation_biogeme import (
 from env_example_2 import TalluriExample2
 from efficient_sets import compute_efficient_sets
 from choice_dp import solve_by_dp
+from choice_dp_gurobi import solve_by_dp_gurobi
 from train_rl import train_rl
 from evaluation import evaluate_saved_models, print_evaluation_table
 from simulation import simulate
@@ -62,7 +63,7 @@ def main():
     estimation_mmnl_5pt_time = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    estimation_mmnl_2pt_result = estimator.estimate_mmnl_twopoint()
+    estimation_mmnl_2pt_result = estimator.estimate_mmnl(K=2)
     estimation_mmnl_2pt_time = time.perf_counter() - t0
 
     t0 = time.perf_counter()
@@ -180,7 +181,8 @@ def main():
         model="MNL",
     )
     dp_mnl_time = time.perf_counter() - t0
-    log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f}")
+    _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
+    log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
 
     t0 = time.perf_counter()
     v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
@@ -192,7 +194,8 @@ def main():
         segment_weights=weights_mmnl_5pt,
     )
     dp_mmnl_5pt_time = time.perf_counter() - t0
-    log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f}")
+    _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+    log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
 
     t0 = time.perf_counter()
     v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
@@ -204,7 +207,8 @@ def main():
         segment_weights=weights_mmnl_2pt,
     )
     dp_mmnl_2pt_time = time.perf_counter() - t0
-    log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f}")
+    _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+    log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
 
     t0 = time.perf_counter()
     v_mmnl_cont, pi_mmnl_cont = solve_by_dp(
@@ -216,7 +220,8 @@ def main():
         sigma_b=sigma_mmnl_cont,
     )
     dp_mmnl_cont_time = time.perf_counter() - t0
-    log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f}\n")
+    _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
+    log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
 
     time_results = {
         "Sampling":                sampling_time,
@@ -233,12 +238,6 @@ def main():
         "DP_MMNL_2PT":             dp_mmnl_2pt_time,
         "DP_MMNL_CONT":            dp_mmnl_cont_time,
     }
-
-    rewards = []
-    for i in range(1000):
-        reward, _ = simulate(efficient_sets_mnl, pi_mnl, seed=i)
-        rewards.append(reward)
-    log_message(f"Average MNL reward over {len(rewards)} episodes: {sum(rewards) / len(rewards):.2f}")
 
     # RL always trains against MNL policy using MNL efficient sets
     training_times_by_step = train_rl(dp_pi=pi_mnl, efficient_sets=efficient_sets_rl)
@@ -313,8 +312,6 @@ def main():
 
     with open(f"{C.OUTPUT_DIR}/results.pkl", "wb") as f:
         pickle.dump(data, f)
-
-    log_message("Execution completed successfully!")
 
 
 if __name__ == "__main__":
