@@ -62,7 +62,7 @@ def main():
     estimation_mmnl_5pt_time = time.perf_counter() - t0
 
     t0 = time.perf_counter()
-    estimation_mmnl_2pt_result = estimator.estimate_mmnl_twopoint()
+    estimation_mmnl_2pt_result = estimator.estimate_mmnl(K=2)
     estimation_mmnl_2pt_time = time.perf_counter() - t0
 
     t0 = time.perf_counter()
