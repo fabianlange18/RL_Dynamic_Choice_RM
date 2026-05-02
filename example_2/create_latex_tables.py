@@ -173,25 +173,33 @@ def parse_exec_log(log_path: str) -> Dict:
         results['metadata']['mmnl_cont_effsets'] = mmnl_cont_eff_match.group(2)
     
     # Extract DP info for all variants
-    dp_mnl_match = re.search(r'DP_MNL\s+time: ([\d.]+)s \| V\(0,C\): ([\d.]+)', content)
+    dp_mnl_match = re.search(r'DP_MNL\s+time: ([\d.]+)s \| V\(0,C\): ([\d.]+)(?: \| avg reward: ([\d.]+))?', content)
     if dp_mnl_match:
         results['metadata']['dp_mnl_time'] = dp_mnl_match.group(1)
         results['metadata']['dp_mnl_value'] = dp_mnl_match.group(2)
+        if dp_mnl_match.group(3):
+            results['metadata']['dp_mnl_sim_reward'] = dp_mnl_match.group(3)
     
-    dp_mmnl_5pt_match = re.search(r'DP_MMNL_5PT time: ([\d.]+)s \| V\(0,C\): ([\d.]+)', content)
+    dp_mmnl_5pt_match = re.search(r'DP_MMNL_5PT time: ([\d.]+)s \| V\(0,C\): ([\d.]+)(?: \| avg reward: ([\d.]+))?', content)
     if dp_mmnl_5pt_match:
         results['metadata']['dp_mmnl_5pt_time'] = dp_mmnl_5pt_match.group(1)
         results['metadata']['dp_mmnl_5pt_value'] = dp_mmnl_5pt_match.group(2)
+        if dp_mmnl_5pt_match.group(3):
+            results['metadata']['dp_mmnl_5pt_sim_reward'] = dp_mmnl_5pt_match.group(3)
     
-    dp_mmnl_2pt_match = re.search(r'DP_MMNL_2PT time: ([\d.]+)s \| V\(0,C\): ([\d.]+)', content)
+    dp_mmnl_2pt_match = re.search(r'DP_MMNL_2PT time: ([\d.]+)s \| V\(0,C\): ([\d.]+)(?: \| avg reward: ([\d.]+))?', content)
     if dp_mmnl_2pt_match:
         results['metadata']['dp_mmnl_2pt_time'] = dp_mmnl_2pt_match.group(1)
         results['metadata']['dp_mmnl_2pt_value'] = dp_mmnl_2pt_match.group(2)
+        if dp_mmnl_2pt_match.group(3):
+            results['metadata']['dp_mmnl_2pt_sim_reward'] = dp_mmnl_2pt_match.group(3)
     
-    dp_mmnl_cont_match = re.search(r'DP_MMNL_CONT time: ([\d.]+)s \| V\(0,C\): ([\d.]+)', content)
+    dp_mmnl_cont_match = re.search(r'DP_MMNL_CONT time: ([\d.]+)s \| V\(0,C\): ([\d.]+)(?: \| avg reward: ([\d.]+))?', content)
     if dp_mmnl_cont_match:
         results['metadata']['dp_mmnl_cont_time'] = dp_mmnl_cont_match.group(1)
         results['metadata']['dp_mmnl_cont_value'] = dp_mmnl_cont_match.group(2)
+        if dp_mmnl_cont_match.group(3):
+            results['metadata']['dp_mmnl_cont_sim_reward'] = dp_mmnl_cont_match.group(3)
     
     # Extract experiment description
     config_match = re.search(r'Run (.+?): (.+)', content)
@@ -461,6 +469,14 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     dp_2pt_value = metadata.get('dp_mmnl_2pt_value', 'N/A')
     dp_cont_value = metadata.get('dp_mmnl_cont_value', 'N/A')
     latex.append(f"    DP $V(0,C)$ & {dp_mnl_value} & {dp_5pt_value} & {dp_2pt_value} & {dp_cont_value} \\\\")
+
+    dp_mnl_sim_reward = metadata.get('dp_mnl_sim_reward', 'N/A')
+    dp_5pt_sim_reward = metadata.get('dp_mmnl_5pt_sim_reward', 'N/A')
+    dp_2pt_sim_reward = metadata.get('dp_mmnl_2pt_sim_reward', 'N/A')
+    dp_cont_sim_reward = metadata.get('dp_mmnl_cont_sim_reward', 'N/A')
+    latex.append(
+        f"    Sim. Rew. (n=1000) & {dp_mnl_sim_reward} & {dp_5pt_sim_reward} & {dp_2pt_sim_reward} & {dp_cont_sim_reward} \\\\"
+    )
     
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
