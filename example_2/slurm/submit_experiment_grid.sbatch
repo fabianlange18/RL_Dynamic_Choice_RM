@@ -23,6 +23,19 @@ export WLSACCESSID=9f1b1284-0ea6-423e-9658-9af7206ddedb
 export WLSSECRET=7e8a0849-bda0-4b5d-8cdf-3c8b5d5d2143
 export LICENSEID=2817305
 
+# Force Gurobi to use this WLS license in batch jobs.
+LICENSE_DIR="${TMPDIR:-/tmp}/gurobi_${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+mkdir -p "${LICENSE_DIR}"
+chmod 700 "${LICENSE_DIR}"
+export GRB_LICENSE_FILE="${LICENSE_DIR}/gurobi.lic"
+cat > "${GRB_LICENSE_FILE}" <<EOF
+WLSACCESSID=${WLSACCESSID}
+WLSSECRET=${WLSSECRET}
+LICENSEID=${LICENSEID}
+EOF
+chmod 600 "${GRB_LICENSE_FILE}"
+echo "Using Gurobi license file: ${GRB_LICENSE_FILE} (LICENSEID=${LICENSEID})"
+
 mkdir -p example_2/slurm/logs
 
 source .rl_venv/bin/activate

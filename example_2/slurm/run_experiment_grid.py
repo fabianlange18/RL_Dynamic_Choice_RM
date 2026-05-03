@@ -10,11 +10,37 @@ SENSITIVITIES = (False, True)
 TRAIN_ON_ALL_SETS_OPTIONS = (False, True)
 LARGE_PRODUCT_SET = (False, True)
 
+
+def _mask(value):
+    if not value:
+        return "<unset>"
+    if len(value) <= 8:
+        return "***"
+    return f"{value[:4]}...{value[-4:]}"
+
+
+def _print_gurobi_license_context():
+    """Log non-sensitive Gurobi license context for SLURM debugging."""
+    grb_license_file = os.environ.get("GRB_LICENSE_FILE")
+    wls_access_id = os.environ.get("WLSACCESSID")
+    license_id = os.environ.get("LICENSEID")
+
+    print(
+        "Gurobi preflight: GRB_LICENSE_FILE={}, exists={}, WLSACCESSID={}, LICENSEID={}".format(
+            grb_license_file if grb_license_file else "<unset>",
+            os.path.exists(grb_license_file) if grb_license_file else False,
+            _mask(wls_access_id),
+            license_id if license_id else "<unset>",
+        )
+    )
+
 def build_grid():
     return list(itertools.product(SENSITIVITIES, GT_MODELS, TRAIN_ON_ALL_SETS_OPTIONS, LARGE_PRODUCT_SET))
 
 
 def run_single(task_id):
+    _print_gurobi_license_context()
+
     grid = build_grid()
     if task_id < 0 or task_id >= len(grid):
         raise ValueError(f"task_id {task_id} out of range [0, {len(grid) - 1}]")
