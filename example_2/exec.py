@@ -41,6 +41,11 @@ def log_message(message):
         log_file.write(f"{message}\n")
 
 
+def log_gurobi_message(message):
+    """Log Gurobi license/slot messages to stdout (captured by SLURM logs)."""
+    print(message, flush=True)
+
+
 @contextmanager
 def gurobi_slot_lock(phase_label):
     """Limit concurrent Gurobi phases across SLURM tasks.
@@ -74,12 +79,12 @@ def gurobi_slot_lock(phase_label):
         return
 
     os.makedirs(lock_dir, exist_ok=True)
-    poll_seconds = 10
+    poll_seconds = 300
     lock_file = None
     lock_slot = None
 
     try:
-        log_message(
+        log_gurobi_message(
             f"[{phase_label}] Waiting for Gurobi slot (max concurrent: {max_slots})"
         )
         while True:
@@ -90,7 +95,7 @@ def gurobi_slot_lock(phase_label):
                     fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                     lock_file = fh
                     lock_slot = slot
-                    log_message(f"[{phase_label}] Acquired Gurobi slot {slot}")
+                    log_gurobi_message(f"[{phase_label}] Acquired Gurobi slot {slot}")
                     yield
                     return
                 except BlockingIOError:
@@ -102,7 +107,7 @@ def gurobi_slot_lock(phase_label):
                 fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
             finally:
                 lock_file.close()
-            log_message(f"[{phase_label}] Released Gurobi slot {lock_slot}")
+            log_gurobi_message(f"[{phase_label}] Released Gurobi slot {lock_slot}")
 
 
 def _effsets_pending_path():
@@ -164,9 +169,10 @@ def main():
     estimation_mmnl_2pt_result = estimator.estimate_mmnl(K=2)
     estimation_mmnl_2pt_time = time.perf_counter() - t0
 
-    t0 = time.perf_counter()
-    estimation_mmnl_cont_result = estimator.estimate_mmnl_continuous()
-    estimation_mmnl_cont_time = time.perf_counter() - t0
+    # MMNL continuous disabled
+    # t0 = time.perf_counter()
+    # estimation_mmnl_cont_result = estimator.estimate_mmnl_continuous()
+    # estimation_mmnl_cont_time = time.perf_counter() - t0
 
     beta_mnl   = estimation_mnl_result["beta"]
     lambda_mnl = estimation_mnl_result["lambda"]
@@ -188,12 +194,13 @@ def main():
     aic_mmnl_2pt = estimation_mmnl_2pt_result["aic"]
     bic_mmnl_2pt = estimation_mmnl_2pt_result["bic"]
 
-    mu_mmnl_cont = estimation_mmnl_cont_result["mu_b"]
-    sigma_mmnl_cont = estimation_mmnl_cont_result["sigma_b"]
-    lambda_mmnl_cont = estimation_mmnl_cont_result["lambda"]
-    ll_mmnl_cont = estimation_mmnl_cont_result["final_log_likelihood"]
-    aic_mmnl_cont = estimation_mmnl_cont_result["aic"]
-    bic_mmnl_cont = estimation_mmnl_cont_result["bic"]
+    # MMNL continuous disabled
+    # mu_mmnl_cont = estimation_mmnl_cont_result["mu_b"]
+    # sigma_mmnl_cont = estimation_mmnl_cont_result["sigma_b"]
+    # lambda_mmnl_cont = estimation_mmnl_cont_result["lambda"]
+    # ll_mmnl_cont = estimation_mmnl_cont_result["final_log_likelihood"]
+    # aic_mmnl_cont = estimation_mmnl_cont_result["aic"]
+    # bic_mmnl_cont = estimation_mmnl_cont_result["bic"]
 
     log_message(f"Estimation_MNL  time: {estimation_mnl_time:.4f}s | beta: {beta_mnl:.6f}, lambda: {lambda_mnl:.6f}")
     log_message(f"  LL: {ll_mnl:.6f}, AIC: {aic_mnl:.3f}, BIC: {bic_mnl:.3f}\n")
@@ -208,8 +215,9 @@ def main():
     log_message(f"Betas: {[f'{b:.6f}' for b in betas_mmnl_2pt]}")
     log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_2pt]}\n")
 
-    log_message(f"Estimation_MMNL_CONT time: {estimation_mmnl_cont_time:.4f}s | mu: {mu_mmnl_cont:.6f}, sigma: {sigma_mmnl_cont:.6f}, lambda: {lambda_mmnl_cont:.6f}")
-    log_message(f"  LL: {ll_mmnl_cont:.6f}, AIC: {aic_mmnl_cont:.3f}, BIC: {bic_mmnl_cont:.3f}\n")
+    # MMNL continuous disabled
+    # log_message(f"Estimation_MMNL_CONT time: {estimation_mmnl_cont_time:.4f}s | mu: {mu_mmnl_cont:.6f}, sigma: {sigma_mmnl_cont:.6f}, lambda: {lambda_mmnl_cont:.6f}")
+    # log_message(f"  LL: {ll_mmnl_cont:.6f}, AIC: {aic_mmnl_cont:.3f}, BIC: {bic_mmnl_cont:.3f}\n")
 
     del observations
     del estimator
@@ -220,17 +228,15 @@ def main():
     _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
     if _pending_marker:
         open(_pending_marker, "w").close()
-        log_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
+        log_gurobi_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
     if c.TRAIN_ON_ALL_SETS:
         efficient_sets_mnl  = None
         efficient_sets_mmnl_5pt = None
         efficient_sets_mmnl_2pt = None
-        efficient_sets_mmnl_cont = None
         efficient_sets_rl = None
         efficient_sets_time_mnl  = 0.0
         efficient_sets_time_mmnl_5pt = 0.0
         efficient_sets_time_mmnl_2pt = 0.0
-        efficient_sets_time_mmnl_cont = 0.0
     else:
         with gurobi_slot_lock("efficient_sets") if uses_gurobi_efficient_sets else nullcontext():
             t0 = time.perf_counter()
@@ -256,24 +262,25 @@ def main():
             efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
             log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
 
-            t0 = time.perf_counter()
-            efficient_sets_mmnl_cont = compute_efficient_sets(
-                model="MMNLcont",
-                mu_b=mu_mmnl_cont,
-                sigma_b=sigma_mmnl_cont,
-            )
-            efficient_sets_time_mmnl_cont = time.perf_counter() - t0
-            log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
+            # MMNL continuous disabled
+            # t0 = time.perf_counter()
+            # efficient_sets_mmnl_cont = compute_efficient_sets(
+            #     model="MMNLcont",
+            #     mu_b=mu_mmnl_cont,
+            #     sigma_b=sigma_mmnl_cont,
+            # )
+            # efficient_sets_time_mmnl_cont = time.perf_counter() - t0
+            # log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
 
     if _pending_marker and os.path.exists(_pending_marker):
         os.remove(_pending_marker)
-        log_message(f"[efficient_sets] Removed pending marker: {_pending_marker}")
+        log_gurobi_message(f"[efficient_sets] Removed pending marker: {_pending_marker}")
 
     efficient_sets_rl_candidates = [
         efficient_sets_mnl,
         efficient_sets_mmnl_5pt,
         efficient_sets_mmnl_2pt,
-        efficient_sets_mmnl_cont,
+        # efficient_sets_mmnl_cont,
     ]
     efficient_sets_rl = None
     for _sets in efficient_sets_rl_candidates:
@@ -283,7 +290,7 @@ def main():
     # -- DP solutions (with memory optimization: delete after use) -------
     uses_gurobi_dp = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
     if uses_gurobi_dp:
-        _wait_for_effsets_priority(log_message)
+        _wait_for_effsets_priority(log_gurobi_message)
     with gurobi_slot_lock("dp") if uses_gurobi_dp else nullcontext():
         t0 = time.perf_counter()
         v_mnl, pi_mnl = solve_by_dp(
@@ -322,33 +329,34 @@ def main():
         _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
         log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
 
-        t0 = time.perf_counter()
-        v_mmnl_cont, pi_mmnl_cont = solve_by_dp(
-            efficient_sets=efficient_sets_mmnl_cont,
-            estimated_beta=None,
-            estimated_lambda=lambda_mmnl_cont,
-            model="MMNLcont",
-            mu_b=mu_mmnl_cont,
-            sigma_b=sigma_mmnl_cont,
-        )
-        dp_mmnl_cont_time = time.perf_counter() - t0
-        _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
-        log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
+        # MMNL continuous disabled
+        # t0 = time.perf_counter()
+        # v_mmnl_cont, pi_mmnl_cont = solve_by_dp(
+        #     efficient_sets=efficient_sets_mmnl_cont,
+        #     estimated_beta=None,
+        #     estimated_lambda=lambda_mmnl_cont,
+        #     model="MMNLcont",
+        #     mu_b=mu_mmnl_cont,
+        #     sigma_b=sigma_mmnl_cont,
+        # )
+        # dp_mmnl_cont_time = time.perf_counter() - t0
+        # _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
+        # log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
 
     time_results = {
         "Sampling":                sampling_time,
         "Estimation_MNL":          estimation_mnl_time,
         "Estimation_MMNL_5PT":     estimation_mmnl_5pt_time,
         "Estimation_MMNL_2PT":     estimation_mmnl_2pt_time,
-        "Estimation_MMNL_CONT":    estimation_mmnl_cont_time,
+        # "Estimation_MMNL_CONT":    estimation_mmnl_cont_time,
         "EfficientSets_MNL":       efficient_sets_time_mnl,
         "EfficientSets_MMNL_5PT":  efficient_sets_time_mmnl_5pt,
         "EfficientSets_MMNL_2PT":  efficient_sets_time_mmnl_2pt,
-        "EfficientSets_MMNL_CONT": efficient_sets_time_mmnl_cont,
+        # "EfficientSets_MMNL_CONT": efficient_sets_time_mmnl_cont,
         "DP_MNL":                  dp_mnl_time,
         "DP_MMNL_5PT":             dp_mmnl_5pt_time,
         "DP_MMNL_2PT":             dp_mmnl_2pt_time,
-        "DP_MMNL_CONT":            dp_mmnl_cont_time,
+        # "DP_MMNL_CONT":            dp_mmnl_cont_time,
     }
 
     # RL always trains against MNL policy using MNL efficient sets
@@ -360,12 +368,12 @@ def main():
                 "DP_MNL": dp_mnl_time,
                 "DP_MMNL_5PT": dp_mmnl_5pt_time,
                 "DP_MMNL_2PT": dp_mmnl_2pt_time,
-                "DP_MMNL_CONT": dp_mmnl_cont_time,
+                # "DP_MMNL_CONT": dp_mmnl_cont_time,
             }
         )
 
     # Delete large DP arrays early to free memory before evaluation
-    del v_mnl, v_mmnl_5pt, v_mmnl_2pt, v_mmnl_cont
+    del v_mnl, v_mmnl_5pt, v_mmnl_2pt
     gc.collect()
 
     dp_policy_configs = {
@@ -381,10 +389,10 @@ def main():
             "pi": pi_mmnl_2pt,
             "efficient_sets": efficient_sets_mmnl_2pt,
         },
-        "DP_MMNL_CONT": {
-            "pi": pi_mmnl_cont,
-            "efficient_sets": efficient_sets_mmnl_cont,
-        },
+        # "DP_MMNL_CONT": {
+        #     "pi": pi_mmnl_cont,
+        #     "efficient_sets": efficient_sets_mmnl_cont,
+        # },
     }
 
     evaluation_results_by_step = evaluate_saved_models(
@@ -403,20 +411,20 @@ def main():
         "weights_mmnl_5pt": weights_mmnl_5pt,
         "betas_mmnl_2pt": betas_mmnl_2pt,
         "weights_mmnl_2pt": weights_mmnl_2pt,
-        "mu_mmnl_cont": mu_mmnl_cont,
-        "sigma_mmnl_cont": sigma_mmnl_cont,
+        # "mu_mmnl_cont": mu_mmnl_cont,
+        # "sigma_mmnl_cont": sigma_mmnl_cont,
         "lambda_mmnl_5pt": lambda_mmnl_5pt,
         "lambda_mmnl_2pt": lambda_mmnl_2pt,
-        "lambda_mmnl_cont": lambda_mmnl_cont,
+        # "lambda_mmnl_cont": lambda_mmnl_cont,
         "efficient_sets_mnl": efficient_sets_mnl,
         "efficient_sets_mmnl_5pt": efficient_sets_mmnl_5pt,
         "efficient_sets_mmnl_2pt": efficient_sets_mmnl_2pt,
-        "efficient_sets_mmnl_cont": efficient_sets_mmnl_cont,
+        # "efficient_sets_mmnl_cont": efficient_sets_mmnl_cont,
         "efficient_sets_rl": efficient_sets_rl,
         "pi_mnl": pi_mnl,
         "pi_mmnl_5pt": pi_mmnl_5pt,
         "pi_mmnl_2pt": pi_mmnl_2pt,
-        "pi_mmnl_cont": pi_mmnl_cont,
+        # "pi_mmnl_cont": pi_mmnl_cont,
         "time_results": time_results,
         "training_times_by_step": training_times_by_step,
         "evaluation_results_by_step": evaluation_results_by_step,
