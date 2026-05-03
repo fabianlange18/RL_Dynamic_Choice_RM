@@ -13,7 +13,14 @@ class TalluriExample2(gym.Env):
 
         self.use_multibinary_action_space = use_multibinary_action_space and efficient_sets is None
 
-        self.possible_sets = tuple(range(2 ** C.n)) if efficient_sets is None else tuple(efficient_sets)
+        if efficient_sets is not None:
+            self.possible_sets = tuple(efficient_sets)
+        elif self.use_multibinary_action_space:
+            # In MultiBinary mode, actions are direct product-wise 0/1 decisions.
+            # Do not materialize all 2^n sets.
+            self.possible_sets = None
+        else:
+            self.possible_sets = tuple(range(2 ** C.n))
         
         self.action_space = (
             gym.spaces.MultiBinary(C.n)
@@ -94,6 +101,11 @@ class TalluriExample2(gym.Env):
         else:
             action_int = int(action)
 
-        action_int = int(self.possible_sets[action_int])
+        if self.possible_sets is None:
+            # In MultiBinary mode, scalar actions are interpreted as bitmasks.
+            if action_int < 0:
+                raise ValueError("Action bitmask must be non-negative")
+        else:
+            action_int = int(self.possible_sets[action_int])
 
         return np.array([(action_int >> i) & 1 for i in range(C.n)], dtype=int)
