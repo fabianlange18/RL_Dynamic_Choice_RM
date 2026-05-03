@@ -267,34 +267,37 @@ def _identify_efficient_sets(
     current_q = 0.0
     current_r = 0.0
 
-    while True:
-        candidate = _solve_best_marginal_ratio(
-            model=gp_model,
-            x_vars=x_vars,
-            q_total=q_total,
-            r_total=r_total,
-            current_q=current_q,
-            current_r=current_r,
-            used_actions=tuple(efficient_sequence),
-            tol=tol,
-        )
+    try:
+        while True:
+            candidate = _solve_best_marginal_ratio(
+                model=gp_model,
+                x_vars=x_vars,
+                q_total=q_total,
+                r_total=r_total,
+                current_q=current_q,
+                current_r=current_r,
+                used_actions=tuple(efficient_sequence),
+                tol=tol,
+            )
 
-        if candidate is None:
-            break
+            if candidate is None:
+                break
 
-        action_int, q_val, r_val = candidate
-        if action_int in efficient_sequence:
-            break
+            action_int, q_val, r_val = candidate
+            if action_int in efficient_sequence:
+                break
 
-        if q_val <= current_q + tol:
-            break
+            if q_val <= current_q + tol:
+                break
 
-        efficient_sequence.append(action_int)
-        current_q = q_val
-        current_r = r_val
+            efficient_sequence.append(action_int)
+            current_q = q_val
+            current_r = r_val
 
-        if current_q >= 1.0 - 1e-10:
-            break
+            if current_q >= 1.0 - 1e-10:
+                break
+    finally:
+        gp_model.dispose()
 
     return tuple(efficient_sequence)
 

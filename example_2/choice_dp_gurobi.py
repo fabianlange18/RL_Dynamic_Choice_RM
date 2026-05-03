@@ -113,41 +113,44 @@ def solve_by_dp(
     v = np.zeros((C.T + 1, C.C + 1), dtype=np.float32)
     pi = np.zeros((C.T, C.C + 1), dtype=object)
 
-    for t in range(C.T - 1, -1, -1):
-        next_v = v[t + 1]
+    try:
+        for t in range(C.T - 1, -1, -1):
+            next_v = v[t + 1]
 
-        for capacity in range(1, C.C + 1):
-            stay_value = next_v[capacity]
-            buy_value = next_v[capacity - 1]
+            for capacity in range(1, C.C + 1):
+                stay_value = next_v[capacity]
+                buy_value = next_v[capacity - 1]
 
-            delta_value = buy_value - stay_value
+                delta_value = buy_value - stay_value
 
-            objective_expr = gp.quicksum(
-                float(seg_weights[k]) * (exp_revenue_vars[k] + float(delta_value) * purchase_prob_vars[k])
-                for k in range(len(betas))
-            )
-            gp_model.setObjective(objective_expr, GRB.MAXIMIZE)
-            gp_model.optimize()
-
-            if gp_model.Status not in (GRB.OPTIMAL, GRB.TIME_LIMIT, GRB.SUBOPTIMAL):
-                raise RuntimeError(f"Gurobi failed with status {gp_model.Status} at t={t}, x={capacity}")
-            
-            if gp_model.SolCount == 0:
-                best_idx = 0
-                best_value = stay_value
-                warnings.warn(
-                    f"Gurobi did not return a feasible solution at t={t}, x={capacity}; using empty-offer fallback",
-                    RuntimeWarning,
-                    stacklevel=2,
+                objective_expr = gp.quicksum(
+                    float(seg_weights[k]) * (exp_revenue_vars[k] + float(delta_value) * purchase_prob_vars[k])
+                    for k in range(len(betas))
                 )
-            else:
-                x_sol = [x_vars[i].X for i in range(len(prices))]
-                best_idx = int(_action_int_from_binary(x_sol))
+                gp_model.setObjective(objective_expr, GRB.MAXIMIZE)
+                gp_model.optimize()
 
-                best_increment = float(gp_model.ObjVal)
-                best_value = stay_value + estimated_lambda * best_increment
+                if gp_model.Status not in (GRB.OPTIMAL, GRB.TIME_LIMIT, GRB.SUBOPTIMAL):
+                    raise RuntimeError(f"Gurobi failed with status {gp_model.Status} at t={t}, x={capacity}")
+                
+                if gp_model.SolCount == 0:
+                    best_idx = 0
+                    best_value = stay_value
+                    warnings.warn(
+                        f"Gurobi did not return a feasible solution at t={t}, x={capacity}; using empty-offer fallback",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                else:
+                    x_sol = [x_vars[i].X for i in range(len(prices))]
+                    best_idx = int(_action_int_from_binary(x_sol))
 
-            v[t, capacity] = best_value
-            pi[t, capacity] = best_idx
+                    best_increment = float(gp_model.ObjVal)
+                    best_value = stay_value + estimated_lambda * best_increment
+
+                v[t, capacity] = best_value
+                pi[t, capacity] = best_idx
+    finally:
+        gp_model.dispose()
 
     return v, pi

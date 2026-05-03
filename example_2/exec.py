@@ -79,7 +79,7 @@ def gurobi_slot_lock(phase_label):
         return
 
     os.makedirs(lock_dir, exist_ok=True)
-    poll_seconds = 300
+    poll_seconds = 60
     lock_file = None
     lock_slot = None
 
@@ -122,7 +122,7 @@ def _effsets_pending_path():
     return os.path.join(pending_dir, f"task_{task_id}")
 
 
-def _wait_for_effsets_priority(log_fn, poll_seconds=15):
+def _wait_for_effsets_priority(log_fn, poll_seconds=60):
     """Block until no other task's effsets pending-marker file remains."""
     lock_dir = os.environ.get("GUROBI_SLOT_LOCK_DIR", "")
     if not lock_dir:
@@ -153,6 +153,12 @@ def main():
     log_message(f"GT_MODEL: {c.GT_MODEL}")
     log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
+
+    uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and (not c.TRAIN_ON_ALL_SETS)
+    _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
+    if _pending_marker:
+        open(_pending_marker, "w").close()
+        log_gurobi_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
 
     # -- Shared observations: collect once, estimate all models ----------
     t0 = time.perf_counter()
@@ -231,11 +237,6 @@ def main():
     gc.collect()
 
     # -- Efficient sets ---------------------------------------------------
-    uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and (not c.TRAIN_ON_ALL_SETS)
-    _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
-    if _pending_marker:
-        open(_pending_marker, "w").close()
-        log_gurobi_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
     if c.TRAIN_ON_ALL_SETS:
         efficient_sets_mnl  = None
         efficient_sets_mmnl_5pt = None
@@ -278,6 +279,9 @@ def main():
             # )
             # efficient_sets_time_mmnl_cont = time.perf_counter() - t0
             # log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
+
+            # Flush lingering Gurobi references before the slot lock releases.
+            gc.collect()
 
     if _pending_marker and os.path.exists(_pending_marker):
         os.remove(_pending_marker)
@@ -349,6 +353,9 @@ def main():
         # dp_mmnl_cont_time = time.perf_counter() - t0
         # _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
         # log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
+
+        # Flush lingering Gurobi references before the slot lock releases.
+        gc.collect()
 
     time_results = {
         "Sampling":                sampling_time,
