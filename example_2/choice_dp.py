@@ -84,13 +84,12 @@ def solve_by_dp(
     # ----------------------------
     # Build action space
     # ----------------------------
-    _, all_action_binary = _precompute_actions(C.n)
-
     if efficient_sets is not None:
-        idx = np.asarray(list(efficient_sets), dtype=np.int32)
-        action_binary = all_action_binary[idx]
+        # Decode only the provided action integers – avoids 2**n enumeration.
+        idx = np.asarray(list(efficient_sets), dtype=object)
+        action_binary = ((idx[:, None] >> np.arange(C.n)) & 1).astype(np.int8)
     else:
-        action_binary = all_action_binary
+        _, action_binary = _precompute_actions(C.n)
 
     # ----------------------------
     # Precompute action stats ONCE

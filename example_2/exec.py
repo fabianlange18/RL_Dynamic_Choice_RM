@@ -105,6 +105,29 @@ def gurobi_slot_lock(phase_label):
             log_message(f"[{phase_label}] Released Gurobi slot {lock_slot}")
 
 
+def _effsets_pending_path():
+    """Return the pending-marker path for this task, or None if not configured."""
+    lock_dir = os.environ.get("GUROBI_SLOT_LOCK_DIR", "")
+    task_id = os.environ.get("TASK_ID", "")
+    if not lock_dir or not task_id:
+        return None
+    return os.path.join(lock_dir, f"effsets_pending_{task_id}")
+
+
+def _wait_for_effsets_priority(log_fn, poll_seconds=15):
+    """Block until no other task's effsets pending-marker file remains."""
+    lock_dir = os.environ.get("GUROBI_SLOT_LOCK_DIR", "")
+    if not lock_dir:
+        return
+    import glob
+    while True:
+        pending = glob.glob(os.path.join(lock_dir, "effsets_pending_*"))
+        if not pending:
+            return
+        log_fn(f"[dp] Yielding to {len(pending)} active efficient-set task(s); waiting {poll_seconds}s")
+        time.sleep(poll_seconds)
+
+
 def main():
     """Main execution function."""
     
@@ -194,6 +217,10 @@ def main():
 
     # -- Efficient sets ---------------------------------------------------
     uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and (not c.TRAIN_ON_ALL_SETS)
+    _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
+    if _pending_marker:
+        open(_pending_marker, "w").close()
+        log_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
     if c.TRAIN_ON_ALL_SETS:
         efficient_sets_mnl  = None
         efficient_sets_mmnl_5pt = None
@@ -238,6 +265,10 @@ def main():
             efficient_sets_time_mmnl_cont = time.perf_counter() - t0
             log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
 
+    if _pending_marker and os.path.exists(_pending_marker):
+        os.remove(_pending_marker)
+        log_message(f"[efficient_sets] Removed pending marker: {_pending_marker}")
+
     efficient_sets_rl_candidates = [
         efficient_sets_mnl,
         efficient_sets_mmnl_5pt,
@@ -251,6 +282,8 @@ def main():
 
     # -- DP solutions (with memory optimization: delete after use) -------
     uses_gurobi_dp = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
+    if uses_gurobi_dp:
+        _wait_for_effsets_priority(log_message)
     with gurobi_slot_lock("dp") if uses_gurobi_dp else nullcontext():
         t0 = time.perf_counter()
         v_mnl, pi_mnl = solve_by_dp(
