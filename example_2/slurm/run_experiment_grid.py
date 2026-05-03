@@ -8,10 +8,10 @@ from pathlib import Path
 GT_MODELS = ("MNL", "MMNL_5PT", "MMNL_2PT", "MMNLcont", "Probit", "MNLrefPrice", "MNLConsidSet", "TMNL", "NLogit") 
 SENSITIVITIES = (False, True)
 TRAIN_ON_ALL_SETS_OPTIONS = (False, True)
-
+LARGE_PRODUCT_SET = (False, True)
 
 def build_grid():
-    return list(itertools.product(SENSITIVITIES, GT_MODELS, TRAIN_ON_ALL_SETS_OPTIONS))
+    return list(itertools.product(SENSITIVITIES, GT_MODELS, TRAIN_ON_ALL_SETS_OPTIONS, LARGE_PRODUCT_SET))
 
 
 def run_single(task_id):
@@ -25,14 +25,15 @@ def run_single(task_id):
     sys.path.insert(0, str(example2_dir))
 
     import config as c
-    c.HIGH_SENSITIVITY, c.GT_MODEL, c.TRAIN_ON_ALL_SETS = grid[task_id]
+    c.HIGH_SENSITIVITY, c.GT_MODEL, c.TRAIN_ON_ALL_SETS, c.LARGE_PRODUCT_SET = grid[task_id]
 
     print(
-        "Running task_id={} with HIGH_SENSITIVITY={}, GT_MODEL={}, TRAIN_ON_ALL_SETS={}".format(
+        "Running task_id={} with HIGH_SENSITIVITY={}, GT_MODEL={}, TRAIN_ON_ALL_SETS={}, LARGE_PRODUCT_SET={}".format(
             task_id,
             c.HIGH_SENSITIVITY,
             c.GT_MODEL,
             c.TRAIN_ON_ALL_SETS,
+            c.LARGE_PRODUCT_SET,
         )
     )
 
@@ -45,8 +46,8 @@ def run_single(task_id):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run one experiment from the 36-case grid.")
-    parser.add_argument("--task-id", type=int, required=True, help="Index in [0, 35] for the experiment grid")
+    parser = argparse.ArgumentParser(description="Run one experiment from the 72-case grid.")
+    parser.add_argument("--task-id", type=int, required=True, help="Index in [0, 71] for the experiment grid")
     args = parser.parse_args()
 
     run_single(args.task_id)

@@ -13,9 +13,6 @@ SUPPORTED_MODELS = ("MNL", "MMNL_5PT", "MMNL_2PT", "MMNLcont")
 
 def _mmnl_cont_quadrature(mu_b, sigma_b, n_points=MMNL_CONT_QUAD_POINTS):
     """Approximate E[f(beta)] for beta=-exp(mu+sigma*Z), Z~N(0,1)."""
-    n_points = int(n_points)
-    if n_points <= 0:
-        raise ValueError("n_points must be a positive integer")
 
     z_nodes, z_weights = np.polynomial.hermite.hermgauss(n_points)
     # Convert Gauss-Hermite nodes/weights for exp(-x^2) to standard normal expectation.
@@ -87,7 +84,7 @@ def _build_offer_model(prices, betas, weights):
     return model, x, exp_revenue, purchase_prob, np.asarray(weights, dtype=float)
 
 
-def solve_by_dp_gurobi(
+def solve_by_dp(
     estimated_beta,
     estimated_lambda,
     model="MNL",
@@ -153,132 +150,3 @@ def solve_by_dp_gurobi(
             pi[t, capacity] = best_idx
 
     return v, pi
-
-
-if __name__ == "__main__":
-    test_failures = []
-
-    def _record_check(condition, message):
-        if condition:
-            print(f"[PASS] {message}")
-        else:
-            print(f"[FAIL] {message}")
-            test_failures.append(message)
-
-    def _run_test(label, *, test_n, test_r, test_t, test_c, **solve_kwargs):
-        old_n, old_r, old_t, old_c = C.n, C.r, C.T, C.C
-        try:
-            C.n = int(test_n)
-            C.r = np.asarray(test_r, dtype=float)
-            C.T = int(test_t)
-            C.C = int(test_c)
-
-            start = time.perf_counter()
-            v_test, pi_test = solve_by_dp_gurobi(
-                **solve_kwargs,
-            )
-            elapsed = time.perf_counter() - start
-            v0c = float(v_test[0, C.C])
-            print(f"[{label}] elapsed: {elapsed:.2f}s | V(0,C)={v0c:.4f} | pi shape={pi_test.shape}")
-            _record_check(np.isfinite(v0c), f"[{label}] V(0,C) is finite")
-            return v0c
-        finally:
-            C.n, C.r, C.T, C.C = old_n, old_r, old_t, old_c
-
-    # Test 1: MNL baseline regression check.
-    baseline_v0c = _run_test(
-        "MNL-baseline",
-        test_n=C.n,
-        test_r=C.r,
-        test_t=C.T,
-        test_c=C.C,
-        estimated_beta=-0.005044,
-        estimated_lambda=0.501366,
-        model="MNL",
-    )
-    expected_v0c = 36821.38
-    _record_check(np.isclose(baseline_v0c, expected_v0c, atol=5), (
-        f"MNL-baseline expected V(0,C)={expected_v0c:.2f}, got {baseline_v0c:.4f}"
-    ))
-
-    # Test 2: MMNL_5PT regression check with provided estimation outputs.
-    mmnl_5pt_v0c = _run_test(
-        "MMNL_5PT",
-        test_n=C.n,
-        test_r=C.r,
-        test_t=C.T,
-        test_c=C.C,
-        estimated_beta=None,
-        estimated_lambda=0.500732,
-        model="MMNL_5PT",
-        segment_betas=[-0.050000, -0.003484, -0.002575, -0.013784, -0.004943],
-        segment_weights=[0.001068, 0.024394, 0.349788, 0.128167, 0.496584],
-    )
-    expected_mmnl_5pt_v0c = 28434.09
-    _record_check(np.isclose(mmnl_5pt_v0c, expected_mmnl_5pt_v0c, atol=5), (
-        f"MMNL_5PT expected V(0,C)={expected_mmnl_5pt_v0c:.2f}, got {mmnl_5pt_v0c:.4f}"
-    ))
-
-    # Test 3: MMNL_2PT regression check from current results logs.
-    # Source: example_2/results/MMNL_2PT_high_all/00_exec.log
-    mmnl_2pt_v0c = _run_test(
-        "MMNL_2PT",
-        test_n=C.n,
-        test_r=C.r,
-        test_t=C.T,
-        test_c=C.C,
-        estimated_beta=None,
-        estimated_lambda=0.492829,
-        model="MMNL_2PT",
-        segment_betas=[-0.002351, -0.007523],
-        segment_weights=[0.476964, 0.523036],
-    )
-    expected_mmnl_2pt_v0c = 37420.01
-    _record_check(np.isclose(mmnl_2pt_v0c, expected_mmnl_2pt_v0c, atol=5), (
-        f"MMNL_2PT expected V(0,C)={expected_mmnl_2pt_v0c:.2f}, got {mmnl_2pt_v0c:.4f}"
-    ))
-
-    # Test 4: MMNLcont regression check from current results logs.
-    # Source: example_2/results/MMNL_2PT_high_all/00_exec.log
-    mmnl_cont_v0c = _run_test(
-        "MMNLcont",
-        test_n=C.n,
-        test_r=C.r,
-        test_t=C.T,
-        test_c=C.C,
-        estimated_beta=None,
-        estimated_lambda=0.492829,
-        model="MMNLcont",
-        mu_b=-5.429548,
-        sigma_b=0.603061,
-    )
-    expected_mmnl_cont_v0c = 64144.36
-    _record_check(np.isclose(mmnl_cont_v0c, expected_mmnl_cont_v0c, atol=15), (
-        f"MMNLcont expected V(0,C)={expected_mmnl_cont_v0c:.2f}, got {mmnl_cont_v0c:.4f}"
-    ))
-
-    # Test 5: MNL with 100 products using temporary n and r.
-    prices_100 = np.linspace(700.0, 100.0, 100, dtype=float)
-    _run_test(
-        "MNL-100-products",
-        test_n=100,
-        test_r=prices_100,
-        test_t=C.T,
-        test_c=C.C,
-        estimated_beta=-0.0045,
-        estimated_lambda=0.5,
-        model="MNL",
-    )
-
-    if test_failures:
-        print("\nTest run completed with failures:")
-        for failure in test_failures:
-            print(f" - {failure}")
-    else:
-        print("\nAll regression checks passed.")
-
-    
-
-
-
-    

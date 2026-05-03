@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=cpu
 #SBATCH --job-name=rl_choice_grid
-#SBATCH --array=0-35
+#SBATCH --array=0-71
 #SBATCH --time=10:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10G

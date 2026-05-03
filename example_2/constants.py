@@ -13,9 +13,9 @@ N_ESTIMATION_EPISODES = 50
 
 T = 410
 C = 185
-n = 10
+n = 100 if c.LARGE_PRODUCT_SET else 10
 ARRIVAL_PROB = 0.5
-r = np.asarray([600, 550, 475, 400, 300, 280, 240, 200, 185, 175], dtype=float)
+r = np.linspace(600, 175, n) if c.LARGE_PRODUCT_SET else np.asarray([600, 550, 475, 400, 300, 280, 240, 200, 185, 175], dtype=float)
 
 LEARNING_CURVE_ENABLED = False
 PROGRESS_BAR_ENABLED = True
@@ -61,5 +61,5 @@ SENSITIVITY_BETA_GT = {
 OUTPUT_DIR = os.path.join(
     BASE_DIR,
     "results",
-    f"{c.GT_MODEL}_{'high' if c.HIGH_SENSITIVITY else 'low'}_{'all' if c.TRAIN_ON_ALL_SETS else 'effsets'}",
+    f"{'large' if c.LARGE_PRODUCT_SET else 'small'}_{'classical' if c.TRAIN_ON_ALL_SETS else 'model_informed'}_{'high' if c.HIGH_SENSITIVITY else 'low'}_{c.GT_MODEL}",
 )

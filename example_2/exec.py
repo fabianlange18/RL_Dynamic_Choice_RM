@@ -17,12 +17,20 @@ from estimation_biogeme import (
     collect_transaction_data,
 )
 from env_example_2 import TalluriExample2
-from efficient_sets import compute_efficient_sets
-from choice_dp import solve_by_dp
-from choice_dp_gurobi import solve_by_dp_gurobi
 from train_rl import train_rl
 from evaluation import evaluate_saved_models, print_evaluation_table
 from simulation import simulate
+
+if c.LARGE_PRODUCT_SET:
+    if c.TRAIN_ON_ALL_SETS:
+        from choice_dp_gurobi import solve_by_dp
+        from efficient_sets import compute_efficient_sets # unused
+    else:
+        from choice_dp import solve_by_dp
+        from efficient_sets_gurobi import compute_efficient_sets
+else:
+    from choice_dp import solve_by_dp
+    from efficient_sets import compute_efficient_sets
 
 
 def log_message(message):
