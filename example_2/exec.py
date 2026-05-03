@@ -302,38 +302,44 @@ def main():
         efficient_sets_time_mmnl_2pt = 0.0
     else:
         with gurobi_slot_lock("efficient_sets") if uses_gurobi_efficient_sets else nullcontext():
-            t0 = time.perf_counter()
-            efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
-            efficient_sets_time_mnl = time.perf_counter() - t0
-            log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+            import gurobipy as gp
 
-            t0 = time.perf_counter()
-            efficient_sets_mmnl_5pt = compute_efficient_sets(
-                model="MMNL_5PT",
-                segment_betas=betas_mmnl_5pt,
-                segment_weights=weights_mmnl_5pt,
-            )
-            efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
-            log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+            with gp.Env() as gurobi_env:
+                t0 = time.perf_counter()
+                efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl, env=gurobi_env)
+                efficient_sets_time_mnl = time.perf_counter() - t0
+                log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
 
-            t0 = time.perf_counter()
-            efficient_sets_mmnl_2pt = compute_efficient_sets(
-                model="MMNL_2PT",
-                segment_betas=betas_mmnl_2pt,
-                segment_weights=weights_mmnl_2pt,
-            )
-            efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
-            log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+                t0 = time.perf_counter()
+                efficient_sets_mmnl_5pt = compute_efficient_sets(
+                    model="MMNL_5PT",
+                    env=gurobi_env,
+                    segment_betas=betas_mmnl_5pt,
+                    segment_weights=weights_mmnl_5pt,
+                )
+                efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+                log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
 
-            # MMNL continuous disabled
-            # t0 = time.perf_counter()
-            # efficient_sets_mmnl_cont = compute_efficient_sets(
-            #     model="MMNLcont",
-            #     mu_b=mu_mmnl_cont,
-            #     sigma_b=sigma_mmnl_cont,
-            # )
-            # efficient_sets_time_mmnl_cont = time.perf_counter() - t0
-            # log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
+                t0 = time.perf_counter()
+                efficient_sets_mmnl_2pt = compute_efficient_sets(
+                    model="MMNL_2PT",
+                    env=gurobi_env,
+                    segment_betas=betas_mmnl_2pt,
+                    segment_weights=weights_mmnl_2pt,
+                )
+                efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+                log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+
+                # MMNL continuous disabled
+                # t0 = time.perf_counter()
+                # efficient_sets_mmnl_cont = compute_efficient_sets(
+                #     model="MMNLcont",
+                #     env=gurobi_env,
+                #     mu_b=mu_mmnl_cont,
+                #     sigma_b=sigma_mmnl_cont,
+                # )
+                # efficient_sets_time_mmnl_cont = time.perf_counter() - t0
+                # log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
 
             # Flush lingering Gurobi references before the slot lock releases.
             gc.collect()
@@ -358,56 +364,63 @@ def main():
     if uses_gurobi_dp:
         _wait_for_effsets_priority(log_gurobi_message)
     with gurobi_slot_lock("dp") if uses_gurobi_dp else nullcontext():
-        t0 = time.perf_counter()
-        v_mnl, pi_mnl = solve_by_dp(
-            efficient_sets=efficient_sets_mnl,
-            estimated_beta=beta_mnl,
-            estimated_lambda=lambda_mnl,
-            model="MNL",
-        )
-        dp_mnl_time = time.perf_counter() - t0
-        _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
-        log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
+        import gurobipy as gp
 
-        t0 = time.perf_counter()
-        v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
-            efficient_sets=efficient_sets_mmnl_5pt,
-            estimated_beta=None,
-            estimated_lambda=lambda_mmnl_5pt,
-            model="MMNL_5PT",
-            segment_betas=betas_mmnl_5pt,
-            segment_weights=weights_mmnl_5pt,
-        )
-        dp_mmnl_5pt_time = time.perf_counter() - t0
-        _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
-        log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
+        with gp.Env() as gurobi_env:
+            t0 = time.perf_counter()
+            v_mnl, pi_mnl = solve_by_dp(
+                efficient_sets=efficient_sets_mnl,
+                estimated_beta=beta_mnl,
+                estimated_lambda=lambda_mnl,
+                model="MNL",
+                env=gurobi_env,
+            )
+            dp_mnl_time = time.perf_counter() - t0
+            _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
+            log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
 
-        t0 = time.perf_counter()
-        v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
-            efficient_sets=efficient_sets_mmnl_2pt,
-            estimated_beta=None,
-            estimated_lambda=lambda_mmnl_2pt,
-            model="MMNL_2PT",
-            segment_betas=betas_mmnl_2pt,
-            segment_weights=weights_mmnl_2pt,
-        )
-        dp_mmnl_2pt_time = time.perf_counter() - t0
-        _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
-        log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
+            t0 = time.perf_counter()
+            v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
+                efficient_sets=efficient_sets_mmnl_5pt,
+                estimated_beta=None,
+                estimated_lambda=lambda_mmnl_5pt,
+                model="MMNL_5PT",
+                env=gurobi_env,
+                segment_betas=betas_mmnl_5pt,
+                segment_weights=weights_mmnl_5pt,
+            )
+            dp_mmnl_5pt_time = time.perf_counter() - t0
+            _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+            log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
 
-        # MMNL continuous disabled
-        # t0 = time.perf_counter()
-        # v_mmnl_cont, pi_mmnl_cont = solve_by_dp(
-        #     efficient_sets=efficient_sets_mmnl_cont,
-        #     estimated_beta=None,
-        #     estimated_lambda=lambda_mmnl_cont,
-        #     model="MMNLcont",
-        #     mu_b=mu_mmnl_cont,
-        #     sigma_b=sigma_mmnl_cont,
-        # )
-        # dp_mmnl_cont_time = time.perf_counter() - t0
-        # _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
-        # log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
+            t0 = time.perf_counter()
+            v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
+                efficient_sets=efficient_sets_mmnl_2pt,
+                estimated_beta=None,
+                estimated_lambda=lambda_mmnl_2pt,
+                model="MMNL_2PT",
+                env=gurobi_env,
+                segment_betas=betas_mmnl_2pt,
+                segment_weights=weights_mmnl_2pt,
+            )
+            dp_mmnl_2pt_time = time.perf_counter() - t0
+            _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+            log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
+
+            # MMNL continuous disabled
+            # t0 = time.perf_counter()
+            # v_mmnl_cont, pi_mmnl_cont = solve_by_dp(
+            #     efficient_sets=efficient_sets_mmnl_cont,
+            #     estimated_beta=None,
+            #     estimated_lambda=lambda_mmnl_cont,
+            #     model="MMNLcont",
+            #     env=gurobi_env,
+            #     mu_b=mu_mmnl_cont,
+            #     sigma_b=sigma_mmnl_cont,
+            # )
+            # dp_mmnl_cont_time = time.perf_counter() - t0
+            # _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
+            # log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
 
         # Flush lingering Gurobi references before the slot lock releases.
         gc.collect()

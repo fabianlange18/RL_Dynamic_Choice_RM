@@ -51,14 +51,14 @@ def _action_int_from_binary(x_vals):
     return action_int
 
 
-def _build_offer_model(prices, betas, weights):
+def _build_offer_model(prices, betas, weights, env=None):
     """Build a reusable MIQCP model over product binaries."""
     n_products = len(prices)
     n_segments = len(betas)
 
     exp_util = np.exp(np.outer(betas, prices))
 
-    model = gp.Model("dp_offer_selection_product_binary")
+    model = gp.Model("dp_offer_selection_product_binary", env=env) if env is not None else gp.Model("dp_offer_selection_product_binary")
     model.Params.OutputFlag = 0
     model.Params.NonConvex = 2
     model.Params.TimeLimit = float(MAX_STATE_SOLVE_SECONDS)
@@ -89,6 +89,7 @@ def solve_by_dp(
     estimated_beta,
     estimated_lambda,
     model="MNL",
+    env=None,
     segment_betas=None,
     segment_weights=None,
     mu_b=None,
@@ -108,7 +109,7 @@ def solve_by_dp(
         mmnl_cont_points=mmnl_cont_points,
     )
 
-    gp_model, x_vars, exp_revenue_vars, purchase_prob_vars, seg_weights = _build_offer_model(prices, betas, weights)
+    gp_model, x_vars, exp_revenue_vars, purchase_prob_vars, seg_weights = _build_offer_model(prices, betas, weights, env=env)
 
     v = np.zeros((C.T + 1, C.C + 1), dtype=np.float32)
     pi = np.zeros((C.T, C.C + 1), dtype=object)

@@ -1,7 +1,6 @@
 import numpy as np
 import gurobipy as gp
 from gurobipy import GRB
-from functools import lru_cache
 
 import config as c
 import constants as C
@@ -93,7 +92,7 @@ def _get_segment_parameters(
     return seg_betas, seg_weights / weight_sum
 
 
-def _build_offer_qr_model(prices, betas, weights):
+def _build_offer_qr_model(prices, betas, weights, env=None):
     """Build a pure MILP model for aggregate (Q, R) of an offer set.
 
     The bilinear terms p_k * x_i are linearized via McCormick envelopes,
@@ -116,7 +115,7 @@ def _build_offer_qr_model(prices, betas, weights):
 
     exp_util = np.exp(np.outer(betas, prices))  # shape (n_segments, n_products)
 
-    model = gp.Model("efficient_set_qr_milp")
+    model = gp.Model("efficient_set_qr_milp", env=env) if env is not None else gp.Model("efficient_set_qr_milp")
     model.Params.OutputFlag = 0
     model.Params.TimeLimit = float(MAX_EFFICIENT_SET_SOLVE_SECONDS)
 
@@ -233,7 +232,6 @@ def _solve_best_marginal_ratio(model, x_vars, q_total, r_total, current_q, curre
         model.update()
 
 
-@lru_cache(maxsize=8)
 def _identify_efficient_sets(
     model,
     beta=None,
@@ -241,6 +239,7 @@ def _identify_efficient_sets(
     segment_weights=None,
     mu_b=None,
     sigma_b=None,
+    env=None,
     mmnl_cont_points=MMNL_CONT_QUAD_POINTS,
 ):
     beta = None if beta is None else float(beta)
@@ -260,7 +259,7 @@ def _identify_efficient_sets(
     )
 
     prices = np.asarray(C.r, dtype=float)
-    gp_model, x_vars, q_total, r_total = _build_offer_qr_model(prices=prices, betas=betas, weights=weights)
+    gp_model, x_vars, q_total, r_total = _build_offer_qr_model(prices=prices, betas=betas, weights=weights, env=env)
 
     tol = 1e-10
     efficient_sequence = [0]
@@ -302,7 +301,7 @@ def _identify_efficient_sets(
     return tuple(efficient_sequence)
 
 
-def compute_efficient_sets(model, beta=None, segment_betas=None, segment_weights=None, mu_b=None, sigma_b=None):
+def compute_efficient_sets(model, beta=None, segment_betas=None, segment_weights=None, mu_b=None, sigma_b=None, env=None):
     """Compute efficient offer sets using Gurobi optimization over product binaries."""
     if beta is None and segment_betas is None and model != "MMNLcont":
         beta = C.SENSITIVITY_BETA_GT["high"] if c.HIGH_SENSITIVITY else C.SENSITIVITY_BETA_GT["low"]
@@ -319,5 +318,6 @@ def compute_efficient_sets(model, beta=None, segment_betas=None, segment_weights
         segment_weights=segment_weights,
         mu_b=mu_b,
         sigma_b=sigma_b,
+        env=env,
         mmnl_cont_points=MMNL_CONT_QUAD_POINTS,
     )
