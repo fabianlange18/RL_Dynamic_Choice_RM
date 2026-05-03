@@ -19,6 +19,9 @@ export XDG_CACHE_HOME=$TMPDIR/.cache
 mkdir -p $XDG_CACHE_HOME/arviz
 
 export PYTHONWARNINGS="ignore::FutureWarning"
+export WLSACCESSID=9f1b1284-0ea6-423e-9658-9af7206ddedb
+export WLSSECRET=7e8a0849-bda0-4b5d-8cdf-3c8b5d5d2143
+export LICENSEID=2817305
 
 mkdir -p example_2/slurm/logs
 

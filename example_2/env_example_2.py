@@ -11,22 +11,22 @@ class TalluriExample2(gym.Env):
 
     def __init__(self, efficient_sets = None, use_multibinary_action_space: bool = False):
 
-        self.use_multibinary_action_space = use_multibinary_action_space and efficient_sets is None
-
         if efficient_sets is not None:
             self.possible_sets = tuple(efficient_sets)
-        elif self.use_multibinary_action_space:
+        elif use_multibinary_action_space or c.LARGE_PRODUCT_SET:
             # In MultiBinary mode, actions are direct product-wise 0/1 decisions.
             # Do not materialize all 2^n sets.
             self.possible_sets = None
         else:
             self.possible_sets = tuple(range(2 ** C.n))
         
-        self.action_space = (
-            gym.spaces.MultiBinary(C.n)
-            if self.use_multibinary_action_space
-            else gym.spaces.Discrete(len(self.possible_sets))
-        )
+        self.use_multibinary_action_space = use_multibinary_action_space or self.possible_sets is None
+
+        if self.use_multibinary_action_space:
+            self.action_space = gym.spaces.MultiBinary(C.n)
+        else:
+            self.action_space = gym.spaces.Discrete(len(self.possible_sets))
+            
         self.observation_space = gym.spaces.MultiDiscrete([C.T + 1, C.C + 1])
         
         self._seed = None

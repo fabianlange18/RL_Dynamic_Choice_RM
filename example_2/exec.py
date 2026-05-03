@@ -46,9 +46,10 @@ def main():
     task_id = os.environ.get("TASK_ID", "N/A")
     log_message(f"\n{'='*60}")
     log_message(f"TASK_ID: {task_id}")
-    log_message(f"GT_MODEL: {c.GT_MODEL}")
-    log_message(f"HIGH_SENSITIVITY: {c.HIGH_SENSITIVITY}")
+    log_message(f"LARGE_PRODUCT_SET: {c.LARGE_PRODUCT_SET}")
     log_message(f"TRAIN_ON_ALL_SETS: {c.TRAIN_ON_ALL_SETS}")
+    log_message(f"HIGH_SENSITIVITY: {c.HIGH_SENSITIVITY}")
+    log_message(f"GT_MODEL: {c.GT_MODEL}")
     log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
