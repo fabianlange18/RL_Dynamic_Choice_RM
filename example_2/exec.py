@@ -4,6 +4,7 @@ import gc
 import time
 import pickle
 import logging
+from datetime import datetime, timezone
 from contextlib import contextmanager, nullcontext
 
 import config as c
@@ -71,17 +72,50 @@ def gurobi_slot_lock(phase_label):
         yield
         return
 
-    try:
-        import fcntl
-    except Exception:
-        # Windows/local fallback where fcntl is unavailable.
-        yield
-        return
-
     os.makedirs(lock_dir, exist_ok=True)
     poll_seconds = 60
-    lock_file = None
+    stale_seconds = int(os.environ.get("GUROBI_SLOT_STALE_SECONDS", "21600"))
+    events_log_path = os.path.join(lock_dir, "gurobi_lock_events.log")
+    lock_path = None
     lock_slot = None
+
+    def _lock_metadata(slot):
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "job_id": os.environ.get("SLURM_JOB_ID", "N/A"),
+            "task_id": os.environ.get("TASK_ID", "N/A"),
+            "phase": str(phase_label),
+            "slot": str(slot),
+        }
+
+    def _write_lock_event(action, slot):
+        meta = _lock_metadata(slot)
+        line = (
+            f"{meta['timestamp']} action={action}"
+            f" job_id={meta['job_id']}"
+            f" task_id={meta['task_id']}"
+            f" phase={meta['phase']}"
+            f" slot={meta['slot']}"
+        )
+        try:
+            with open(events_log_path, "a", encoding="utf-8") as events_log:
+                events_log.write(f"{line}\n")
+        except OSError as exc:
+            log_gurobi_message(f"[{phase_label}] Failed to write lock event log: {exc}")
+
+    def _dispose_gurobi_default_env():
+        """Best-effort teardown of default Gurobi environment before slot release."""
+        try:
+            import gurobipy as gp
+        except Exception:
+            return
+
+        try:
+            gc.collect()
+            gp.disposeDefaultEnv()
+            log_gurobi_message(f"[{phase_label}] Disposed Gurobi default environment")
+        except Exception as exc:
+            log_gurobi_message(f"[{phase_label}] Failed to dispose Gurobi default environment: {exc}")
 
     try:
         log_gurobi_message(
@@ -90,23 +124,44 @@ def gurobi_slot_lock(phase_label):
         while True:
             for slot in range(1, max_slots + 1):
                 path = os.path.join(lock_dir, f"slot_{slot}.lock")
-                fh = open(path, "w", encoding="utf-8")
+
+                # Best-effort stale lock cleanup for crashed jobs.
+                if os.path.exists(path):
+                    try:
+                        age = time.time() - os.path.getmtime(path)
+                        if age > stale_seconds:
+                            os.remove(path)
+                            log_gurobi_message(
+                                f"[{phase_label}] Removed stale lock file: {path} (age={age:.0f}s)"
+                            )
+                    except FileNotFoundError:
+                        pass
+                    except OSError:
+                        pass
+
                 try:
-                    fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    lock_file = fh
+                    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                    with os.fdopen(fd, "w", encoding="utf-8") as meta:
+                        meta.write(
+                            f"pid={os.getpid()} task_id={os.environ.get('TASK_ID', 'N/A')} phase={phase_label}\n"
+                        )
+                    lock_path = path
                     lock_slot = slot
+                    _write_lock_event("acquire", slot)
                     log_gurobi_message(f"[{phase_label}] Acquired Gurobi slot {slot}")
                     yield
                     return
-                except BlockingIOError:
-                    fh.close()
+                except FileExistsError:
+                    pass
             time.sleep(poll_seconds)
     finally:
-        if lock_file is not None:
+        if lock_path is not None:
+            _dispose_gurobi_default_env()
             try:
-                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-            finally:
-                lock_file.close()
+                os.remove(lock_path)
+            except FileNotFoundError:
+                pass
+            _write_lock_event("release", lock_slot)
             log_gurobi_message(f"[{phase_label}] Released Gurobi slot {lock_slot}")
 
 
