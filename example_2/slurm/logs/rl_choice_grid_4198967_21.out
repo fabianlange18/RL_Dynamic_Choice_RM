@@ -1,0 +1,52 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4198979/gurobi_4198979_21/gurobi.lic (LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4198979/gurobi_4198979_21/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=21 with HIGH_SENSITIVITY=False, GT_MODEL=MNLrefPrice, TRAIN_ON_ALL_SETS=False, LARGE_PRODUCT_SET=True
+[efficient_sets] Registered pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_21
+xlogit long data: obs=9526, alts=101, rows=962126, memory=22.02 MiB
+[efficient_sets] Waiting for Gurobi slot (max concurrent: 2)
+[efficient_sets] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2817305
+Academic license 2817305 - for non-commercial use only - registered to fa___@uni-mannheim.de
+[efficient_sets] Released Gurobi slot 1
+[efficient_sets] Removed pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_21
+Training DQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:08 < 0:00:00 , 2,282 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:34 < 0:00:00 , 2,293 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:02:58 < 0:00:00 , 2,261 it/s ]
+Training QRDQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:25 < 0:00:00 , 794 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:01:40 < 0:00:00 , 799 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:08:21 < 0:00:00 , 787 it/s ]
+Training ARS (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 26,008/20,000  [ 0:00:04 < 0:00:00 , 4,117 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━ 102,856/53,992  [ 0:00:12 < 0:00:00 , 4,181 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 412,116/271,136  [ 0:01:05 < 0:00:00 , 4,235 it/s ]
+Training A2C (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:08 < 0:00:00 , 2,497 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:32 < 0:00:00 , 2,499 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:02:43 < 0:00:00 , 2,413 it/s ]
+Training TRPO (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 24,576/20,000  [ 0:00:08 < 0:00:00 , 2,170 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 81,920/80,000  [ 0:00:35 < 0:00:00 , 2,185 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 401,408/400,000  [ 0:03:02 < 0:00:00 , 2,108 it/s ]
+Training PPO (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 24,576/20,000  [ 0:00:13 < 0:00:00 , 1,307 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 81,920/80,000  [ 0:00:57 < 0:00:00 , 1,219 it/s ]
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n005
+Job ID: 4198979
+Array Job ID: 4198967_21
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 02:31:04 core-walltime
+Job Wall-clock time: 01:15:32
+Memory Utilized: 3.01 GB
+Memory Efficiency: 30.14% of 10.00 GB (10.00 GB/node)

@@ -1,0 +1,23 @@
+Traceback (most recent call last):
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/run_experiment_grid.py", line 79, in <module>
+    run_single(args.task_id)
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/run_experiment_grid.py", line 71, in run_single
+    runpy.run_path(str(exec_path), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/exec.py", line 456, in <module>
+    main()
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/exec.py", line 256, in main
+    efficient_sets_mmnl_5pt = compute_efficient_sets(
+                              ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/efficient_sets_gurobi.py", line 315, in compute_efficient_sets
+    return _identify_efficient_sets(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/efficient_sets_gurobi.py", line 272, in _identify_efficient_sets
+    candidate = _solve_best_marginal_ratio(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/efficient_sets_gurobi.py", line 200, in _solve_best_marginal_ratio
+    model.optimize()
+  File "src/gurobipy/_model.pyx", line 903, in gurobipy._model.Model.optimize
+gurobipy._exception.GurobiError: Overage for too long, 5 active sessions and over the baseline for 62 minutes

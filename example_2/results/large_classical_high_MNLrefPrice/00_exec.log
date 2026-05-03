@@ -1,0 +1,24 @@
+
+============================================================
+TASK_ID: 59
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: True
+GT_MODEL: MNLrefPrice
+============================================================
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000, 1000000], Estimation Episodes: 50
+
+Observation sampling time: 2.2870 seconds
+Estimation_MNL  time: 0.1180s | beta: -0.006091, lambda: 0.503895
+  LL: -35641.993430, AIC: 71285.987, BIC: 71293.200
+
+Estimation_MMNL_5PT time: 30.8844s | lambda: 0.503895
+  LL: -35641.993319, AIC: 71287.987, BIC: 71302.413
+Betas: ['-0.006097', '-0.006094', '-0.006091', '-0.006089', '-0.006086']
+Weights: ['0.011257', '0.222076', '0.533333', '0.222076', '0.011257']
+
+Estimation_MMNL_2PT time: 0.0003s | lambda: 0.503895
+  LL: -35641.993319, AIC: 71287.987, BIC: 71302.413
+Betas: ['-0.006093', '-0.006089']
+Weights: ['0.500000', '0.500000']
+

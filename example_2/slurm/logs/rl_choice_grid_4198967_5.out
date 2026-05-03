@@ -1,0 +1,76 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4198971/gurobi_4198971_5/gurobi.lic (LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4198971/gurobi_4198971_5/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=5 with HIGH_SENSITIVITY=False, GT_MODEL=MMNL_5PT, TRAIN_ON_ALL_SETS=False, LARGE_PRODUCT_SET=True
+[efficient_sets] Registered pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_5
+xlogit long data: obs=9545, alts=101, rows=964045, memory=22.07 MiB
+[efficient_sets] Waiting for Gurobi slot (max concurrent: 2)
+[efficient_sets] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2817305
+Academic license 2817305 - for non-commercial use only - registered to fa___@uni-mannheim.de
+[efficient_sets] Released Gurobi slot 1
+[efficient_sets] Removed pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_5
+Training DQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:09 < 0:00:00 , 2,063 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:39 < 0:00:00 , 2,021 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:03:17 < 0:00:00 , 2,030 it/s ]
+Training QRDQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:25 < 0:00:00 , 777 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:01:42 < 0:00:00 , 782 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:08:29 < 0:00:00 , 785 it/s ]
+Training ARS (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 26,108/20,000  [ 0:00:06 < 0:00:00 , 3,025 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━ 103,644/53,892  [ 0:00:17 < 0:00:00 , 3,016 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 414,932/270,248  [ 0:01:29 < 0:00:00 , 3,005 it/s ]
+Training A2C (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:10 < 0:00:00 , 1,998 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:40 < 0:00:00 , 1,992 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:03:24 < 0:00:00 , 1,931 it/s ]
+Training TRPO (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 24,576/20,000  [ 0:00:10 < 0:00:00 , 1,795 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 81,920/80,000  [ 0:00:42 < 0:00:00 , 1,757 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 401,408/400,000  [ 0:03:42 < 0:00:00 , 1,679 it/s ]
+Training PPO (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 24,576/20,000  [ 0:00:15 < 0:00:00 , 1,158 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 81,920/80,000  [ 0:01:05 < 0:00:00 , 1,165 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 401,408/400,000  [ 0:05:41 < 0:00:00 , 1,118 it/s ]
+Training DQN (seed 2/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:09 < 0:00:00 , 2,022 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:39 < 0:00:00 , 2,011 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:03:19 < 0:00:00 , 2,016 it/s ]
+Training QRDQN (seed 2/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:25 < 0:00:00 , 780 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:01:42 < 0:00:00 , 777 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:08:33 < 0:00:00 , 782 it/s ]
+Training ARS (seed 2/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 26,004/20,000  [ 0:00:06 < 0:00:00 , 2,958 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━ 103,620/53,996  [ 0:00:18 < 0:00:00 , 2,946 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 413,596/270,376  [ 0:01:31 < 0:00:00 , 2,994 it/s ]
+Training A2C (seed 2/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:09 < 0:00:00 , 2,004 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:40 < 0:00:00 , 1,995 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:03:23 < 0:00:00 , 1,940 it/s ]
+Training TRPO (seed 2/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 24,576/20,000  [ 0:00:10 < 0:00:00 , 1,775 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 81,920/80,000  [ 0:00:42 < 0:00:00 , 1,770 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 401,408/400,000  [ 0:03:40 < 0:00:00 , 1,704 it/s ]
+Training PPO (seed 2/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 24,576/20,000  [ 0:00:15 < 0:00:00 , 1,158 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 81,920/80,000  [ 0:01:05 < 0:00:00 , 1,160 it/s ]
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n001
+Job ID: 4198971
+Array Job ID: 4198967_5
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 02:31:04 core-walltime
+Job Wall-clock time: 01:15:32
+Memory Utilized: 3.73 GB
+Memory Efficiency: 37.28% of 10.00 GB (10.00 GB/node)

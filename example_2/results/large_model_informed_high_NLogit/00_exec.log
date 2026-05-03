@@ -1,0 +1,24 @@
+
+============================================================
+TASK_ID: 69
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: False
+HIGH_SENSITIVITY: True
+GT_MODEL: NLogit
+============================================================
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000], Estimation Episodes: 50
+
+Observation sampling time: 2.3146 seconds
+Estimation_MNL  time: 0.1333s | beta: -0.006955, lambda: 0.498828
+  LL: -35138.708967, AIC: 70279.418, BIC: 70286.650
+
+Estimation_MMNL_5PT time: 26.9726s | lambda: 0.498828
+  LL: -35124.067097, AIC: 70252.134, BIC: 70266.598
+Betas: ['-0.012751', '-0.009696', '-0.006937', '-0.004179', '-0.001124']
+Weights: ['0.011257', '0.222076', '0.533333', '0.222076', '0.011257']
+
+Estimation_MMNL_2PT time: 0.0004s | lambda: 0.498828
+  LL: -35124.067097, AIC: 70252.134, BIC: 70266.598
+Betas: ['-0.008972', '-0.004902']
+Weights: ['0.500000', '0.500000']
+

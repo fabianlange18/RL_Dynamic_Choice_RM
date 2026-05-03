@@ -1,0 +1,95 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4199000/gurobi_4199000_63/gurobi.lic (LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4199000/gurobi_4199000_63/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=63 with HIGH_SENSITIVITY=True, GT_MODEL=MNLConsidSet, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+xlogit long data: obs=10136, alts=101, rows=1023736, memory=23.43 MiB
+[dp] Yielding to 18 active efficient-set task(s); waiting 60s
+[dp] Yielding to 17 active efficient-set task(s); waiting 60s
+[dp] Yielding to 17 active efficient-set task(s); waiting 60s
+[dp] Yielding to 17 active efficient-set task(s); waiting 60s
+[dp] Yielding to 16 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 15 active efficient-set task(s); waiting 60s
+[dp] Yielding to 14 active efficient-set task(s); waiting 60s
+[dp] Yielding to 13 active efficient-set task(s); waiting 60s
+[dp] Yielding to 12 active efficient-set task(s); waiting 60s
+[dp] Yielding to 12 active efficient-set task(s); waiting 60s
+[dp] Yielding to 12 active efficient-set task(s); waiting 60s
+[dp] Yielding to 12 active efficient-set task(s); waiting 60s
+[dp] Yielding to 12 active efficient-set task(s); waiting 60s
+[dp] Yielding to 11 active efficient-set task(s); waiting 60s
+[dp] Yielding to 11 active efficient-set task(s); waiting 60s
+[dp] Yielding to 11 active efficient-set task(s); waiting 60s
+[dp] Yielding to 11 active efficient-set task(s); waiting 60s
+[dp] Yielding to 11 active efficient-set task(s); waiting 60s
+[dp] Yielding to 11 active efficient-set task(s); waiting 60s
+[dp] Yielding to 10 active efficient-set task(s); waiting 60s
+[dp] Yielding to 9 active efficient-set task(s); waiting 60s
+[dp] Yielding to 9 active efficient-set task(s); waiting 60s
+[dp] Yielding to 8 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+[dp] Yielding to 7 active efficient-set task(s); waiting 60s
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n011
+Job ID: 4199000
+Array Job ID: 4198967_63
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 02:31:04 core-walltime
+Job Wall-clock time: 01:15:32
+Memory Utilized: 4.05 GB
+Memory Efficiency: 40.50% of 10.00 GB (10.00 GB/node)

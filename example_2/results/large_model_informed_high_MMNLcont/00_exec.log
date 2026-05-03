@@ -1,0 +1,24 @@
+
+============================================================
+TASK_ID: 49
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: False
+HIGH_SENSITIVITY: True
+GT_MODEL: MMNLcont
+============================================================
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000], Estimation Episodes: 50
+
+Observation sampling time: 3.0406 seconds
+Estimation_MNL  time: 0.1296s | beta: -0.005038, lambda: 0.498789
+  LL: -37112.051048, AIC: 74226.102, BIC: 74233.322
+
+Estimation_MMNL_5PT time: 31.8246s | lambda: 0.498789
+  LL: -37098.310838, AIC: 74200.622, BIC: 74215.061
+Betas: ['-0.010655', '-0.007685', '-0.005003', '-0.002321', '-0.000000']
+Weights: ['0.011257', '0.222076', '0.533333', '0.222076', '0.011257']
+
+Estimation_MMNL_2PT time: 0.0004s | lambda: 0.498789
+  LL: -37098.310838, AIC: 74200.622, BIC: 74215.061
+Betas: ['-0.006981', '-0.003024']
+Weights: ['0.500000', '0.500000']
+

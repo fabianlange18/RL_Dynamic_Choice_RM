@@ -1,0 +1,28 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4198993/gurobi_4198993_49/gurobi.lic (LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4198993/gurobi_4198993_49/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=49 with HIGH_SENSITIVITY=True, GT_MODEL=MMNLcont, TRAIN_ON_ALL_SETS=False, LARGE_PRODUCT_SET=True
+[efficient_sets] Registered pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_49
+xlogit long data: obs=10093, alts=101, rows=1019393, memory=23.33 MiB
+[efficient_sets] Waiting for Gurobi slot (max concurrent: 2)
+[efficient_sets] Acquired Gurobi slot 2
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2817305
+[efficient_sets] Released Gurobi slot 2
+Max traced memory: 4728.02 MiB
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n009
+Job ID: 4198993
+Array Job ID: 4198967_49
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:40
+CPU Efficiency: 0.54% of 02:02:20 core-walltime
+Job Wall-clock time: 01:01:10
+Memory Utilized: 4.67 GB
+Memory Efficiency: 46.67% of 10.00 GB (10.00 GB/node)

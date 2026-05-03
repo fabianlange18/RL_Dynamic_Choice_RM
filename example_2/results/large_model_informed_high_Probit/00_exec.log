@@ -1,0 +1,24 @@
+
+============================================================
+TASK_ID: 53
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: False
+HIGH_SENSITIVITY: True
+GT_MODEL: Probit
+============================================================
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000], Estimation Episodes: 50
+
+Observation sampling time: 2.8128 seconds
+Estimation_MNL  time: 0.1313s | beta: -0.009656, lambda: 0.495805
+  LL: -30125.329374, AIC: 60252.659, BIC: 60259.885
+
+Estimation_MMNL_5PT time: 33.5018s | lambda: 0.495805
+  LL: -30125.329350, AIC: 60254.659, BIC: 60269.112
+Betas: ['-0.009660', '-0.009658', '-0.009656', '-0.009655', '-0.009653']
+Weights: ['0.011257', '0.222076', '0.533333', '0.222076', '0.011257']
+
+Estimation_MMNL_2PT time: 0.0003s | lambda: 0.495805
+  LL: -30125.329350, AIC: 60254.659, BIC: 60269.112
+Betas: ['-0.009658', '-0.009655']
+Weights: ['0.500000', '0.500000']
+

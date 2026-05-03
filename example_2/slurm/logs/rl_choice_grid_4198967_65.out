@@ -1,0 +1,36 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4199001/gurobi_4199001_65/gurobi.lic (LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4199001/gurobi_4199001_65/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=65 with HIGH_SENSITIVITY=True, GT_MODEL=TMNL, TRAIN_ON_ALL_SETS=False, LARGE_PRODUCT_SET=True
+[efficient_sets] Registered pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_65
+xlogit long data: obs=9952, alts=101, rows=1005152, memory=23.01 MiB
+[efficient_sets] Waiting for Gurobi slot (max concurrent: 2)
+[efficient_sets] Acquired Gurobi slot 2
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2817305
+Academic license 2817305 - for non-commercial use only - registered to fa___@uni-mannheim.de
+[efficient_sets] Released Gurobi slot 2
+[efficient_sets] Removed pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_65
+Training DQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:09 < 0:00:00 , 2,167 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:39 < 0:00:00 , 2,018 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:03:18 < 0:00:00 , 2,019 it/s ]
+Training QRDQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:31 < 0:00:00 , 639 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:02:08 < 0:00:00 , 626 it/s ]
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n011
+Job ID: 4199001
+Array Job ID: 4198967_65
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 02:31:04 core-walltime
+Job Wall-clock time: 01:15:32
+Memory Utilized: 4.40 GB
+Memory Efficiency: 44.04% of 10.00 GB (10.00 GB/node)
