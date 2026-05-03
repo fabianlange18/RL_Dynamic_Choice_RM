@@ -116,7 +116,10 @@ def _effsets_pending_path():
     task_id = os.environ.get("TASK_ID", "")
     if not lock_dir or not task_id:
         return None
-    return os.path.join(lock_dir, f"effsets_pending_{task_id}")
+    # Separate pending markers into their own subdirectory to avoid interference with slot locks
+    pending_dir = os.path.join(lock_dir, "effsets_pending")
+    os.makedirs(pending_dir, exist_ok=True)
+    return os.path.join(pending_dir, f"task_{task_id}")
 
 
 def _wait_for_effsets_priority(log_fn, poll_seconds=15):
@@ -125,8 +128,12 @@ def _wait_for_effsets_priority(log_fn, poll_seconds=15):
     if not lock_dir:
         return
     import glob
+    # Check the dedicated pending directory, not the main lock dir
+    pending_dir = os.path.join(lock_dir, "effsets_pending")
+    if not os.path.exists(pending_dir):
+        return
     while True:
-        pending = glob.glob(os.path.join(lock_dir, "effsets_pending_*"))
+        pending = glob.glob(os.path.join(pending_dir, "task_*"))
         if not pending:
             return
         log_fn(f"[dp] Yielding to {len(pending)} active efficient-set task(s); waiting {poll_seconds}s")
