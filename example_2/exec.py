@@ -4,6 +4,7 @@ import gc
 import time
 import pickle
 import logging
+from contextlib import contextmanager, nullcontext
 
 import config as c
 import constants as C
@@ -38,6 +39,70 @@ def log_message(message):
     """Log message to file."""
     with open(log_path, "a", encoding="utf-8") as log_file:
         log_file.write(f"{message}\n")
+
+
+@contextmanager
+def gurobi_slot_lock(phase_label):
+    """Limit concurrent Gurobi phases across SLURM tasks.
+
+    Uses file locks on Linux clusters when GUROBI_MAX_SLOTS and
+    GUROBI_SLOT_LOCK_DIR are configured. Falls back to no-op locally.
+    """
+    max_slots_raw = os.environ.get("GUROBI_MAX_SLOTS", "")
+    lock_dir = os.environ.get("GUROBI_SLOT_LOCK_DIR", "")
+
+    # No lock configuration -> no-op
+    if not max_slots_raw or not lock_dir:
+        yield
+        return
+
+    try:
+        max_slots = int(max_slots_raw)
+    except ValueError:
+        yield
+        return
+
+    if max_slots <= 0:
+        yield
+        return
+
+    try:
+        import fcntl
+    except Exception:
+        # Windows/local fallback where fcntl is unavailable.
+        yield
+        return
+
+    os.makedirs(lock_dir, exist_ok=True)
+    poll_seconds = 10
+    lock_file = None
+    lock_slot = None
+
+    try:
+        log_message(
+            f"[{phase_label}] Waiting for Gurobi slot (max concurrent: {max_slots})"
+        )
+        while True:
+            for slot in range(1, max_slots + 1):
+                path = os.path.join(lock_dir, f"slot_{slot}.lock")
+                fh = open(path, "w", encoding="utf-8")
+                try:
+                    fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    lock_file = fh
+                    lock_slot = slot
+                    log_message(f"[{phase_label}] Acquired Gurobi slot {slot}")
+                    yield
+                    return
+                except BlockingIOError:
+                    fh.close()
+            time.sleep(poll_seconds)
+    finally:
+        if lock_file is not None:
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            finally:
+                lock_file.close()
+            log_message(f"[{phase_label}] Released Gurobi slot {lock_slot}")
 
 
 def main():
@@ -128,6 +193,7 @@ def main():
     gc.collect()
 
     # -- Efficient sets ---------------------------------------------------
+    uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and (not c.TRAIN_ON_ALL_SETS)
     if c.TRAIN_ON_ALL_SETS:
         efficient_sets_mnl  = None
         efficient_sets_mmnl_5pt = None
@@ -139,37 +205,38 @@ def main():
         efficient_sets_time_mmnl_2pt = 0.0
         efficient_sets_time_mmnl_cont = 0.0
     else:
-        t0 = time.perf_counter()
-        efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
-        efficient_sets_time_mnl = time.perf_counter() - t0
-        log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+        with gurobi_slot_lock("efficient_sets") if uses_gurobi_efficient_sets else nullcontext():
+            t0 = time.perf_counter()
+            efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
+            efficient_sets_time_mnl = time.perf_counter() - t0
+            log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
 
-        t0 = time.perf_counter()
-        efficient_sets_mmnl_5pt = compute_efficient_sets(
-            model="MMNL_5PT",
-            segment_betas=betas_mmnl_5pt,
-            segment_weights=weights_mmnl_5pt,
-        )
-        efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
-        log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+            t0 = time.perf_counter()
+            efficient_sets_mmnl_5pt = compute_efficient_sets(
+                model="MMNL_5PT",
+                segment_betas=betas_mmnl_5pt,
+                segment_weights=weights_mmnl_5pt,
+            )
+            efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+            log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
 
-        t0 = time.perf_counter()
-        efficient_sets_mmnl_2pt = compute_efficient_sets(
-            model="MMNL_2PT",
-            segment_betas=betas_mmnl_2pt,
-            segment_weights=weights_mmnl_2pt,
-        )
-        efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
-        log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+            t0 = time.perf_counter()
+            efficient_sets_mmnl_2pt = compute_efficient_sets(
+                model="MMNL_2PT",
+                segment_betas=betas_mmnl_2pt,
+                segment_weights=weights_mmnl_2pt,
+            )
+            efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+            log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
 
-        t0 = time.perf_counter()
-        efficient_sets_mmnl_cont = compute_efficient_sets(
-            model="MMNLcont",
-            mu_b=mu_mmnl_cont,
-            sigma_b=sigma_mmnl_cont,
-        )
-        efficient_sets_time_mmnl_cont = time.perf_counter() - t0
-        log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
+            t0 = time.perf_counter()
+            efficient_sets_mmnl_cont = compute_efficient_sets(
+                model="MMNLcont",
+                mu_b=mu_mmnl_cont,
+                sigma_b=sigma_mmnl_cont,
+            )
+            efficient_sets_time_mmnl_cont = time.perf_counter() - t0
+            log_message(f"MMNL Cont efficient sets time: {efficient_sets_time_mmnl_cont:.4f}s | sets: {efficient_sets_mmnl_cont}\n")
 
     efficient_sets_rl_candidates = [
         efficient_sets_mnl,
@@ -183,55 +250,57 @@ def main():
             efficient_sets_rl = set(_sets) if efficient_sets_rl is None else (efficient_sets_rl | set(_sets))
 
     # -- DP solutions (with memory optimization: delete after use) -------
-    t0 = time.perf_counter()
-    v_mnl, pi_mnl = solve_by_dp(
-        efficient_sets=efficient_sets_mnl,
-        estimated_beta=beta_mnl,
-        estimated_lambda=lambda_mnl,
-        model="MNL",
-    )
-    dp_mnl_time = time.perf_counter() - t0
-    _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
+    uses_gurobi_dp = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
+    with gurobi_slot_lock("dp") if uses_gurobi_dp else nullcontext():
+        t0 = time.perf_counter()
+        v_mnl, pi_mnl = solve_by_dp(
+            efficient_sets=efficient_sets_mnl,
+            estimated_beta=beta_mnl,
+            estimated_lambda=lambda_mnl,
+            model="MNL",
+        )
+        dp_mnl_time = time.perf_counter() - t0
+        _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
 
-    t0 = time.perf_counter()
-    v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
-        efficient_sets=efficient_sets_mmnl_5pt,
-        estimated_beta=None,
-        estimated_lambda=lambda_mmnl_5pt,
-        model="MMNL_5PT",
-        segment_betas=betas_mmnl_5pt,
-        segment_weights=weights_mmnl_5pt,
-    )
-    dp_mmnl_5pt_time = time.perf_counter() - t0
-    _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
+        t0 = time.perf_counter()
+        v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
+            efficient_sets=efficient_sets_mmnl_5pt,
+            estimated_beta=None,
+            estimated_lambda=lambda_mmnl_5pt,
+            model="MMNL_5PT",
+            segment_betas=betas_mmnl_5pt,
+            segment_weights=weights_mmnl_5pt,
+        )
+        dp_mmnl_5pt_time = time.perf_counter() - t0
+        _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
 
-    t0 = time.perf_counter()
-    v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
-        efficient_sets=efficient_sets_mmnl_2pt,
-        estimated_beta=None,
-        estimated_lambda=lambda_mmnl_2pt,
-        model="MMNL_2PT",
-        segment_betas=betas_mmnl_2pt,
-        segment_weights=weights_mmnl_2pt,
-    )
-    dp_mmnl_2pt_time = time.perf_counter() - t0
-    _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
+        t0 = time.perf_counter()
+        v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
+            efficient_sets=efficient_sets_mmnl_2pt,
+            estimated_beta=None,
+            estimated_lambda=lambda_mmnl_2pt,
+            model="MMNL_2PT",
+            segment_betas=betas_mmnl_2pt,
+            segment_weights=weights_mmnl_2pt,
+        )
+        dp_mmnl_2pt_time = time.perf_counter() - t0
+        _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
 
-    t0 = time.perf_counter()
-    v_mmnl_cont, pi_mmnl_cont = solve_by_dp(
-        efficient_sets=efficient_sets_mmnl_cont,
-        estimated_beta=None,
-        estimated_lambda=lambda_mmnl_cont,
-        model="MMNLcont",
-        mu_b=mu_mmnl_cont,
-        sigma_b=sigma_mmnl_cont,
-    )
-    dp_mmnl_cont_time = time.perf_counter() - t0
-    _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
+        t0 = time.perf_counter()
+        v_mmnl_cont, pi_mmnl_cont = solve_by_dp(
+            efficient_sets=efficient_sets_mmnl_cont,
+            estimated_beta=None,
+            estimated_lambda=lambda_mmnl_cont,
+            model="MMNLcont",
+            mu_b=mu_mmnl_cont,
+            sigma_b=sigma_mmnl_cont,
+        )
+        dp_mmnl_cont_time = time.perf_counter() - t0
+        _avg_mmnl_cont = sum(simulate(efficient_sets_mmnl_cont, pi_mmnl_cont, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"DP_MMNL_CONT time: {dp_mmnl_cont_time:.4f}s | V(0,C): {v_mmnl_cont[0, C.C]:.2f} | avg reward: {_avg_mmnl_cont:.2f}\n")
 
     time_results = {
         "Sampling":                sampling_time,

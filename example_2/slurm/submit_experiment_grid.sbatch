@@ -40,4 +40,8 @@ mkdir -p example_2/slurm/logs
 
 source .rl_venv/bin/activate
 
+export GUROBI_MAX_SLOTS=2
+export GUROBI_SLOT_LOCK_DIR="${SLURM_SUBMIT_DIR}/example_2/slurm/.gurobi_slots"
+mkdir -p "${GUROBI_SLOT_LOCK_DIR}"
+
 python example_2/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
