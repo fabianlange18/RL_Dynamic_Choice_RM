@@ -4,4 +4,5 @@ gymnasium>=0.29.0
 numpy>=1.21.0
 matplotlib
 biogeme>=3.3.0
+xlogit>=0.2.7
 gurobipy==12.0.3

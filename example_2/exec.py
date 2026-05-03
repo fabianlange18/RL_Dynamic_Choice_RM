@@ -1,4 +1,5 @@
 import os
+import tracemalloc
 import gc
 import time
 import pickle
@@ -12,8 +13,8 @@ if "cxx=" not in _pytensor_flags:
     os.environ["PYTENSOR_FLAGS"] = f"{_pytensor_flags},cxx=".strip(",")
 logging.getLogger("pytensor.configdefaults").setLevel(logging.ERROR)
 
-from estimation_biogeme import (
-    BiogemeEstimator,
+from estimation_xlogit import (
+    XlogitEstimator,
     collect_transaction_data,
 )
 from env_example_2 import TalluriExample2
@@ -61,7 +62,7 @@ def main():
     sampling_time = time.perf_counter() - t0
     log_message(f"Observation sampling time: {sampling_time:.4f} seconds")
 
-    estimator = BiogemeEstimator(observations)
+    estimator = XlogitEstimator(observations)
 
     t0 = time.perf_counter()
     estimation_mnl_result = estimator.estimate_mnl()
@@ -326,4 +327,9 @@ def main():
 if __name__ == "__main__":
     os.makedirs(C.OUTPUT_DIR, exist_ok=True)
     log_path = os.path.join(C.OUTPUT_DIR, "00_exec.log")
-    main()
+    tracemalloc.start()
+    try:
+        main()
+    finally:
+        print(f"Max traced memory: {tracemalloc.get_traced_memory()[1] / (1024 ** 2):.2f} MiB")
+        tracemalloc.stop()

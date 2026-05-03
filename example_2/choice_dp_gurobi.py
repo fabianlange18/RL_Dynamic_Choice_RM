@@ -85,6 +85,7 @@ def _build_offer_model(prices, betas, weights):
 
 
 def solve_by_dp(
+    efficient_sets,
     estimated_beta,
     estimated_lambda,
     model="MNL",

@@ -1,4 +1,0 @@
-Running task_id=2 with HIGH_SENSITIVITY=False, GT_MODEL=MNL, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=False
-Training DQN (seed 1/15)
- 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:03 < 0:00:00 , 4,999 it/s ]
- 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:16 < 0:00:00 , 4,973 it/s ]
