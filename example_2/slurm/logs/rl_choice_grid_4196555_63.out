@@ -1,0 +1,17 @@
+Running task_id=63 with HIGH_SENSITIVITY=True, GT_MODEL=MNLConsidSet, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n027
+Job ID: 4196619
+Array Job ID: 4196555_63
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:11
+CPU Efficiency: 11.96% of 00:01:32 core-walltime
+Job Wall-clock time: 00:00:46
+Memory Utilized: 358.85 MB
+Memory Efficiency: 3.50% of 10.00 GB (10.00 GB/node)

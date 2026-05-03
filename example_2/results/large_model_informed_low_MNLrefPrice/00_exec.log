@@ -1,0 +1,11 @@
+
+============================================================
+TASK_ID: 21
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: False
+HIGH_SENSITIVITY: False
+GT_MODEL: MNLrefPrice
+============================================================
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000], Estimation Episodes: 50
+
+Observation sampling time: 0.5393 seconds

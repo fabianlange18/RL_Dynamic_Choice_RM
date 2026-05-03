@@ -1,0 +1,32 @@
+
+============================================================
+TASK_ID: 10
+LARGE_PRODUCT_SET: False
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: False
+GT_MODEL: MMNL_2PT
+============================================================
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000, 1000000], Estimation Episodes: 50
+
+Observation sampling time: 0.7650 seconds
+Estimation_MNL  time: 4.6593s | beta: -0.001511, lambda: 0.505805
+  LL: -17784.060000, AIC: 35570.130, BIC: 35577.370
+
+Estimation_MMNL_5PT time: 14.8239s | lambda: 0.505805
+  LL: -17783.750000, AIC: 35585.510, BIC: 35650.730
+Betas: ['-0.050000', '-0.001867', '-0.000612', '-0.000000', '-0.001867']
+Weights: ['0.111118', '0.111117', '0.111107', '0.111125', '0.555533']
+
+Estimation_MMNL_2PT time: 8.0018s | lambda: 0.505805
+  LL: -17783.780000, AIC: 35573.550, BIC: 35595.290
+Betas: ['-0.050000', '-0.000580']
+Weights: ['0.666667', '0.333333']
+
+Estimation_MMNL_CONT time: 64.2724s | mu: -6.494849, sigma: 0.000000, lambda: 0.505805
+  LL: -17784.060000, AIC: 35572.130, BIC: 35586.620
+
+DP_MNL  time: 0.4484s | V(0,C): 67268.88 | avg reward: 66430.65
+DP_MMNL_5PT time: 0.4923s | V(0,C): 59817.85 | avg reward: 66430.65
+DP_MMNL_2PT time: 0.4754s | V(0,C): 26039.99 | avg reward: 66430.65
+DP_MMNL_CONT time: 0.4716s | V(0,C): 67268.88 | avg reward: 66430.65
+

@@ -1,0 +1,38 @@
+E0503 05:45:50.437617   41076 slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_one_gradient for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 05:55:19.933310   40938 slow_operation_alarm.cc:140] The operation took 11m29.497184744s
+
+********************************
+[Compiling module jit_one_gradient for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:26:41.452266   41076 slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit__unstack for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:29:43.668727   40938 slow_operation_alarm.cc:140] The operation took 5m2.220426846s
+
+********************************
+[Compiling module jit__unstack for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:41:15.951393   41076 slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_equal for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:41:40.472700   40938 slow_operation_alarm.cc:140] The operation took 2m24.524328624s
+
+********************************
+[Compiling module jit_equal for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:43:57.130041   41076 slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_convert_element_type for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:43:58.106499   40938 slow_operation_alarm.cc:140] The operation took 2m0.978357164s
+
+********************************
+[Compiling module jit_convert_element_type for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+/var/spool/slurmd/job4196605/slurm_script: line 30: 40100 Killed                  python example_2/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
+[2026-05-03T06:47:29.218] error: Detected 1 oom_kill event in StepId=4196605.batch. Some of the step tasks have been OOM Killed.

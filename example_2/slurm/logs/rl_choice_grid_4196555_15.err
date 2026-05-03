@@ -1,0 +1,4 @@
+E0503 10:53:53.966861 3122384 slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_one_gradient for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************

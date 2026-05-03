@@ -1,0 +1,20 @@
+E0503 05:47:06.476247   41086 slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit_one_gradient for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 05:54:44.698885   40977 slow_operation_alarm.cc:140] The operation took 9m38.225960396s
+
+********************************
+[Compiling module jit_one_gradient for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:29:09.715440   41086 slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit__reduce_sum for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+E0503 06:29:36.876768   40977 slow_operation_alarm.cc:140] The operation took 2m27.16858431s
+
+********************************
+[Compiling module jit__reduce_sum for CPU] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+/var/spool/slurmd/job4196603/slurm_script: line 30: 40325 Killed                  python example_2/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
+[2026-05-03T06:47:18.935] error: Detected 1 oom_kill event in StepId=4196603.batch. Some of the step tasks have been OOM Killed.

@@ -1,0 +1,16 @@
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n026
+Job ID: 4196591
+Array Job ID: 4196555_35
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: OUT_OF_MEMORY (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:07:30
+CPU Efficiency: 58.14% of 00:12:54 core-walltime
+Job Wall-clock time: 00:06:27
+Memory Utilized: 9.51 GB
+Memory Efficiency: 95.06% of 10.00 GB (10.00 GB/node)
