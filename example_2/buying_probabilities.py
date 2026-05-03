@@ -15,6 +15,13 @@ def _subset_membership_matrix(k):
 	bits = np.arange(k, dtype=np.uint32)
 	return ((masks[:, None] >> bits[None, :]) & 1).astype(bool)
 
+
+@lru_cache(maxsize=8)
+def _unit_interval_legendre_quadrature(n_points):
+	"""Return Gauss-Legendre nodes/weights mapped from [-1,1] to [0,1]."""
+	x, w = np.polynomial.legendre.leggauss(int(n_points))
+	return 0.5 * (x + 1.0), 0.5 * w
+
 def _mnl_probabilities(action_binary, beta):
 	"""Compute MNL choice probabilities via softmax over active products plus outside option.
 
@@ -179,20 +186,49 @@ def _mnl_consideration_probabilities(action_binary, beta=None):
 	one_minus_q = 1.0 - q
 	exp_utility_offered = np.exp(beta * prices[offered_indices])
 
-	subset_matrix = _subset_membership_matrix(k)
-	subset_matrix_float = subset_matrix.astype(float)
+	# Exact subset enumeration is only feasible for small k; for larger k use a
+	# numerically integrated expression that avoids O(2^k) memory/time.
+	if k <= 20:
+		subset_matrix = _subset_membership_matrix(k)
+		subset_matrix_float = subset_matrix.astype(float)
 
-	set_probabilities = np.prod(
-		np.where(subset_matrix, q[None, :], one_minus_q[None, :]),
-		axis=1,
-	)
+		set_probabilities = np.prod(
+			np.where(subset_matrix, q[None, :], one_minus_q[None, :]),
+			axis=1,
+		)
 
-	denominators = 1.0 + subset_matrix_float.dot(exp_utility_offered)
-	weights = set_probabilities / denominators
+		denominators = 1.0 + subset_matrix_float.dot(exp_utility_offered)
+		weights = set_probabilities / denominators
 
-	offered_probabilities = exp_utility_offered * subset_matrix_float.T.dot(weights)
-	probabilities[offered_indices] = offered_probabilities
-	probabilities[-1] = float(np.sum(weights))
+		offered_probabilities = exp_utility_offered * subset_matrix_float.T.dot(weights)
+		probabilities[offered_indices] = offered_probabilities
+		probabilities[-1] = float(np.sum(weights))
+	else:
+		# Let v_i = exp(beta * r_i), Z_i~Bernoulli(q_i), independent.
+		# Outside probability: E[1/(1+sum_i Z_i v_i)]
+		# Product i probability: q_i v_i E[1/(1+v_i+sum_{j!=i} Z_j v_j)]
+		# Using 1/(1+s)=int_0^1 t^s dt gives efficient 1D quadrature formulas.
+		t_nodes, t_weights = _unit_interval_legendre_quadrature(64)
+		t_pow_v = t_nodes[:, None] ** exp_utility_offered[None, :]
+		factors = one_minus_q[None, :] + q[None, :] * t_pow_v
+		prod_all = np.prod(factors, axis=1)
+
+		outside_prob = float(np.dot(t_weights, prod_all))
+		prod_excluding_i = prod_all[:, None] / factors
+		offered_integrand = (
+			q[None, :]
+			* exp_utility_offered[None, :]
+			* t_pow_v
+			* prod_excluding_i
+		)
+		offered_probabilities = np.dot(t_weights, offered_integrand)
+
+		probabilities[offered_indices] = offered_probabilities
+		probabilities[-1] = outside_prob
+
+		total_prob = float(np.sum(probabilities))
+		if total_prob > 0.0 and abs(total_prob - 1.0) > 1e-10:
+			probabilities /= total_prob
 
 	return probabilities
 

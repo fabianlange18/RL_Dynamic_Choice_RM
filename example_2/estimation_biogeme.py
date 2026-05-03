@@ -1,7 +1,18 @@
+import os
 import logging
 
 import numpy as np
 import pandas as pd
+
+# Avoid costly XLA JIT compilation (seen in cluster logs as jit_* compile stalls)
+# unless the user explicitly opts in via environment variables.
+os.environ.setdefault("JAX_DISABLE_JIT", "1")
+os.environ.setdefault("JAX_PLATFORM_NAME", "cpu")
+os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
+_pytensor_flags = os.environ.get("PYTENSOR_FLAGS", "")
+if "cxx=" not in _pytensor_flags:
+    os.environ["PYTENSOR_FLAGS"] = f"{_pytensor_flags},cxx=".strip(",")
+logging.getLogger("pytensor.configdefaults").setLevel(logging.ERROR)
 
 import biogeme.database as db
 import biogeme.biogeme as bio
