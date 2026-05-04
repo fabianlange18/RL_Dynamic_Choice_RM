@@ -8,17 +8,41 @@ GT_MODEL: MMNLcont
 ============================================================
 RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000, 1000000], Estimation Episodes: 50
 
-Observation sampling time: 2.9196 seconds
-Estimation_MNL  time: 0.1265s | beta: -0.001567, lambda: 0.497450
-  LL: -37321.217160, AIC: 74644.434, BIC: 74651.599
+Observation sampling time: 0.9478 seconds
+Estimation_MNL  time: 0.1256s | beta: -0.001585, lambda: 0.504597
+  LL: -37489.778420, AIC: 74981.557, BIC: 74988.727
 
-Estimation_MMNL_5PT time: 22.9324s | lambda: 0.497450
-  LL: -37320.986431, AIC: 74645.973, BIC: 74660.303
-Betas: ['-0.003603', '-0.002529', '-0.001559', '-0.000589', '-0.000000']
+Estimation_MMNL_5PT time: 19.3398s | lambda: 0.504597
+  LL: -37488.614682, AIC: 74981.229, BIC: 74995.569
+Betas: ['-0.004799', '-0.003100', '-0.001565', '-0.000030', '-0.000000']
 Weights: ['0.011257', '0.222076', '0.533333', '0.222076', '0.011257']
 
-Estimation_MMNL_2PT time: 0.0004s | lambda: 0.497450
-  LL: -37320.986431, AIC: 74645.973, BIC: 74660.303
-Betas: ['-0.002275', '-0.000843']
+Estimation_MMNL_2PT time: 0.0001s | lambda: 0.504597
+  LL: -37488.614682, AIC: 74981.229, BIC: 74995.569
+Betas: ['-0.002697', '-0.000433']
+Weights: ['0.500000', '0.500000']
+
+
+============================================================
+TASK_ID: 15
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: False
+GT_MODEL: MMNLcont
+============================================================
+RL Training Seeds: 15, RL Training Steps: [20000, 100000, 500000, 1000000], Estimation Episodes: 50
+
+Observation sampling time: 0.8524 seconds
+Estimation_MNL  time: 0.1203s | beta: -0.001662, lambda: 0.492802
+  LL: -37255.617649, AIC: 74513.235, BIC: 74520.400
+
+Estimation_MMNL_5PT time: 28.4177s | lambda: 0.492802
+  LL: -37255.616764, AIC: 74515.234, BIC: 74529.562
+Betas: ['-0.001811', '-0.001733', '-0.001662', '-0.001591', '-0.001513']
+Weights: ['0.011257', '0.222076', '0.533333', '0.222076', '0.011257']
+
+Estimation_MMNL_2PT time: 0.0001s | lambda: 0.492802
+  LL: -37255.616764, AIC: 74515.234, BIC: 74529.562
+Betas: ['-0.001714', '-0.001610']
 Weights: ['0.500000', '0.500000']
 

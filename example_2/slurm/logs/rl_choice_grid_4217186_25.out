@@ -1,0 +1,14 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4217186/gurobi_4217186_25/gurobi.lic (LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4217186/gurobi_4217186_25/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=25 with HIGH_SENSITIVITY=False, GT_MODEL=MNLConsidSet, TRAIN_ON_ALL_SETS=False, LARGE_PRODUCT_SET=True
+[efficient_sets] Registered pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_25
+xlogit long data: obs=9553, alts=101, rows=964853, memory=22.08 MiB
+[efficient_sets] Waiting for Gurobi slot (max concurrent: 2)
+[efficient_sets] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2817305
+Academic license 2817305 - for non-commercial use only - registered to fa___@uni-mannheim.de
+[efficient_sets] Disposed Gurobi default environment
+[efficient_sets] Released Gurobi slot 1
+[efficient_sets] Removed pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/example_2/slurm/.gurobi_slots/effsets_pending/task_25

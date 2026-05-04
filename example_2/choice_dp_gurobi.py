@@ -6,7 +6,7 @@ import warnings
 
 import constants as C
 
-MAX_STATE_SOLVE_SECONDS = 180.0
+MAX_STATE_SOLVE_SECONDS = 1.0
 MMNL_CONT_QUAD_POINTS = 25
 SUPPORTED_MODELS = ("MNL", "MMNL_5PT", "MMNL_2PT", "MMNLcont")
 

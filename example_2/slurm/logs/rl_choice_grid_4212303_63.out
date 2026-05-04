@@ -1,0 +1,26 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4215969/gurobi_4215969_63/gurobi.lic (LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4215969/gurobi_4215969_63/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=63 with HIGH_SENSITIVITY=True, GT_MODEL=MNLConsidSet, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+xlogit long data: obs=10055, alts=101, rows=1015555, memory=23.24 MiB
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 2
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2817305
+Academic license 2817305 - for non-commercial use only - registered to fa___@uni-mannheim.de
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n019
+Job ID: 4215969
+Array Job ID: 4212303_63
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: CANCELLED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:00
+CPU Efficiency: 0.00% of 05:45:46 core-walltime
+Job Wall-clock time: 02:52:53
+Memory Utilized: 4.72 GB
+Memory Efficiency: 47.20% of 10.00 GB (10.00 GB/node)
