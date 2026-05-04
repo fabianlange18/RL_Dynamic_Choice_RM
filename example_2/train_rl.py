@@ -7,7 +7,6 @@ import time
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-import config as c
 import constants as C
 from env_example_2 import TalluriExample2
 from evaluation_callback import PercentOptimalCallback
@@ -26,7 +25,7 @@ def _create_train_env(algorithm_name, efficient_sets):
         },
     )
 
-def train_rl(dp_pi, efficient_sets=None):
+def train_rl(dp_pi=None, efficient_sets=None):
     checkpoints = list(C.TOTAL_TIMESTEPS)
     training_times_by_step = {step: [] for step in checkpoints}
 
@@ -34,7 +33,7 @@ def train_rl(dp_pi, efficient_sets=None):
         seed_times_by_step = {step: {} for step in checkpoints}
 
         for algorithm_name, algorithm_cls in C.RL_ALGORITHMS.items():
-            if C.LEARNING_CURVE_ENABLED:
+            if C.LEARNING_CURVE_ENABLED and dp_pi is not None:
                 eval_callback = PercentOptimalCallback(dp_pi, efficient_sets)
 
             print(f"Training {algorithm_name} (seed {seed + 1}/{C.N_EVAL_EPISODES})")
@@ -48,7 +47,7 @@ def train_rl(dp_pi, efficient_sets=None):
                 start_time = time.perf_counter()
                 model.learn(
                     total_timesteps=delta,
-                    callback=eval_callback if C.LEARNING_CURVE_ENABLED else None,
+                    callback=eval_callback if C.LEARNING_CURVE_ENABLED and dp_pi is not None else None,
                     progress_bar=C.PROGRESS_BAR_ENABLED,
                     reset_num_timesteps=(i == 0),
                 )
@@ -57,7 +56,7 @@ def train_rl(dp_pi, efficient_sets=None):
                 seed_times_by_step[total_steps][algorithm_name] = cumulative_time
                 prev_steps = total_steps
 
-            if C.LEARNING_CURVE_ENABLED:
+            if C.LEARNING_CURVE_ENABLED and dp_pi is not None:
                 plt.figure(figsize=(8, 5))
                 x = np.asarray(eval_callback.timesteps, dtype=float)
                 y = np.asarray(eval_callback.pct_optimal_mean, dtype=float)

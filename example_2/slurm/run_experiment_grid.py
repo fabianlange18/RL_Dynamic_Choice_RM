@@ -67,7 +67,7 @@ def run_single(task_id):
     os.environ["TASK_ID"] = str(task_id)
     
     # Run exec.py
-    exec_path = example2_dir / "exec.py"
+    exec_path = example2_dir / "exec_RL.py"
     runpy.run_path(str(exec_path), run_name="__main__")
 
 

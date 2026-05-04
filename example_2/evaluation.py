@@ -82,7 +82,7 @@ def print_evaluation_table(training_times, evaluation_results):
     rows = []
     for method in methods:
         t_vals = [float(run_dict[method]) for run_dict in training_times if method in run_dict]
-        if "seed_rewards" in evaluation_results[method]:
+        if "seed_rewards" in evaluation_results[method] and dp_seed_rewards_ref:
             method_seed_rewards = evaluation_results[method]["seed_rewards"]
             pct_vals = [
                 (method_seed_rewards[idx] / dp_seed_rewards_ref[idx]) * 100 if dp_seed_rewards_ref[idx] != 0 else np.nan
