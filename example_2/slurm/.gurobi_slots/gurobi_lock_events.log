@@ -39,3 +39,5 @@
 2026-05-04T15:57:57.145561+00:00 action=release job_id=4217186 task_id=25 phase=efficient_sets slot=1
 2026-05-04T15:58:01.099905+00:00 action=acquire job_id=4217282 task_id=3 phase=dp slot=1
 2026-05-04T15:58:56.489731+00:00 action=acquire job_id=4217272 task_id=7 phase=dp slot=2
+2026-05-05T05:18:18.146117+00:00 action=release job_id=4217282 task_id=3 phase=dp slot=1
+2026-05-05T05:28:18.069585+00:00 action=release job_id=4217272 task_id=7 phase=dp slot=2

@@ -39,7 +39,11 @@ MULTIBINARY_ALGORITHMS = {
 }
 
 if c.TRAIN_ON_ALL_SETS:
-    RL_ALGORITHMS = MULTIBINARY_ALGORITHMS if c.LARGE_PRODUCT_SET else {
+    RL_ALGORITHMS = {
+        "A2C": A2C,
+        "TRPO": TRPO,
+        "PPO": PPO,
+    } if c.LARGE_PRODUCT_SET else {
         "DQN": DQN,
         "ARS": ARS,
         "A2C": A2C,
