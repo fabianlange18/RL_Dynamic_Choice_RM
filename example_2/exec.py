@@ -24,15 +24,16 @@ from train_rl import train_rl
 from evaluation import evaluate_saved_models, print_evaluation_table
 from simulation import simulate
 
-if c.LARGE_PRODUCT_SET:
-    if c.TRAIN_ON_ALL_SETS:
-        from choice_dp_gurobi import solve_by_dp
-        from efficient_sets import compute_efficient_sets # unused
-    else:
-        from choice_dp import solve_by_dp
-        from efficient_sets_gurobi import compute_efficient_sets
+from choice_adp import solve_by_adp
+
+if c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS:
+    from choice_dp_gurobi import solve_by_dp
 else:
     from choice_dp import solve_by_dp
+
+if c.LARGE_PRODUCT_SET and (not c.TRAIN_ON_ALL_SETS):
+    from efficient_sets_gurobi import compute_efficient_sets
+else:
     from efficient_sets import compute_efficient_sets
 
 
@@ -206,6 +207,7 @@ def main():
     log_message(f"TRAIN_ON_ALL_SETS: {c.TRAIN_ON_ALL_SETS}")
     log_message(f"HIGH_SENSITIVITY: {c.HIGH_SENSITIVITY}")
     log_message(f"GT_MODEL: {c.GT_MODEL}")
+    log_message("SOLVER: DP + ADP")
     log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
@@ -490,6 +492,46 @@ def main():
         _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
         log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
 
+    adp_mnl_time = 0.0
+    adp_mmnl_5pt_time = 0.0
+    adp_mmnl_2pt_time = 0.0
+    t0 = time.perf_counter()
+    v_adp_mnl, pi_adp_mnl = solve_by_adp(
+        efficient_sets=efficient_sets_mnl,
+        estimated_beta=beta_mnl,
+        estimated_lambda=lambda_mnl,
+        model="MNL",
+    )
+    adp_mnl_time = time.perf_counter() - t0
+    _avg_adp_mnl = sum(simulate(efficient_sets_mnl, pi_adp_mnl, seed=i)[0] for i in range(1000)) / 1000
+    log_message(f"ADP_MNL  time: {adp_mnl_time:.4f}s | V(0,C): {v_adp_mnl[0, C.C]:.2f} | avg reward: {_avg_adp_mnl:.2f}")
+
+    t0 = time.perf_counter()
+    v_adp_mmnl_5pt, pi_adp_mmnl_5pt = solve_by_adp(
+        efficient_sets=efficient_sets_mmnl_5pt,
+        estimated_beta=None,
+        estimated_lambda=lambda_mmnl_5pt,
+        model="MMNL_5PT",
+        segment_betas=betas_mmnl_5pt,
+        segment_weights=weights_mmnl_5pt,
+    )
+    adp_mmnl_5pt_time = time.perf_counter() - t0
+    _avg_adp_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_adp_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+    log_message(f"ADP_MMNL_5PT time: {adp_mmnl_5pt_time:.4f}s | V(0,C): {v_adp_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_adp_mmnl_5pt:.2f}")
+
+    t0 = time.perf_counter()
+    v_adp_mmnl_2pt, pi_adp_mmnl_2pt = solve_by_adp(
+        efficient_sets=efficient_sets_mmnl_2pt,
+        estimated_beta=None,
+        estimated_lambda=lambda_mmnl_2pt,
+        model="MMNL_2PT",
+        segment_betas=betas_mmnl_2pt,
+        segment_weights=weights_mmnl_2pt,
+    )
+    adp_mmnl_2pt_time = time.perf_counter() - t0
+    _avg_adp_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_adp_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+    log_message(f"ADP_MMNL_2PT time: {adp_mmnl_2pt_time:.4f}s | V(0,C): {v_adp_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_adp_mmnl_2pt:.2f}")
+
     time_results = {
         "Sampling":                sampling_time,
         "Estimation_MNL":          estimation_mnl_time,
@@ -504,6 +546,9 @@ def main():
         "DP_MMNL_5PT":             dp_mmnl_5pt_time,
         "DP_MMNL_2PT":             dp_mmnl_2pt_time,
         # "DP_MMNL_CONT":            dp_mmnl_cont_time,
+        "ADP_MNL":                 adp_mnl_time,
+        "ADP_MMNL_5PT":            adp_mmnl_5pt_time,
+        "ADP_MMNL_2PT":            adp_mmnl_2pt_time,
     }
 
     # RL always trains against MNL policy using MNL efficient sets
@@ -516,6 +561,9 @@ def main():
                 "DP_MMNL_5PT": dp_mmnl_5pt_time,
                 "DP_MMNL_2PT": dp_mmnl_2pt_time,
                 # "DP_MMNL_CONT": dp_mmnl_cont_time,
+                "ADP_MNL": adp_mnl_time,
+                "ADP_MMNL_5PT": adp_mmnl_5pt_time,
+                "ADP_MMNL_2PT": adp_mmnl_2pt_time,
             }
         )
 
@@ -541,6 +589,23 @@ def main():
         #     "efficient_sets": efficient_sets_mmnl_cont,
         # },
     }
+
+    dp_policy_configs.update(
+        {
+            "ADP_MNL": {
+                "pi": pi_adp_mnl,
+                "efficient_sets": efficient_sets_mnl,
+            },
+            "ADP_MMNL_5PT": {
+                "pi": pi_adp_mmnl_5pt,
+                "efficient_sets": efficient_sets_mmnl_5pt,
+            },
+            "ADP_MMNL_2PT": {
+                "pi": pi_adp_mmnl_2pt,
+                "efficient_sets": efficient_sets_mmnl_2pt,
+            },
+        }
+    )
 
     evaluation_results_by_step = evaluate_saved_models(
         dp_policy_configs=dp_policy_configs,
@@ -572,6 +637,9 @@ def main():
         "pi_mmnl_5pt": pi_mmnl_5pt,
         "pi_mmnl_2pt": pi_mmnl_2pt,
         # "pi_mmnl_cont": pi_mmnl_cont,
+        "pi_adp_mnl": pi_adp_mnl,
+        "pi_adp_mmnl_5pt": pi_adp_mmnl_5pt,
+        "pi_adp_mmnl_2pt": pi_adp_mmnl_2pt,
         "time_results": time_results,
         "training_times_by_step": training_times_by_step,
         "evaluation_results_by_step": evaluation_results_by_step,

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=cpu
-#SBATCH --job-name=rl_choice_grid
-#SBATCH --array=3,7
+#SBATCH --job-name=rl_choice_large_eff
+#SBATCH --array=1-69:4
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10G
@@ -42,7 +42,8 @@ WLSACCESSIDS=("${WLSACCESSID_1}" "${WLSACCESSID_2}" "${WLSACCESSID_3}" "${WLSACC
 WLSSECRETS=("${WLSSECRET_1}" "${WLSSECRET_2}" "${WLSSECRET_3}" "${WLSSECRET_4}")
 LICENSEIDS=("${LICENSEID_1}" "${LICENSEID_2}" "${LICENSEID_3}" "${LICENSEID_4}")
 
-license_idx=$(( SLURM_ARRAY_TASK_ID % 4 ))
+array_step=${SLURM_ARRAY_TASK_STEP:-1}
+license_idx=$(( (SLURM_ARRAY_TASK_ID / array_step) % 4 ))
 export WLSACCESSID="${WLSACCESSIDS[$license_idx]}"
 export WLSSECRET="${WLSSECRETS[$license_idx]}"
 export LICENSEID="${LICENSEIDS[$license_idx]}"

@@ -18,6 +18,7 @@ def main():
     if not c.LARGE_PRODUCT_SET:
         raise ValueError("exec_RL.py is intended for LARGE_PRODUCT_SET=True.")
 
+    # Keep this increase scoped to the RL-only runner.
     rl_only_timesteps = [step * 10 for step in C.TOTAL_TIMESTEPS]
     C.TOTAL_TIMESTEPS = rl_only_timesteps
 
@@ -42,7 +43,6 @@ def main():
     )
 
     for step in rl_only_timesteps:
-        log_message(f"RL-only training finished for {step:,} timesteps: {training_times_by_step[step]}")
         table_str = print_evaluation_table(training_times_by_step[step], evaluation_results_by_step[step])
         log_message(f"\n=== {step:,} training timesteps ===\n{table_str}")
 

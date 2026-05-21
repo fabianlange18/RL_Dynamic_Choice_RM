@@ -1,0 +1,27 @@
+#!/bin/bash
+#SBATCH --partition=cpu
+#SBATCH --job-name=rl_choice_small
+#SBATCH --array=0-70:2
+#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=10G
+#SBATCH --output=example_2/slurm/logs/%x_%A_%a.out
+#SBATCH --error=example_2/slurm/logs/%x_%A_%a.err
+#SBATCH --mail-user=fabian.lange@uni-mannheim.de
+#SBATCH --mail-type=END
+
+set -euo pipefail
+
+# Run from repository root
+cd "${SLURM_SUBMIT_DIR}"
+
+export XDG_CACHE_HOME=$TMPDIR/.cache
+mkdir -p $XDG_CACHE_HOME/arviz
+
+export PYTHONWARNINGS="ignore::FutureWarning"
+
+mkdir -p example_2/slurm/logs
+
+source .rl_venv/bin/activate
+
+python example_2/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
