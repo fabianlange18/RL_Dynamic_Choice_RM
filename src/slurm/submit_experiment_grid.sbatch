@@ -60,12 +60,12 @@ EOF
 chmod 600 "${GRB_LICENSE_FILE}"
 echo "Using Gurobi license file: ${GRB_LICENSE_FILE} (license index=${license_idx}, LICENSEID=${LICENSEID})"
 
-mkdir -p example_2/slurm/logs
+mkdir -p src/slurm/logs
 
 source .rl_venv/bin/activate
 
 export GUROBI_MAX_SLOTS=2
-export GUROBI_SLOT_LOCK_DIR="${SLURM_SUBMIT_DIR}/example_2/slurm/.gurobi_slots_license_${LICENSEID}"
+export GUROBI_SLOT_LOCK_DIR="${SLURM_SUBMIT_DIR}/src/slurm/.gurobi_slots_license_${LICENSEID}"
 mkdir -p "${GUROBI_SLOT_LOCK_DIR}"
 
-python example_2/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
+python src/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
