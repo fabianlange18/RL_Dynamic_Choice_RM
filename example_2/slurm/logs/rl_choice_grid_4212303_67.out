@@ -1,5 +1,0 @@
-Using Gurobi license file: /scratch/slurm_tmpdir/job_4212303/gurobi_4212303_67/gurobi.lic (LICENSEID=2817305)
-Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4212303/gurobi_4212303_67/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
-Running task_id=67 with HIGH_SENSITIVITY=True, GT_MODEL=TMNL, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
-xlogit long data: obs=9904, alts=101, rows=1000304, memory=22.90 MiB
-[dp] Waiting for Gurobi slot (max concurrent: 2)
