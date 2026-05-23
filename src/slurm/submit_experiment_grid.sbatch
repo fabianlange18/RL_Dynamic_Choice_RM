@@ -2,7 +2,7 @@
 #SBATCH --partition=cpu
 #SBATCH --job-name=rl_choice_grid
 #SBATCH --array=0-63
-#SBATCH --time=96:00:00
+#SBATCH --time=72:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10G
 #SBATCH --output=example_2/slurm/logs/%x_%A_%a.out
