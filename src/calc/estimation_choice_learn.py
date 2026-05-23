@@ -1,11 +1,15 @@
 import os
-
+from pathlib import Path
+import sys
 import numpy as np
 import pandas as pd
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit
 from choice_learn.models.latent_class_mnl import LatentClassConditionalLogit
-
+# Ensure `src` package imports resolve when executed as a script.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 import src.constants as C
 from src.calc.estimation_xlogit import collect_transaction_data
 
