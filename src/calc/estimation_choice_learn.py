@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pandas as pd
 from choice_learn.data import ChoiceDataset
 from choice_learn.models import ConditionalLogit
 from choice_learn.models.latent_class_mnl import LatentClassConditionalLogit
@@ -54,31 +55,49 @@ class ChoiceLearnEstimator:
             raise ValueError("No arrival observations available for choice-learn estimation.")
 
         n_obs = len(arrival_obs)
-        n_alts = self.n + 1
-
-        choices = np.full(n_obs, self.n, dtype=np.int32)
-        available = np.ones((n_obs, n_alts), dtype=np.float32)
-        items_features = np.zeros((n_obs, n_alts, 1), dtype=np.float32)
-        items_features[:, : self.n, 0] = prices
+        rows = []
 
         for obs_index, obs in enumerate(arrival_obs):
-            action_binary = np.asarray(obs["action_binary"], dtype=np.float32)
-            available[obs_index, : self.n] = action_binary
-            chosen_alt = obs["purchase_index"]
-            if chosen_alt is not None:
-                choices[obs_index] = int(chosen_alt)
+            action_binary = np.asarray(obs["action_binary"], dtype=np.int8)
+            chosen_alt = self.n if obs["purchase_index"] is None else int(obs["purchase_index"])
 
-        self._dataset = ChoiceDataset(
-            choices=choices,
-            items_features_by_choice=items_features,
-            available_items_by_choice=available,
-            items_features_by_choice_names=(["price"],),
+            for item_index in range(self.n):
+                rows.append(
+                    {
+                        "choice_id": obs_index,
+                        "item_id": item_index,
+                        "price": float(prices[item_index]),
+                        "available": int(action_binary[item_index]),
+                        "choice": int(chosen_alt == item_index),
+                    }
+                )
+
+            # Explicit outside option with zero price, always available.
+            rows.append(
+                {
+                    "choice_id": obs_index,
+                    "item_id": self.n,
+                    "price": 0.0,
+                    "available": 1,
+                    "choice": int(chosen_alt == self.n),
+                }
+            )
+
+        choice_df = pd.DataFrame(rows)
+        self._dataset = ChoiceDataset.from_single_long_df(
+            df=choice_df,
+            items_features_columns=["price"],
+            items_id_column="item_id",
+            choices_id_column="choice_id",
+            choices_column="choice",
+            available_items_column="available",
+            choice_format="one_zero",
         )
 
-        total_bytes = choices.nbytes + available.nbytes + items_features.nbytes
+        total_bytes = int(choice_df.memory_usage(deep=True).sum())
         print(
             "choice-learn data: "
-            f"obs={n_obs}, alts={n_alts}, memory={total_bytes / (1024 ** 2):.2f} MiB"
+            f"obs={n_obs}, alts={self.n + 1}, rows={len(choice_df)}, memory={total_bytes / (1024 ** 2):.2f} MiB"
         )
 
     @staticmethod
