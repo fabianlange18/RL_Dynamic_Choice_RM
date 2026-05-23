@@ -2,7 +2,7 @@
 #SBATCH --partition=cpu
 #SBATCH --job-name=rl_choice_grid
 #SBATCH --array=0-63
-#SBATCH --time=72:00:00
+#SBATCH --time=96:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10G
 #SBATCH --output=example_2/slurm/logs/%x_%A_%a.out
@@ -20,29 +20,21 @@ mkdir -p $XDG_CACHE_HOME/arviz
 
 export PYTHONWARNINGS="ignore::FutureWarning"
 
-# Four WLS licenses. Keep defaults for license 1, and override via env vars when needed.
+# License 1
 WLSACCESSID_1="${WLSACCESSID_1:-9f1b1284-0ea6-423e-9658-9af7206ddedb}"
 WLSSECRET_1="${WLSSECRET_1:-7e8a0849-bda0-4b5d-8cdf-3c8b5d5d2143}"
 LICENSEID_1="${LICENSEID_1:-2817305}"
 
-# Replace these defaults with your other licenses (or set via exported env vars).
-WLSACCESSID_2="${WLSACCESSID_2:-9f1b1284-0ea6-423e-9658-9af7206ddedb}"
-WLSSECRET_2="${WLSSECRET_2:-7e8a0849-bda0-4b5d-8cdf-3c8b5d5d2143}"
-LICENSEID_2="${LICENSEID_2:-2817305}"
+# License 2
+WLSACCESSID_2="${WLSACCESSID_2:-eb0106ef-198e-43c9-bb56-233cc08191da}"
+WLSSECRET_2="${WLSSECRET_2:-4418da38-fdaf-489e-a24f-27dfcaceb67a}"
+LICENSEID_2="${LICENSEID_2:-2826830}"
 
-WLSACCESSID_3="${WLSACCESSID_3:-9f1b1284-0ea6-423e-9658-9af7206ddedb}"
-WLSSECRET_3="${WLSSECRET_3:-7e8a0849-bda0-4b5d-8cdf-3c8b5d5d2143}"
-LICENSEID_3="${LICENSEID_3:-2817305}"
+WLSACCESSIDS=("${WLSACCESSID_1}" "${WLSACCESSID_2}")
+WLSSECRETS=("${WLSSECRET_1}" "${WLSSECRET_2}")
+LICENSEIDS=("${LICENSEID_1}" "${LICENSEID_2}")
 
-WLSACCESSID_4="${WLSACCESSID_4:-9f1b1284-0ea6-423e-9658-9af7206ddedb}"
-WLSSECRET_4="${WLSSECRET_4:-7e8a0849-bda0-4b5d-8cdf-3c8b5d5d2143}"
-LICENSEID_4="${LICENSEID_4:-2817305}"
-
-WLSACCESSIDS=("${WLSACCESSID_1}" "${WLSACCESSID_2}" "${WLSACCESSID_3}" "${WLSACCESSID_4}")
-WLSSECRETS=("${WLSSECRET_1}" "${WLSSECRET_2}" "${WLSSECRET_3}" "${WLSSECRET_4}")
-LICENSEIDS=("${LICENSEID_1}" "${LICENSEID_2}" "${LICENSEID_3}" "${LICENSEID_4}")
-
-license_idx=$(( SLURM_ARRAY_TASK_ID % 4 ))
+license_idx=$(( SLURM_ARRAY_TASK_ID % 2 ))
 export WLSACCESSID="${WLSACCESSIDS[$license_idx]}"
 export WLSSECRET="${WLSSECRETS[$license_idx]}"
 export LICENSEID="${LICENSEIDS[$license_idx]}"
