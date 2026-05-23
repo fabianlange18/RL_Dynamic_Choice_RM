@@ -49,7 +49,6 @@ class ScipyEstimator:
         self.observations = observations
         self.n = len(C.r)
         self.lambda_val = self._estimate_lambda(observations)
-        self._price_scale = float(os.getenv("SCIPY_PRICE_SCALE", "100.0"))
         self._optimizer_method = os.getenv("SCIPY_ESTIMATION_METHOD", "L-BFGS-B")
         self._maxiter = int(os.getenv("SCIPY_ESTIMATION_MAXITER", "500"))
         self._random_seed = int(os.getenv("SCIPY_ESTIMATION_SEED", "42"))
@@ -68,7 +67,7 @@ class ScipyEstimator:
         self._build_estimation_arrays()
 
     def _build_estimation_arrays(self):
-        prices = np.asarray(C.r, dtype=float) / self._price_scale
+        prices = np.asarray(C.r, dtype=float)
         arrival_obs = [obs for obs in self.observations if obs["arrival_flag"]]
 
         if not arrival_obs:
@@ -248,6 +247,7 @@ class ScipyEstimator:
     def estimate_mnl(self):
         fit_result = self._fit_latent_class_model(1, min_weight=0.0)
         beta_hat = float(fit_result["betas"][0])
+        beta_hat = float(np.clip(beta_hat, C.ESTIMATION_BETA_BOUNDS[0], C.ESTIMATION_BETA_BOUNDS[1]))
 
         return {
             "beta": beta_hat,
@@ -265,9 +265,11 @@ class ScipyEstimator:
 
         fit_result = self._fit_latent_class_model(K, min_weight=min_weight)
         n_parameters = K + (K - 1)
+        betas_raw = np.asarray(fit_result["betas"], dtype=float)
+        betas_raw = np.clip(betas_raw, C.ESTIMATION_BETA_BOUNDS[0], C.ESTIMATION_BETA_BOUNDS[1])
 
         return {
-            "betas": [float(beta) for beta in fit_result["betas"]],
+            "betas": [float(beta) for beta in betas_raw],
             "n_segments": K,
             "mixing_weights": [float(weight) for weight in fit_result["weights"]],
             "lambda": self.lambda_val,
