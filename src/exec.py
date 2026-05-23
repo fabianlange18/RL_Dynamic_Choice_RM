@@ -72,7 +72,7 @@ def gurobi_slot_lock(phase_label):
 
     os.makedirs(lock_dir, exist_ok=True)
     poll_seconds = 60
-    stale_seconds = int(os.environ.get("GUROBI_SLOT_STALE_SECONDS", "21600"))
+    stale_seconds = int(os.environ.get("GUROBI_SLOT_STALE_SECONDS", "86400"))
     events_log_path = os.path.join(lock_dir, "gurobi_lock_events.log")
     lock_path = None
     lock_slot = None
