@@ -49,6 +49,7 @@ class ScipyEstimator:
         self.observations = observations
         self.n = len(C.r)
         self.lambda_val = self._estimate_lambda(observations)
+        self._beta_bounds = tuple(C.ESTIMATION_BETA_BOUNDS)
         self._optimizer_method = os.getenv("SCIPY_ESTIMATION_METHOD", "L-BFGS-B")
         self._maxiter = int(os.getenv("SCIPY_ESTIMATION_MAXITER", "500"))
         self._random_seed = int(os.getenv("SCIPY_ESTIMATION_SEED", "42"))
@@ -64,6 +65,7 @@ class ScipyEstimator:
         self._chosen_is_outside = None
         self._chosen_product_index = None
         self._n_obs = 0
+        self._arrival_purchase_rate = 0.0
         self._build_estimation_arrays()
 
     def _build_estimation_arrays(self):
@@ -85,6 +87,7 @@ class ScipyEstimator:
         )
         self._chosen_is_outside = self._chosen == self.n
         self._chosen_product_index = np.where(self._chosen_is_outside, 0, self._chosen)
+        self._arrival_purchase_rate = float(1.0 - np.mean(self._chosen_is_outside))
 
         total_bytes = (
             self._prices.nbytes
@@ -95,6 +98,9 @@ class ScipyEstimator:
         )
         print(
             f"scipy estimation data: obs={self._n_obs}, alts={self.n + 1}, memory={total_bytes / (1024 ** 2):.2f} MiB"
+        )
+        print(
+            f"scipy estimation mode: raw prices, beta_bounds={self._beta_bounds}, purchase_rate|arrival={self._arrival_purchase_rate:.4f}"
         )
 
     @staticmethod
@@ -134,7 +140,7 @@ class ScipyEstimator:
         return -float(np.sum(np.log(np.clip(mixture_probabilities, 1e-300, None))))
 
     def _initial_params(self, n_segments, restart_index, rng, min_weight):
-        beta_low, beta_high = C.ESTIMATION_BETA_BOUNDS
+        beta_low, beta_high = self._beta_bounds
         base_betas = np.linspace(beta_low, beta_high, int(n_segments) + 2, dtype=float)[1:-1]
 
         if restart_index > 0:
@@ -173,7 +179,7 @@ class ScipyEstimator:
 
         rng = np.random.default_rng(self._random_seed)
         restart_count = self._mnl_restarts if n_segments == 1 else self._mmnl_restarts
-        beta_bounds = [tuple(C.ESTIMATION_BETA_BOUNDS)] * n_segments
+        beta_bounds = [tuple(self._beta_bounds)] * n_segments
         weight_bounds = [(float(min_weight), 1.0 - float(min_weight))] * max(0, n_segments - 1)
         bounds = beta_bounds + weight_bounds
 
@@ -194,6 +200,35 @@ class ScipyEstimator:
         if best_result is None or not best_result.success:
             message = "No optimization result returned." if best_result is None else str(best_result.message)
             raise RuntimeError(f"SciPy estimation failed for {n_segments} segment(s): {message}")
+
+        # Guard against pathological edge solutions that can collapse efficient sets to only the empty set.
+        beta_low = float(self._beta_bounds[0])
+        edge_tol = 1e-6
+        fitted_betas = np.asarray(best_result.x[:n_segments], dtype=float)
+        all_on_lower_bound = bool(np.all(np.abs(fitted_betas - beta_low) <= edge_tol))
+        if all_on_lower_bound and self._arrival_purchase_rate > 0.5 and beta_low < -0.01:
+            fallback_low = -0.01
+            fallback_bounds = [(fallback_low, float(self._beta_bounds[1]))] * n_segments + weight_bounds
+            fallback_result = None
+            for restart_index in range(int(restart_count)):
+                initial_params = self._initial_params(n_segments, restart_index, rng, min_weight)
+                result = minimize(
+                    self._neg_log_likelihood,
+                    x0=initial_params,
+                    args=(n_segments, min_weight),
+                    method=self._optimizer_method,
+                    bounds=fallback_bounds,
+                    options={"maxiter": self._maxiter},
+                )
+                if fallback_result is None or result.fun < fallback_result.fun:
+                    fallback_result = result
+
+            if fallback_result is not None and fallback_result.success and fallback_result.fun <= best_result.fun + 1e-6:
+                print(
+                    "scipy estimation fallback: moved beta lower bound from "
+                    f"{beta_low} to {fallback_low} to avoid degenerate lower-bound solution"
+                )
+                best_result = fallback_result
 
         betas = np.asarray(best_result.x[:n_segments], dtype=float)
         if n_segments == 1:
@@ -247,7 +282,7 @@ class ScipyEstimator:
     def estimate_mnl(self):
         fit_result = self._fit_latent_class_model(1, min_weight=0.0)
         beta_hat = float(fit_result["betas"][0])
-        beta_hat = float(np.clip(beta_hat, C.ESTIMATION_BETA_BOUNDS[0], C.ESTIMATION_BETA_BOUNDS[1]))
+        beta_hat = float(np.clip(beta_hat, self._beta_bounds[0], self._beta_bounds[1]))
 
         return {
             "beta": beta_hat,
@@ -266,7 +301,7 @@ class ScipyEstimator:
         fit_result = self._fit_latent_class_model(K, min_weight=min_weight)
         n_parameters = K + (K - 1)
         betas_raw = np.asarray(fit_result["betas"], dtype=float)
-        betas_raw = np.clip(betas_raw, C.ESTIMATION_BETA_BOUNDS[0], C.ESTIMATION_BETA_BOUNDS[1])
+        betas_raw = np.clip(betas_raw, self._beta_bounds[0], self._beta_bounds[1])
 
         return {
             "betas": [float(beta) for beta in betas_raw],
