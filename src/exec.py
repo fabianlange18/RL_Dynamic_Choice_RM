@@ -19,7 +19,10 @@ from src.calc.train_rl import train_rl
 from src.eval.evaluation import evaluate_saved_models, print_evaluation_table
 from src.eval.simulation import simulate
 from src.calc.choice_adp import solve_by_adp, solve_by_adp_env_rollout
-from src.calc.efficient_sets_gurobi import compute_efficient_sets
+if c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS:
+    from src.calc.efficient_sets_gurobi import compute_efficient_sets
+else:
+    from src.calc.efficient_sets import compute_efficient_sets
 
 _pytensor_flags = os.environ.get("PYTENSOR_FLAGS", "")
 if "cxx=" not in _pytensor_flags:
@@ -205,7 +208,7 @@ def main():
     log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
-    uses_gurobi_efficient_sets = not c.TRAIN_ON_ALL_SETS
+    uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
     _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
     if _pending_marker:
         open(_pending_marker, "w").close()
@@ -280,62 +283,62 @@ def main():
         efficient_sets_time_mmnl_5pt = 0.0
         efficient_sets_time_mmnl_2pt = 0.0
     else:
-        # if uses_gurobi_efficient_sets:
-        with gurobi_slot_lock("efficient_sets"):
-            import gurobipy as gp
+        if uses_gurobi_efficient_sets:
+            with gurobi_slot_lock("efficient_sets"):
+                import gurobipy as gp
 
-            with gp.Env() as gurobi_env:
-                t0 = time.perf_counter()
-                efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl, env=gurobi_env)
-                efficient_sets_time_mnl = time.perf_counter() - t0
-                log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+                with gp.Env() as gurobi_env:
+                    t0 = time.perf_counter()
+                    efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl, env=gurobi_env)
+                    efficient_sets_time_mnl = time.perf_counter() - t0
+                    log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
 
-                t0 = time.perf_counter()
-                efficient_sets_mmnl_5pt = compute_efficient_sets(
-                    model="MMNL_5PT",
-                    env=gurobi_env,
-                    segment_betas=betas_mmnl_5pt,
-                    segment_weights=weights_mmnl_5pt,
-                )
-                efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
-                log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+                    t0 = time.perf_counter()
+                    efficient_sets_mmnl_5pt = compute_efficient_sets(
+                        model="MMNL_5PT",
+                        env=gurobi_env,
+                        segment_betas=betas_mmnl_5pt,
+                        segment_weights=weights_mmnl_5pt,
+                    )
+                    efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+                    log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
 
-                t0 = time.perf_counter()
-                efficient_sets_mmnl_2pt = compute_efficient_sets(
-                    model="MMNL_2PT",
-                    env=gurobi_env,
-                    segment_betas=betas_mmnl_2pt,
-                    segment_weights=weights_mmnl_2pt,
-                )
-                efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
-                log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+                    t0 = time.perf_counter()
+                    efficient_sets_mmnl_2pt = compute_efficient_sets(
+                        model="MMNL_2PT",
+                        env=gurobi_env,
+                        segment_betas=betas_mmnl_2pt,
+                        segment_weights=weights_mmnl_2pt,
+                    )
+                    efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+                    log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
 
-            # Flush lingering Gurobi references before the slot lock releases.
-            gc.collect()
-        # else:
-        #     # Non-Gurobi path: compute efficient sets without env
-        #     t0 = time.perf_counter()
-        #     efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
-        #     efficient_sets_time_mnl = time.perf_counter() - t0
-        #     log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+                # Flush lingering Gurobi references before the slot lock releases.
+                gc.collect()
+        else:
+            # Non-Gurobi path: compute efficient sets without env
+            t0 = time.perf_counter()
+            efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
+            efficient_sets_time_mnl = time.perf_counter() - t0
+            log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
 
-        #     t0 = time.perf_counter()
-        #     efficient_sets_mmnl_5pt = compute_efficient_sets(
-        #         model="MMNL_5PT",
-        #         segment_betas=betas_mmnl_5pt,
-        #         segment_weights=weights_mmnl_5pt,
-        #     )
-        #     efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
-        #     log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+            t0 = time.perf_counter()
+            efficient_sets_mmnl_5pt = compute_efficient_sets(
+                model="MMNL_5PT",
+                segment_betas=betas_mmnl_5pt,
+                segment_weights=weights_mmnl_5pt,
+            )
+            efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+            log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
 
-        #     t0 = time.perf_counter()
-        #     efficient_sets_mmnl_2pt = compute_efficient_sets(
-        #         model="MMNL_2PT",
-        #         segment_betas=betas_mmnl_2pt,
-        #         segment_weights=weights_mmnl_2pt,
-        #     )
-        #     efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
-        #     log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+            t0 = time.perf_counter()
+            efficient_sets_mmnl_2pt = compute_efficient_sets(
+                model="MMNL_2PT",
+                segment_betas=betas_mmnl_2pt,
+                segment_weights=weights_mmnl_2pt,
+            )
+            efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+            log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
 
     if _pending_marker and os.path.exists(_pending_marker):
         os.remove(_pending_marker)

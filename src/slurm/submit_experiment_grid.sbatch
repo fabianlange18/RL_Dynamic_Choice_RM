@@ -34,7 +34,7 @@ WLSACCESSIDS=("${WLSACCESSID_1}" "${WLSACCESSID_2}")
 WLSSECRETS=("${WLSSECRET_1}" "${WLSSECRET_2}")
 LICENSEIDS=("${LICENSEID_1}" "${LICENSEID_2}")
 
-license_idx=$(( SLURM_ARRAY_TASK_ID % 2 ))
+license_idx=$(( SLURM_ARRAY_TASK_ID / 32 ))  # 0-31 = low sensitivity, 32-63 = high sensitivity
 export WLSACCESSID="${WLSACCESSIDS[$license_idx]}"
 export WLSSECRET="${WLSSECRETS[$license_idx]}"
 export LICENSEID="${LICENSEIDS[$license_idx]}"
