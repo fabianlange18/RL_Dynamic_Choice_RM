@@ -1,5 +1,6 @@
 import argparse
 import itertools
+import importlib
 import runpy
 import os
 import sys
@@ -62,6 +63,9 @@ def run_single(task_id):
 
     import src.config as c
     c.HIGH_SENSITIVITY, c.GT_MODEL, c.TRAIN_ON_ALL_SETS, c.LARGE_PRODUCT_SET = grid[task_id]
+
+    # `src.constants` depends on `src.config`; reload after task-specific config update.
+    importlib.reload(C)
 
     print(
         "Running task_id={} with HIGH_SENSITIVITY={}, GT_MODEL={}, TRAIN_ON_ALL_SETS={}, LARGE_PRODUCT_SET={}".format(
