@@ -1,0 +1,16 @@
+2026-05-23T10:02:36.306207+00:00 action=acquire job_id=4787873 task_id=35 phase=dp slot=1
+2026-05-23T10:02:40.229440+00:00 action=acquire job_id=4787883 task_id=45 phase=efficient_sets slot=2
+2026-05-23T10:04:29.184933+00:00 action=release job_id=4787883 task_id=45 phase=efficient_sets slot=2
+2026-05-23T10:04:40.263893+00:00 action=acquire job_id=4787879 task_id=41 phase=efficient_sets slot=2
+2026-05-23T10:20:36.963279+00:00 action=release job_id=4787879 task_id=41 phase=efficient_sets slot=2
+2026-05-23T10:20:40.834859+00:00 action=acquire job_id=4787875 task_id=37 phase=efficient_sets slot=2
+2026-05-23T15:52:39.801822+00:00 action=release job_id=4787875 task_id=37 phase=efficient_sets slot=2
+2026-05-23T15:52:42.684327+00:00 action=acquire job_id=4787871 task_id=33 phase=efficient_sets slot=2
+2026-05-23T15:53:42.304644+00:00 action=release job_id=4787871 task_id=33 phase=efficient_sets slot=2
+2026-05-23T15:53:42.327128+00:00 action=acquire job_id=4787877 task_id=39 phase=dp slot=2
+2026-05-23T16:02:41.661734+00:00 action=acquire job_id=4787881 task_id=43 phase=dp slot=1
+2026-05-23T16:34:44.027615+00:00 action=release job_id=4787881 task_id=43 phase=dp slot=1
+2026-05-23T16:34:48.820879+00:00 action=acquire job_id=4787885 task_id=47 phase=dp slot=1
+2026-05-23T16:34:50.157885+00:00 action=release job_id=4787885 task_id=47 phase=dp slot=1
+2026-05-23T16:35:07.303672+00:00 action=release job_id=4787873 task_id=35 phase=dp slot=1
+2026-05-23T16:35:13.763583+00:00 action=release job_id=4787877 task_id=39 phase=dp slot=2

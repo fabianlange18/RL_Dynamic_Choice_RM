@@ -1,0 +1,42 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1779530412.793940 2020033 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1779530414.636429 2020033 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1779530423.034884 2020033 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1779530423.050961 2020033 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=271, x=70; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=190, x=86; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=188, x=104; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=183, x=23; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=163, x=62; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=161, x=59; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=157, x=42; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=146, x=84; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:368: RuntimeWarning: Gurobi did not return a feasible solution at t=144, x=62; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+Traceback (most recent call last):
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/slurm/run_experiment_grid.py", line 93, in <module>
+    run_single(args.task_id)
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/slurm/run_experiment_grid.py", line 85, in run_single
+    runpy.run_path(str(exec_path), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py", line 611, in <module>
+    main()
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py", line 368, in main
+    v_mnl, pi_mnl = solve_by_dp(
+                    ^^^^^^^^^^^^
+  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/calc/choice_dp_gurobi.py", line 104, in solve_by_dp
+    gp_model.optimize()
+  File "src/gurobipy/_model.pyx", line 903, in gurobipy._model.Model.optimize
+gurobipy._exception.GurobiError: Overage for too long, 4 active sessions and over the baseline for 33 minutes
