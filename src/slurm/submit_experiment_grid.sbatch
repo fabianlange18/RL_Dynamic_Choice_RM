@@ -5,8 +5,8 @@
 #SBATCH --time=72:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10G
-#SBATCH --output=example_2/slurm/logs/%x_%A_%a.out
-#SBATCH --error=example_2/slurm/logs/%x_%A_%a.err
+#SBATCH --output=src/slurm/logs/%x_%A_%a.out
+#SBATCH --error=src/slurm/logs/%x_%A_%a.err
 #SBATCH --mail-user=fabian.lange@uni-mannheim.de
 #SBATCH --mail-type=END
 

@@ -5,6 +5,11 @@ import os
 import sys
 from pathlib import Path
 
+# Ensure `src` package imports resolve when executed as a script.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 import src.constants as C
 
 
@@ -49,10 +54,11 @@ def run_single(task_id):
     if task_id < 0 or task_id >= len(grid):
         raise ValueError(f"task_id {task_id} out of range [0, {len(grid) - 1}]")
 
-    repo_root = Path(__file__).resolve().parents[2]
+    repo_root = REPO_ROOT
     src_dir = repo_root / "src"
 
-    sys.path.insert(0, str(src_dir))
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
 
     import src.config as c
     c.HIGH_SENSITIVITY, c.GT_MODEL, c.TRAIN_ON_ALL_SETS, c.LARGE_PRODUCT_SET = grid[task_id]
