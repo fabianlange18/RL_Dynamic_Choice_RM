@@ -1,0 +1,18 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4785245/gurobi_4785245_5/gurobi.lic (license index=0, LICENSEID=2817305)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4785245/gurobi_4785245_5/gurobi.lic, exists=True, WLSACCESSID=9f1b...dedb, LICENSEID=2817305
+Running task_id=5 with HIGH_SENSITIVITY=False, GT_MODEL=MMNL_2PT, TRAIN_ON_ALL_SETS=False, LARGE_PRODUCT_SET=True
+[efficient_sets] Registered pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/slurm/.gurobi_slots_license_2817305/effsets_pending/task_5
+scipy estimation data: obs=9538, alts=101, memory=7.36 MiB
+[efficient_sets] Waiting for Gurobi slot (max concurrent: 2)
+[efficient_sets] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2817305
+Academic license 2817305 - for non-commercial use only - registered to fa___@uni-mannheim.de
+[efficient_sets] Disposed Gurobi default environment
+[efficient_sets] Released Gurobi slot 1
+[efficient_sets] Removed pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/slurm/.gurobi_slots_license_2817305/effsets_pending/task_5
+Training DQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:04 < 0:00:00 , 4,733 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:17 < 0:00:00 , 4,635 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:01:26 < 0:00:00 , 4,453 it/s ]

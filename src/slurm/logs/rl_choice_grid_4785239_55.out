@@ -1,0 +1,17 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4785295/gurobi_4785295_55/gurobi.lic (license index=1, LICENSEID=2826830)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4785295/gurobi_4785295_55/gurobi.lic, exists=True, WLSACCESSID=eb01...91da, LICENSEID=2826830
+Running task_id=55 with HIGH_SENSITIVITY=True, GT_MODEL=MNLConsidSet, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+scipy estimation data: obs=10086, alts=101, memory=7.78 MiB
+[dp] Yielding to 5 active efficient-set task(s); waiting 60s
+[dp] Yielding to 8 active efficient-set task(s); waiting 60s
+[dp] Yielding to 8 active efficient-set task(s); waiting 60s
+[dp] Yielding to 6 active efficient-set task(s); waiting 60s
+[dp] Yielding to 6 active efficient-set task(s); waiting 60s
+[dp] Yielding to 6 active efficient-set task(s); waiting 60s
+[dp] Yielding to 4 active efficient-set task(s); waiting 60s
+[dp] Yielding to 4 active efficient-set task(s); waiting 60s
+[dp] Yielding to 4 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Waiting for Gurobi slot (max concurrent: 2)

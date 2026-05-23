@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/slurm/run_experiment_grid.py", line 8, in <module>
-    import src.constants as C
-ModuleNotFoundError: No module named 'src'

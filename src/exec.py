@@ -19,7 +19,7 @@ from src.calc.train_rl import train_rl
 from src.eval.evaluation import evaluate_saved_models, print_evaluation_table
 from src.eval.simulation import simulate
 from src.calc.choice_adp import solve_by_adp, solve_by_adp_env_rollout
-if c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS:
+if c.LARGE_PRODUCT_SET and not c.TRAIN_ON_ALL_SETS:
     from src.calc.efficient_sets_gurobi import compute_efficient_sets
 else:
     from src.calc.efficient_sets import compute_efficient_sets
@@ -204,11 +204,10 @@ def main():
     log_message(f"TRAIN_ON_ALL_SETS: {c.TRAIN_ON_ALL_SETS}")
     log_message(f"HIGH_SENSITIVITY: {c.HIGH_SENSITIVITY}")
     log_message(f"GT_MODEL: {c.GT_MODEL}")
-    log_message("SOLVER: DP + ADP")
     log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
-    uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
+    uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and not c.TRAIN_ON_ALL_SETS
     _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
     if _pending_marker:
         open(_pending_marker, "w").close()

@@ -1,0 +1,11 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4785276/gurobi_4785276_36/gurobi.lic (license index=1, LICENSEID=2826830)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4785276/gurobi_4785276_36/gurobi.lic, exists=True, WLSACCESSID=eb01...91da, LICENSEID=2826830
+Running task_id=36 with HIGH_SENSITIVITY=True, GT_MODEL=MMNL_2PT, TRAIN_ON_ALL_SETS=False, LARGE_PRODUCT_SET=False
+scipy estimation data: obs=10304, alts=11, memory=0.87 MiB
+Training DQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:03 < 0:00:00 , 5,239 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:00:15 < 0:00:00 , 5,254 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 400,000/400,000  [ 0:01:16 < 0:00:00 , 5,237 it/s ]
+Training QRDQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:21 < 0:00:00 , 921 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:01:34 < 0:00:00 , 839 it/s ]
