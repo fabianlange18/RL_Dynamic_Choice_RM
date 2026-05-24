@@ -48,7 +48,11 @@ def get_buying_probabilities_by_model(
 				reference_price=reference_price,
 			)
 		case "MNLConsidSet":
-			probabilities = mnl_consideration_set_probabilities(action_binary, beta=beta)
+			probabilities = mnl_consideration_set_probabilities(
+				action_binary,
+				beta=beta,
+				seed=seed,
+			)
 		case "NLogit":
 			probabilities = nested_logit_probabilities(action_binary, beta=beta)
 		case "TMNL":

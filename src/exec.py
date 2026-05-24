@@ -72,7 +72,6 @@ def gurobi_slot_lock(phase_label):
 
     os.makedirs(lock_dir, exist_ok=True)
     poll_seconds = 60
-    stale_seconds = int(os.environ.get("GUROBI_SLOT_STALE_SECONDS", "86400"))
     events_log_path = os.path.join(lock_dir, "gurobi_lock_events.log")
     lock_path = None
     lock_slot = None
@@ -122,20 +121,6 @@ def gurobi_slot_lock(phase_label):
         while True:
             for slot in range(1, max_slots + 1):
                 path = os.path.join(lock_dir, f"slot_{slot}.lock")
-
-                # Best-effort stale lock cleanup for crashed jobs.
-                if os.path.exists(path):
-                    try:
-                        age = time.time() - os.path.getmtime(path)
-                        if age > stale_seconds:
-                            os.remove(path)
-                            log_gurobi_message(
-                                f"[{phase_label}] Removed stale lock file: {path} (age={age:.0f}s)"
-                            )
-                    except FileNotFoundError:
-                        pass
-                    except OSError:
-                        pass
 
                 try:
                     fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
