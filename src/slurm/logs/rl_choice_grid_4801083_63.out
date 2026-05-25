@@ -1,0 +1,29 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4801083/gurobi_4801083_63/gurobi.lic (license index=3, LICENSEID=2826907)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4801083/gurobi_4801083_63/gurobi.lic, exists=True, WLSACCESSID=1e7a...556e, LICENSEID=2826907
+Running task_id=63 with HIGH_SENSITIVITY=True, GT_MODEL=NLogit, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+scipy estimation data: obs=10204, alts=101, memory=7.87 MiB
+scipy estimation mode: raw prices, beta_bounds=(-0.05, -1e-07), purchase_rate|arrival=0.8112
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 4 active efficient-set task(s); waiting 60s
+[dp] Yielding to 3 active efficient-set task(s); waiting 60s
+[dp] Yielding to 3 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 2
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2826907
+Academic license 2826907 - for non-commercial use only - registered to ca___@ruhr-uni-bochum.de
