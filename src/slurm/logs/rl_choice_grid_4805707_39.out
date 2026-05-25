@@ -1,0 +1,11 @@
+Using Gurobi license file: /scratch/slurm_tmpdir/job_4805749/gurobi_4805749_39/gurobi.lic (license index=2, LICENSEID=2826902)
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4805749/gurobi_4805749_39/gurobi.lic, exists=True, WLSACCESSID=980b...1937, LICENSEID=2826902
+Running task_id=39 with HIGH_SENSITIVITY=True, GT_MODEL=MMNL_2PT, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+scipy estimation data: obs=10105, alts=101, memory=7.80 MiB
+scipy estimation mode: raw prices, beta_bounds=(-0.05, -1e-07), purchase_rate|arrival=0.8733
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2826902
+Academic license 2826902 - for non-commercial use only - registered to b2___@campus.vwa-goettingen.de
