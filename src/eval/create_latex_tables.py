@@ -408,63 +408,63 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     latex.append(r'    \midrule')
 
     sampling_time = _format_decimal(metadata.get('sampling_time', 'N/A'), 2)
-    latex.append(f"    Obs. Sampling Time & \\multicolumn{{3}}{{c}}{{{sampling_time} s}} \\")
+    latex.append(f"    Obs. Sampling Time & \\multicolumn{{3}}{{c}}{{{sampling_time} s}} \\\\")
 
     est_mnl_lambda = _format_decimal(metadata.get('estimation_mnl_lambda', 'N/A'), 6)
-    latex.append(f"    Estim. $\\lambda$ & \\multicolumn{{3}}{{c}}{{{est_mnl_lambda}}} \\")
+    latex.append(f"    Estim. $\\lambda$ & \\multicolumn{{3}}{{c}}{{{est_mnl_lambda}}} \\\\")
 
     est_mnl_time = fmt_seconds(metadata.get('estimation_mnl_time', 'N/A'))
     est_5pt_time = fmt_seconds(metadata.get('estimation_mmnl_5pt_time', 'N/A'))
     est_2pt_time = fmt_seconds(metadata.get('estimation_mmnl_2pt_time', 'N/A'))
-    latex.append(f"    Estim. Time & {est_mnl_time} & {est_5pt_time} & {est_2pt_time} \\")
+    latex.append(f"    Estim. Time & {est_mnl_time} & {est_5pt_time} & {est_2pt_time} \\\\")
 
     est_mnl_beta = _format_decimal(metadata.get('estimation_mnl_beta', 'N/A'), 6)
-    latex.append(f"    Estim. $\\beta$ & {est_mnl_beta} & {mmnl_5pt_beta_text} & {mmnl_2pt_beta_text} \\")
-    latex.append(f"    Estim. Weights & - & {mmnl_5pt_weights_text} & {mmnl_2pt_weights_text} \\")
+    latex.append(f"    Estim. $\\beta$ & {est_mnl_beta} & {mmnl_5pt_beta_text} & {mmnl_2pt_beta_text} \\\\")
+    latex.append(f"    Estim. Weights & - & {mmnl_5pt_weights_text} & {mmnl_2pt_weights_text} \\\\")
 
     est_mnl_ll = _format_decimal(metadata.get('estimation_mnl_ll', 'N/A'), 2)
     est_5pt_ll = _format_decimal(metadata.get('estimation_mmnl_5pt_ll', 'N/A'), 2)
     est_2pt_ll = _format_decimal(metadata.get('estimation_mmnl_2pt_ll', 'N/A'), 2)
-    latex.append(f"    Log Likelihood & {est_mnl_ll} & {est_5pt_ll} & {est_2pt_ll} \\")
+    latex.append(f"    Log Likelihood & {est_mnl_ll} & {est_5pt_ll} & {est_2pt_ll} \\\\")
 
     est_mnl_aic = _format_decimal(metadata.get('estimation_mnl_aic', 'N/A'), 2)
     est_5pt_aic = _format_decimal(metadata.get('estimation_mmnl_5pt_aic', 'N/A'), 2)
     est_2pt_aic = _format_decimal(metadata.get('estimation_mmnl_2pt_aic', 'N/A'), 2)
-    latex.append(f"    AIC & {est_mnl_aic} & {est_5pt_aic} & {est_2pt_aic} \\")
+    latex.append(f"    AIC & {est_mnl_aic} & {est_5pt_aic} & {est_2pt_aic} \\\\")
 
     est_mnl_bic = _format_decimal(metadata.get('estimation_mnl_bic', 'N/A'), 2)
     est_5pt_bic = _format_decimal(metadata.get('estimation_mmnl_5pt_bic', 'N/A'), 2)
     est_2pt_bic = _format_decimal(metadata.get('estimation_mmnl_2pt_bic', 'N/A'), 2)
-    latex.append(f"    BIC & {est_mnl_bic} & {est_5pt_bic} & {est_2pt_bic} \\")
+    latex.append(f"    BIC & {est_mnl_bic} & {est_5pt_bic} & {est_2pt_bic} \\\\")
 
     if 'effsets' in folder_name.lower():
         eff_mnl_time = fmt_seconds(metadata.get('mnl_effsets_time', 'N/A'))
         eff_5pt_time = fmt_seconds(metadata.get('mmnl_5pt_effsets_time', 'N/A'))
         eff_2pt_time = fmt_seconds(metadata.get('mmnl_2pt_effsets_time', 'N/A'))
-        latex.append(f"    Eff. Sets Time & {eff_mnl_time} & {eff_5pt_time} & {eff_2pt_time} \\")
-        latex.append(f"    \\# Eff. Sets & {mnl_effsets_count} & {mmnl_5pt_effsets_count} & {mmnl_2pt_effsets_count} \\")
+        latex.append(f"    Eff. Sets Time & {eff_mnl_time} & {eff_5pt_time} & {eff_2pt_time} \\\\")
+        latex.append(f"    \\# Eff. Sets & {mnl_effsets_count} & {mmnl_5pt_effsets_count} & {mmnl_2pt_effsets_count} \\\\")
 
     dp_mnl_value = metadata.get('dp_mnl_value', 'N/A')
     dp_5pt_value = metadata.get('dp_mmnl_5pt_value', 'N/A')
     dp_2pt_value = metadata.get('dp_mmnl_2pt_value', 'N/A')
-    latex.append(f"    DP $V(0,C)$ & {dp_mnl_value} & {dp_5pt_value} & {dp_2pt_value} \\")
+    latex.append(f"    DP $V(0,C)$ & {dp_mnl_value} & {dp_5pt_value} & {dp_2pt_value} \\\\")
 
     dp_mnl_sim_reward = metadata.get('dp_mnl_sim_reward', 'N/A')
     dp_5pt_sim_reward = metadata.get('dp_mmnl_5pt_sim_reward', 'N/A')
     dp_2pt_sim_reward = metadata.get('dp_mmnl_2pt_sim_reward', 'N/A')
     latex.append(
-        f"    Sim. Rew. (n=1000) & {dp_mnl_sim_reward} & {dp_5pt_sim_reward} & {dp_2pt_sim_reward} \\")
+        f"    Sim. Rew. (n=1000) & {dp_mnl_sim_reward} & {dp_5pt_sim_reward} & {dp_2pt_sim_reward} \\\\")
 
     adp_mnl_value = metadata.get('adp_mnl_value', 'N/A')
     adp_5pt_value = metadata.get('adp_mmnl_5pt_value', 'N/A')
     adp_2pt_value = metadata.get('adp_mmnl_2pt_value', 'N/A')
-    latex.append(f"    ADP $V(0,C)$ & {adp_mnl_value} & {adp_5pt_value} & {adp_2pt_value} \\")
+    latex.append(f"    ADP $V(0,C)$ & {adp_mnl_value} & {adp_5pt_value} & {adp_2pt_value} \\\\")
 
     adp_mnl_sim_reward = metadata.get('adp_mnl_sim_reward', 'N/A')
     adp_5pt_sim_reward = metadata.get('adp_mmnl_5pt_sim_reward', 'N/A')
     adp_2pt_sim_reward = metadata.get('adp_mmnl_2pt_sim_reward', 'N/A')
     latex.append(
-        f"    ADP Sim. Rew. (n=1000) & {adp_mnl_sim_reward} & {adp_5pt_sim_reward} & {adp_2pt_sim_reward} \\")
+        f"    ADP Sim. Rew. (n=1000) & {adp_mnl_sim_reward} & {adp_5pt_sim_reward} & {adp_2pt_sim_reward} \\\\")
 
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
