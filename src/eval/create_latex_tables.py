@@ -400,8 +400,8 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
         rounded = _format_decimal(value, 2)
         return f"{rounded}s" if rounded != 'N/A' else 'N/A'
 
-    latex.append(r'\begin{table}[H]')
-    latex.append(r'  \centering')
+    latex.append(r'\begin{center}')
+    latex.append(r'  \small')
     latex.append(r'  \begin{tabular}{l|r|r|r}')
     latex.append(r'    \toprule')
     latex.append(r'    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\')
@@ -468,7 +468,8 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
 
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
-    latex.append(r'\end{table}')
+    latex.append(r'\end{center}')
+    latex.append(r'\vspace{0.5em}')
     latex.append('')
 
     return '\n'.join(latex)
@@ -502,9 +503,11 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
     timestep_int = int(timestep)
     timestep_label = _format_steps_with_dots(timestep_int)
     
-    # Table begin
-    latex.append(r'\begin{table}[H]')
-    latex.append(r'  \centering')
+    # Non-floating table block to avoid float-queue overflows when including many result tables.
+    latex.append(rf'\noindent\textbf{{Training Results over {timestep_label} Steps (Sample Size: 15)}}')
+    latex.append(r'')
+    latex.append(r'\begin{center}')
+    latex.append(r'  \small')
     latex.append(r'  \begin{tabular}{l|rr|rr|rr|rr}')
     latex.append(r'    \toprule')
     
@@ -554,8 +557,8 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
     
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
-    latex.append(f"  \\caption{{Training Results over {timestep_label} Steps (Sample Size: 15)}}")
-    latex.append(r'\end{table}')
+    latex.append(r'\end{center}')
+    latex.append(r'\vspace{0.5em}')
     latex.append('')
     
     return '\n'.join(latex)
