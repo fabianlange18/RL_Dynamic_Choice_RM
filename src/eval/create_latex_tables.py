@@ -475,92 +475,98 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     return '\n'.join(latex)
 
 
-def create_latex_table(data: List[Dict], timestep: str) -> str:
-    """
-    Create a LaTeX table from parsed data for a single timestep.
-    """
+def create_latex_table(timesteps: Dict[str, List[Dict]]) -> str:
+    """Create one compact LaTeX table with DP/ADP once and RL blocks by training steps."""
+    if not timesteps:
+        return ''
+
     latex = []
-    
-    # Reorder rows: DP first, then ADP, then remaining methods.
+
     dp_method_order = ['DP_MNL', 'DP_MMNL_5PT', 'DP_MMNL_2PT']
     adp_method_order = ['ADP_MNL', 'ADP_MMNL_5PT', 'ADP_MMNL_2PT', 'ADP_ENV']
-    dp_rows = [r for r in data if r['Method'] in dp_method_order]
-    adp_rows = [r for r in data if r['Method'] in adp_method_order]
-    other_rows = [
-        r
-        for r in data
-        if r['Method'] not in dp_method_order and r['Method'] not in adp_method_order
-    ]
-    
-    # Sort DP/ADP rows to ensure a stable canonical order.
-    dp_rows_sorted = sorted(dp_rows, key=lambda x: dp_method_order.index(x['Method']))
-    adp_rows_sorted = sorted(adp_rows, key=lambda x: adp_method_order.index(x['Method']))
-    
-    # Keep groups separate so we can insert visual separators in the table.
-    grouped_data = [dp_rows_sorted, adp_rows_sorted, other_rows]
-    
-    # Subsection for this timestep (convert to int for formatting)
-    timestep_int = int(timestep)
-    timestep_label = _format_steps_with_dots(timestep_int)
-    
-    # Non-floating table block to avoid float-queue overflows when including many result tables.
+    sorted_timesteps = sorted(timesteps.keys(), key=int)
+
+    def split_rows(data: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
+        dp_rows = [r for r in data if r['Method'] in dp_method_order]
+        adp_rows = [r for r in data if r['Method'] in adp_method_order]
+        rl_rows = [
+            r
+            for r in data
+            if r['Method'] not in dp_method_order and r['Method'] not in adp_method_order
+        ]
+        dp_rows = sorted(dp_rows, key=lambda x: dp_method_order.index(x['Method']))
+        adp_rows = sorted(adp_rows, key=lambda x: adp_method_order.index(x['Method']))
+        return dp_rows, adp_rows, rl_rows
+
+    def format_row(row: Dict) -> str:
+        method = row['Method'].replace('_', '\\_')
+        train_time_mean = row['TrainTimeMean']
+        train_time_std = row['TrainTimeStd']
+        reward_mean = row['RewardMean']
+        reward_std = row['RewardStdAcrossRuns']
+        pct_dp = row['PctOfDP']
+        pct_dp_std = row['PctOfDPStd']
+        load_mean = row['LoadFactorMean']
+        load_std = row['LoadFactorStdAcrossRuns']
+
+        if row['Method'].startswith('DP_') and row['Method'] not in ['DP_MMNL_2PT', 'DP_MMNL_5PT']:
+            pct_dp_display = f'{pct_dp:.2f}*'
+        else:
+            pct_dp_display = f'{pct_dp:.2f}'
+
+        if row['Method'].startswith('DP_') or row['Method'].startswith('ADP_'):
+            train_time_std_display = '   --'
+        else:
+            train_time_std_display = f'{train_time_std:8.2f}'
+
+        return (
+            f'    {method:12s} & {train_time_mean:8.2f} & {train_time_std_display} & '
+            f'{reward_mean:10.1f} & {reward_std:10.2f} & {pct_dp_display:>7s} & {pct_dp_std:7.2f} & '
+            f'{load_mean:7.2f} & {load_std:7.2f} \\\\'
+        )
+
+    baseline_dp_rows, baseline_adp_rows, _ = split_rows(timesteps[sorted_timesteps[0]])
+
     latex.append(r'\begin{center}')
     latex.append(r'  \small')
     latex.append(r'  \begin{tabular}{l|rr|rr|rr|rr}')
     latex.append(r'    \toprule')
-    latex.append(rf'    \multicolumn{{9}}{{c}}{{\textbf{{Training Results over {timestep_label} Steps (Sample Size: 15)}}}} \\')
+    latex.append(r'    \multicolumn{9}{c}{\textbf{Training Results (RL blocks by training steps, Sample Size: 15)}} \\')
     latex.append(r'    \midrule')
-    
-    # Header
-    latex.append(r'    Method & \multicolumn{2}{c|}{Training Time (s)} & '
-                r'\multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & '
-                r'\multicolumn{2}{c}{Load Factor (\%)} \\')
+    latex.append(
+        r'    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & '\
+        r'\multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\'
+    )
     latex.append(r'    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\')
     latex.append(r'    \midrule')
-    
-    # Data rows with proper underscore escaping and separators between DP/ADP/RL blocks.
-    for group_index, group_rows in enumerate(grouped_data):
-        if not group_rows:
+
+    for row in baseline_dp_rows:
+        latex.append(format_row(row))
+    if baseline_adp_rows:
+        latex.append(r'    \midrule')
+    for row in baseline_adp_rows:
+        latex.append(format_row(row))
+
+    for timestep in sorted_timesteps:
+        _, _, rl_rows = split_rows(timesteps[timestep])
+        if not rl_rows:
             continue
 
-        for row in group_rows:
-            method = row['Method'].replace('_', '\\_')  # Escape underscores
-            train_time_mean = row['TrainTimeMean']
-            train_time_std = row['TrainTimeStd']
-            reward_mean = row['RewardMean']
-            reward_std = row['RewardStdAcrossRuns']
-            pct_dp = row['PctOfDP']
-            pct_dp_std = row['PctOfDPStd']
-            load_mean = row['LoadFactorMean']
-            load_std = row['LoadFactorStdAcrossRuns']
+        timestep_label = _format_steps_with_dots(int(timestep))
+        latex.append(r'    \midrule')
+        latex.append(
+            rf'    \multicolumn{{9}}{{l}}{{\textit{{RL methods trained for {timestep_label} steps}}}} \\'
+        )
+        latex.append(r'    \midrule')
+        for row in rl_rows:
+            latex.append(format_row(row))
 
-            # Mark DP methods with a star (reference percentage), but not for MMNL_2PT and MMNL_5PT.
-            if row['Method'].startswith('DP_') and row['Method'] not in ['DP_MMNL_2PT', 'DP_MMNL_5PT']:
-                pct_dp_display = f'{pct_dp:.2f}*'
-            else:
-                pct_dp_display = f'{pct_dp:.2f}'
-
-            # For DP and ADP methods, display -- for training time std.
-            if row['Method'].startswith('DP_') or row['Method'].startswith('ADP_'):
-                train_time_std_display = '   --'
-            else:
-                train_time_std_display = f'{train_time_std:8.2f}'
-
-            line = (f'    {method:12s} & {train_time_mean:8.2f} & {train_time_std_display} & '
-                 f'{reward_mean:10.1f} & {reward_std:10.2f} & {pct_dp_display:>7s} & {pct_dp_std:7.2f} & '
-                   f'{load_mean:7.2f} & {load_std:7.2f} \\\\')
-            latex.append(line)
-
-        has_next_nonempty_group = any(next_group for next_group in grouped_data[group_index + 1:])
-        if has_next_nonempty_group:
-            latex.append(r'    \midrule')
-    
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
     latex.append(r'\end{center}')
     latex.append(r'\vspace{0.5em}')
     latex.append('')
-    
+
     return '\n'.join(latex)
 
 
@@ -688,11 +694,9 @@ def main():
             # Write metadata section
             f.write(create_metadata_section(parsed['metadata'], folder.name))
             
-            # Write tables for each timestep
-            for timestep in sorted(parsed['timesteps'].keys(), key=int):
-                data = parsed['timesteps'][timestep]
-                latex_code = create_latex_table(data, timestep)
-                f.write(latex_code)
+            # Write one compact table with DP/ADP once and RL methods by timestep blocks.
+            latex_code = create_latex_table(parsed['timesteps'])
+            f.write(latex_code)
         
         print(f'  ✓ Created: {folder.name}/results_table.tex\n')
 

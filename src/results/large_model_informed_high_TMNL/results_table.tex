@@ -24,7 +24,7 @@
   \small
   \begin{tabular}{l|rr|rr|rr|rr}
     \toprule
-    \multicolumn{9}{c}{\textbf{Training Results over 20.000 Steps (Sample Size: 15)}} \\
+    \multicolumn{9}{c}{\textbf{Training Results (RL blocks by training steps, Sample Size: 15)}} \\
     \midrule
     Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
     & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
@@ -37,6 +37,8 @@
     ADP\_MMNL\_5PT &     0.56 &    -- &    42144.6 &    2056.89 &   85.04 &    2.74 &   78.23 &    3.70 \\
     ADP\_MMNL\_2PT &     0.55 &    -- &    42143.7 &    2058.71 &   85.04 &    2.74 &   78.23 &    3.70 \\
     ADP\_ENV     &     1.67 &    -- &    46838.7 &    2852.71 &   94.44 &    2.56 &   87.78 &    5.33 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 20.000 steps}} \\
     \midrule
     DQN          &     3.57 &     0.30 &    46521.6 &    3816.97 &   93.79 &    5.63 &   87.93 &    8.48 \\
     QRDQN        &    27.14 &     3.10 &    35684.0 &   16308.78 &   72.49 &   33.18 &   67.21 &   31.05 \\
@@ -44,27 +46,8 @@
     A2C          &     4.19 &     0.29 &    41186.6 &    1592.09 &   83.14 &    2.55 &   98.67 &    1.95 \\
     TRPO         &     6.66 &     0.20 &    42510.3 &    1032.28 &   85.89 &    3.60 &   98.63 &    2.11 \\
     PPO          &    10.38 &     0.68 &    42337.7 &    1780.62 &   85.53 &    4.31 &   98.63 &    2.15 \\
-    \bottomrule
-  \end{tabular}
-\end{center}
-\vspace{0.5em}
-\begin{center}
-  \small
-  \begin{tabular}{l|rr|rr|rr|rr}
-    \toprule
-    \multicolumn{9}{c}{\textbf{Training Results over 100.000 Steps (Sample Size: 15)}} \\
     \midrule
-    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
-    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
-    \midrule
-    DP\_MNL      &     0.37 &    -- &    49558.3 &    1881.98 & 100.00* &    0.00 &   96.25 &    3.12 \\
-    DP\_MMNL\_5PT &     0.38 &    -- &    49557.4 &    1881.09 &  100.00 &    0.00 &   96.25 &    3.12 \\
-    DP\_MMNL\_2PT &     0.37 &    -- &    49556.9 &    1880.66 &  100.00 &    0.01 &   96.25 &    3.12 \\
-    \midrule
-    ADP\_MNL     &     0.55 &    -- &    42144.6 &    2060.76 &   85.04 &    2.75 &   78.23 &    3.70 \\
-    ADP\_MMNL\_5PT &     0.56 &    -- &    42144.6 &    2056.89 &   85.04 &    2.74 &   78.23 &    3.70 \\
-    ADP\_MMNL\_2PT &     0.55 &    -- &    42143.7 &    2058.71 &   85.04 &    2.74 &   78.23 &    3.70 \\
-    ADP\_ENV     &     1.67 &    -- &    46838.7 &    2852.71 &   94.44 &    2.56 &   87.78 &    5.33 \\
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
     \midrule
     DQN          &    17.92 &     1.57 &    48621.4 &    2447.64 &   98.08 &    2.19 &   92.83 &    5.01 \\
     QRDQN        &   134.71 &    14.71 &    44030.6 &    8377.63 &   88.71 &   16.07 &   83.17 &   17.05 \\
@@ -72,27 +55,8 @@
     A2C          &    20.89 &     1.48 &    42813.8 &    1473.02 &   86.52 &    4.58 &   98.74 &    2.20 \\
     TRPO         &    28.70 &     0.84 &    42902.9 &    1470.24 &   86.65 &    3.33 &   99.14 &    1.71 \\
     PPO          &    44.78 &     2.90 &    43031.0 &    1161.10 &   86.91 &    2.96 &   99.32 &    1.14 \\
-    \bottomrule
-  \end{tabular}
-\end{center}
-\vspace{0.5em}
-\begin{center}
-  \small
-  \begin{tabular}{l|rr|rr|rr|rr}
-    \toprule
-    \multicolumn{9}{c}{\textbf{Training Results over 500.000 Steps (Sample Size: 15)}} \\
     \midrule
-    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
-    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
-    \midrule
-    DP\_MNL      &     0.37 &    -- &    49558.3 &    1881.98 & 100.00* &    0.00 &   96.25 &    3.12 \\
-    DP\_MMNL\_5PT &     0.38 &    -- &    49557.4 &    1881.09 &  100.00 &    0.00 &   96.25 &    3.12 \\
-    DP\_MMNL\_2PT &     0.37 &    -- &    49556.9 &    1880.66 &  100.00 &    0.01 &   96.25 &    3.12 \\
-    \midrule
-    ADP\_MNL     &     0.55 &    -- &    42144.6 &    2060.76 &   85.04 &    2.75 &   78.23 &    3.70 \\
-    ADP\_MMNL\_5PT &     0.56 &    -- &    42144.6 &    2056.89 &   85.04 &    2.74 &   78.23 &    3.70 \\
-    ADP\_MMNL\_2PT &     0.55 &    -- &    42143.7 &    2058.71 &   85.04 &    2.74 &   78.23 &    3.70 \\
-    ADP\_ENV     &     1.67 &    -- &    46838.7 &    2852.71 &   94.44 &    2.56 &   87.78 &    5.33 \\
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
     \midrule
     DQN          &    89.14 &     7.49 &    49170.1 &    2488.48 &   99.18 &    1.92 &   94.63 &    4.89 \\
     QRDQN        &   663.29 &    43.21 &    44030.6 &    8377.63 &   88.71 &   16.07 &   83.17 &   17.05 \\
