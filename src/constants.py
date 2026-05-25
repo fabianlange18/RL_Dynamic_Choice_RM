@@ -7,7 +7,7 @@ from sb3_contrib import ARS, QRDQN, TRPO
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-TOTAL_TIMESTEPS = [20_000, 100_000, 500_000, 1_000_000] if c.TRAIN_ON_ALL_SETS else [20_000, 100_000, 500_000]
+TOTAL_TIMESTEPS = [100_000, 500_000, 1_000_000]
 if c.TRAIN_ON_ALL_SETS and c.LARGE_PRODUCT_SET:
     TOTAL_TIMESTEPS = [10 * steps for steps in TOTAL_TIMESTEPS]
 
