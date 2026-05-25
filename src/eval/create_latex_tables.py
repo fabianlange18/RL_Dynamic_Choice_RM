@@ -632,7 +632,7 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
                     lines.append('')
 
                     for folder in selected:
-                        lines.append(rf'\input{{{folder.name}/results_table.tex}}')
+                        lines.append(rf'\input{{results/{folder.name}/results_table.tex}}')
                         lines.append('')
 
     with open(output_path, 'w') as f:
