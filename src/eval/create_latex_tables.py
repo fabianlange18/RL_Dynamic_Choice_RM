@@ -13,22 +13,50 @@ import src.constants as C
 
 
 MODEL_ORDER_MAP = {name.lower(): idx for idx, name in enumerate(C.DEMAND_MODELS)}
+def _resolve_results_dir() -> Path:
+    """Resolve the results directory regardless of invocation working directory."""
+    script_src_dir = Path(__file__).resolve().parents[1]
+    candidates = [
+        script_src_dir / 'results',
+        Path(C.BASE_DIR) / 'results',
+        Path.cwd() / 'results',
+    ]
+
+    for candidate in candidates:
+        if candidate.exists() and candidate.is_dir():
+            return candidate
+
+    # Default to canonical location under src for clearer error reporting.
+    return script_src_dir / 'results'
 
 
 def _parse_result_folder_name(folder_name: str) -> Tuple[str, str, str]:
-    """Parse folder names like '<model>_<high|low>_<all|effsets>'.
+    """Parse supported results folder naming conventions.
 
-    Works even when <model> itself contains underscores (e.g., MMNL_2PT).
-    Returns: (model, sensitivity, sets_kind)
+    Returns: (model, sensitivity, regime_kind)
+    where regime_kind is one of: classical/model_informed/all/effsets.
     """
-    parts = folder_name.split('_')
-    if len(parts) >= 3:
-        model = '_'.join(parts[:-2])
-        sensitivity = parts[-2]
-        sets_kind = parts[-1]
-        return model, sensitivity, sets_kind
+    # Current naming: <small|large>_<classical|model_informed>_<high|low>_<model>
+    current_match = re.match(
+        r'^(small|large)_(classical|model_informed)_(high|low)_(.+)$',
+        folder_name,
+        flags=re.IGNORECASE,
+    )
+    if current_match:
+        regime_kind = current_match.group(2)
+        sensitivity = current_match.group(3)
+        model = current_match.group(4)
+        return model, sensitivity, regime_kind
 
-    # Fallback for unexpected names
+    # Legacy naming: <model>_<high|low>_<all|effsets>
+    legacy_match = re.match(r'^(.+)_(high|low)_(all|effsets)$', folder_name, flags=re.IGNORECASE)
+    if legacy_match:
+        model = legacy_match.group(1)
+        sensitivity = legacy_match.group(2)
+        regime_kind = legacy_match.group(3)
+        return model, sensitivity, regime_kind
+
+    # Fallback for unexpected names.
     return folder_name, '', ''
 
 
@@ -168,6 +196,28 @@ def parse_exec_log(log_path: str) -> Dict:
         results['metadata']['dp_mmnl_2pt_value'] = dp_mmnl_2pt_match.group(2)
         if dp_mmnl_2pt_match.group(3):
             results['metadata']['dp_mmnl_2pt_sim_reward'] = dp_mmnl_2pt_match.group(3)
+
+    # Extract ADP info for all variants
+    adp_mnl_match = re.search(r'ADP_MNL\s+time: ([\d.]+)s \| V\(0,C\): ([\d.]+)(?: \| avg reward: ([\d.]+))?', content)
+    if adp_mnl_match:
+        results['metadata']['adp_mnl_time'] = adp_mnl_match.group(1)
+        results['metadata']['adp_mnl_value'] = adp_mnl_match.group(2)
+        if adp_mnl_match.group(3):
+            results['metadata']['adp_mnl_sim_reward'] = adp_mnl_match.group(3)
+
+    adp_mmnl_5pt_match = re.search(r'ADP_MMNL_5PT\s+time: ([\d.]+)s \| V\(0,C\): ([\d.]+)(?: \| avg reward: ([\d.]+))?', content)
+    if adp_mmnl_5pt_match:
+        results['metadata']['adp_mmnl_5pt_time'] = adp_mmnl_5pt_match.group(1)
+        results['metadata']['adp_mmnl_5pt_value'] = adp_mmnl_5pt_match.group(2)
+        if adp_mmnl_5pt_match.group(3):
+            results['metadata']['adp_mmnl_5pt_sim_reward'] = adp_mmnl_5pt_match.group(3)
+
+    adp_mmnl_2pt_match = re.search(r'ADP_MMNL_2PT\s+time: ([\d.]+)s \| V\(0,C\): ([\d.]+)(?: \| avg reward: ([\d.]+))?', content)
+    if adp_mmnl_2pt_match:
+        results['metadata']['adp_mmnl_2pt_time'] = adp_mmnl_2pt_match.group(1)
+        results['metadata']['adp_mmnl_2pt_value'] = adp_mmnl_2pt_match.group(2)
+        if adp_mmnl_2pt_match.group(3):
+            results['metadata']['adp_mmnl_2pt_sim_reward'] = adp_mmnl_2pt_match.group(3)
     
     # Extract experiment description
     config_match = re.search(r'Run (.+?): (.+)', content)
@@ -311,25 +361,26 @@ def _format_multiline_values(values_list: List[str], max_per_line: int = 3) -> s
 
 
 def _result_folder_sort_key(folder: Path) -> Tuple[int, int, int, str]:
-    """Sort folders by requested model order, then sensitivity and set type."""
+    """Sort folders by model order, then regime, then sensitivity."""
     name = folder.name
-    model, sensitivity, sets_type = _parse_result_folder_name(name)
+    model, sensitivity, regime_kind = _parse_result_folder_name(name)
 
     model_rank = MODEL_ORDER_MAP.get(model.lower(), len(MODEL_ORDER_MAP))
-    sensitivity_rank = 0 if sensitivity.lower() == 'high' else 1
-    sets_rank = 0 if sets_type.lower() == 'all' else 1
+    regime_map = {
+        'classical': 0,
+        'all': 0,
+        'model_informed': 1,
+        'effsets': 1,
+    }
+    regime_rank = regime_map.get(regime_kind.lower(), 2)
+    sensitivity_rank = 0 if sensitivity.lower() == 'low' else 1
 
-    return (model_rank, sensitivity_rank, sets_rank, name.lower())
+    return (model_rank, regime_rank, sensitivity_rank, name.lower())
 
 
 def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     """Create LaTeX section with metadata in a more beautiful format."""
     latex = []
-
-    model_display_name = extract_model_display_name(folder_name)
-
-    latex.append(f'\\subsubsection{{Ground Truth Demand Model: {{{model_display_name}}}}}')
-    latex.append('')
 
     mmnl_5pt_betas = _parse_mmnl_betas(metadata.get('estimation_mmnl_5pt_betas', ''))
     mmnl_5pt_beta_text = _format_multiline_values([_format_decimal(beta, 4) for beta in mmnl_5pt_betas], max_per_line=3) if mmnl_5pt_betas else 'N/A'
@@ -393,11 +444,6 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
         latex.append(f"    Eff. Sets Time & {eff_mnl_time} & {eff_5pt_time} & {eff_2pt_time} \\")
         latex.append(f"    \\# Eff. Sets & {mnl_effsets_count} & {mmnl_5pt_effsets_count} & {mmnl_2pt_effsets_count} \\")
 
-    dp_mnl_time = fmt_seconds(metadata.get('dp_mnl_time', 'N/A'))
-    dp_5pt_time = fmt_seconds(metadata.get('dp_mmnl_5pt_time', 'N/A'))
-    dp_2pt_time = fmt_seconds(metadata.get('dp_mmnl_2pt_time', 'N/A'))
-    latex.append(f"    DP Time & {dp_mnl_time} & {dp_5pt_time} & {dp_2pt_time} \\")
-
     dp_mnl_value = metadata.get('dp_mnl_value', 'N/A')
     dp_5pt_value = metadata.get('dp_mmnl_5pt_value', 'N/A')
     dp_2pt_value = metadata.get('dp_mmnl_2pt_value', 'N/A')
@@ -408,6 +454,17 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     dp_2pt_sim_reward = metadata.get('dp_mmnl_2pt_sim_reward', 'N/A')
     latex.append(
         f"    Sim. Rew. (n=1000) & {dp_mnl_sim_reward} & {dp_5pt_sim_reward} & {dp_2pt_sim_reward} \\")
+
+    adp_mnl_value = metadata.get('adp_mnl_value', 'N/A')
+    adp_5pt_value = metadata.get('adp_mmnl_5pt_value', 'N/A')
+    adp_2pt_value = metadata.get('adp_mmnl_2pt_value', 'N/A')
+    latex.append(f"    ADP $V(0,C)$ & {adp_mnl_value} & {adp_5pt_value} & {adp_2pt_value} \\")
+
+    adp_mnl_sim_reward = metadata.get('adp_mnl_sim_reward', 'N/A')
+    adp_5pt_sim_reward = metadata.get('adp_mmnl_5pt_sim_reward', 'N/A')
+    adp_2pt_sim_reward = metadata.get('adp_mmnl_2pt_sim_reward', 'N/A')
+    latex.append(
+        f"    ADP Sim. Rew. (n=1000) & {adp_mnl_sim_reward} & {adp_5pt_sim_reward} & {adp_2pt_sim_reward} \\")
 
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
@@ -423,16 +480,23 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
     """
     latex = []
     
-    # Reorder rows: DP methods first.
+    # Reorder rows: DP first, then ADP, then remaining methods.
     dp_method_order = ['DP_MNL', 'DP_MMNL_5PT', 'DP_MMNL_2PT']
+    adp_method_order = ['ADP_MNL', 'ADP_MMNL_5PT', 'ADP_MMNL_2PT', 'ADP_ENV']
     dp_rows = [r for r in data if r['Method'] in dp_method_order]
-    rl_rows = [r for r in data if r['Method'] not in dp_method_order]
+    adp_rows = [r for r in data if r['Method'] in adp_method_order]
+    other_rows = [
+        r
+        for r in data
+        if r['Method'] not in dp_method_order and r['Method'] not in adp_method_order
+    ]
     
-    # Sort DP rows to ensure a stable canonical order.
+    # Sort DP/ADP rows to ensure a stable canonical order.
     dp_rows_sorted = sorted(dp_rows, key=lambda x: dp_method_order.index(x['Method']))
+    adp_rows_sorted = sorted(adp_rows, key=lambda x: adp_method_order.index(x['Method']))
     
-    # Combine: DP methods first, then RL methods in original order
-    ordered_data = dp_rows_sorted + rl_rows
+    # Keep groups separate so we can insert visual separators in the table.
+    grouped_data = [dp_rows_sorted, adp_rows_sorted, other_rows]
     
     # Subsection for this timestep (convert to int for formatting)
     timestep_int = int(timestep)
@@ -451,35 +515,42 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
     latex.append(r'    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\')
     latex.append(r'    \midrule')
     
-    # Data rows with proper underscore escaping
-    for row in ordered_data:
-        method = row['Method'].replace('_', '\\_')  # Escape underscores
-        train_time_mean = row['TrainTimeMean']
-        train_time_std = row['TrainTimeStd']
-        reward_mean = row['RewardMean']
-        reward_std = row['RewardStdAcrossRuns']
-        pct_dp = row['PctOfDP']
-        pct_dp_std = row['PctOfDPStd']
-        load_mean = row['LoadFactorMean']
-        load_std = row['LoadFactorStdAcrossRuns']
+    # Data rows with proper underscore escaping and separators between DP/ADP/RL blocks.
+    for group_index, group_rows in enumerate(grouped_data):
+        if not group_rows:
+            continue
 
-        # Mark DP methods with a star (reference percentage), but not for MMNL_2PT and MMNL_5PT.
-        if row['Method'].startswith('DP_') and row['Method'] not in ['DP_MMNL_2PT', 'DP_MMNL_5PT']:
-            pct_dp_display = f'{pct_dp:.2f}*'
-        else:
-            pct_dp_display = f'{pct_dp:.2f}'
-        
-        # For DP methods, use -- for training time std (no variability in deterministic algorithm)
-        if row['Method'].startswith('DP_'):
-            train_time_std_display = '   --'
-        else:
-            train_time_std_display = f'{train_time_std:8.2f}'
-        
-        # Format numbers
-        line = (f'    {method:12s} & {train_time_mean:8.2f} & {train_time_std_display} & '
-             f'{reward_mean:10.1f} & {reward_std:10.2f} & {pct_dp_display:>7s} & {pct_dp_std:7.2f} & '
-               f'{load_mean:7.2f} & {load_std:7.2f} \\\\')
-        latex.append(line)
+        for row in group_rows:
+            method = row['Method'].replace('_', '\\_')  # Escape underscores
+            train_time_mean = row['TrainTimeMean']
+            train_time_std = row['TrainTimeStd']
+            reward_mean = row['RewardMean']
+            reward_std = row['RewardStdAcrossRuns']
+            pct_dp = row['PctOfDP']
+            pct_dp_std = row['PctOfDPStd']
+            load_mean = row['LoadFactorMean']
+            load_std = row['LoadFactorStdAcrossRuns']
+
+            # Mark DP methods with a star (reference percentage), but not for MMNL_2PT and MMNL_5PT.
+            if row['Method'].startswith('DP_') and row['Method'] not in ['DP_MMNL_2PT', 'DP_MMNL_5PT']:
+                pct_dp_display = f'{pct_dp:.2f}*'
+            else:
+                pct_dp_display = f'{pct_dp:.2f}'
+
+            # For DP and ADP methods, display -- for training time std.
+            if row['Method'].startswith('DP_') or row['Method'].startswith('ADP_'):
+                train_time_std_display = '   --'
+            else:
+                train_time_std_display = f'{train_time_std:8.2f}'
+
+            line = (f'    {method:12s} & {train_time_mean:8.2f} & {train_time_std_display} & '
+                 f'{reward_mean:10.1f} & {reward_std:10.2f} & {pct_dp_display:>7s} & {pct_dp_std:7.2f} & '
+                   f'{load_mean:7.2f} & {load_std:7.2f} \\\\')
+            latex.append(line)
+
+        has_next_nonempty_group = any(next_group for next_group in grouped_data[group_index + 1:])
+        if has_next_nonempty_group:
+            latex.append(r'    \midrule')
     
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
@@ -491,32 +562,78 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
 
 
 def create_master_latex_file(result_folders: List[Path], output_path: Path) -> None:
-    """Create a paper-ready include snippet listing all result tables."""
-    def in_group(folder: Path, sensitivity: str, sets_kind: str) -> bool:
-        _, folder_sensitivity, folder_sets = _parse_result_folder_name(folder.name.lower())
-        return folder_sensitivity == sensitivity and folder_sets == sets_kind
+    """Create a paper-ready include snippet grouped by demand model and regime."""
+    model_display_map = {
+        'MNL': 'MNL',
+        'MMNL_2PT': 'MMNL 2PT',
+        'MMNL_5PT': 'MMNL 5PT',
+        'Probit': 'Probit',
+        'MNLrefPrice': 'MNL with Reference Price',
+        'MNLConsidSet': 'MNL with Consideration Set',
+        'TMNL': 'TMNL',
+        'NLogit': 'Nested Logit',
+    }
 
-    groups = [
-        (r'\subsection{Model-Informed RL -- High Sensitivity}',
-         [f for f in result_folders if in_group(f, 'high', 'effsets')]),
-        (r'\subsection{Model-Informed RL -- Low Sensitivity}',
-         [f for f in result_folders if in_group(f, 'low', 'effsets')]),
-        (r'\subsection{Classical RL -- High Sensitivity}',
-         [f for f in result_folders if in_group(f, 'high', 'all')]),
-        (r'\subsection{Classical RL -- Low Sensitivity}',
-         [f for f in result_folders if in_group(f, 'low', 'all')]),
-    ]
+    parsed = []
+    for folder in result_folders:
+        size_match = re.match(
+            r'^(small|large)_(classical|model_informed)_(high|low)_(.+)$',
+            folder.name,
+            flags=re.IGNORECASE,
+        )
+        if size_match:
+            size_key = size_match.group(1).lower()
+            regime_kind = size_match.group(2)
+            sensitivity = size_match.group(3)
+            model = size_match.group(4)
+        else:
+            size_key = ''
+            model, sensitivity, regime_kind = _parse_result_folder_name(folder.name)
+
+        normalized_regime = regime_kind.lower()
+        if normalized_regime == 'all':
+            normalized_regime = 'classical'
+        elif normalized_regime == 'effsets':
+            normalized_regime = 'model_informed'
+        parsed.append((folder, size_key, model, sensitivity.lower(), normalized_regime))
 
     lines = []
-    lines.append(r'\section{Experimental Results}')
-    lines.append('')
-
-    for heading, folders in groups:
-        lines.append(heading)
+    for size_label, size_key in [('Small number of products', 'small'), ('Large number of products', 'large')]:
+        lines.append(rf'\section{{{size_label}}}')
         lines.append('')
-        for folder in folders:
-            lines.append(rf'\input{{results/{folder.name}/results_table.tex}}')
+
+        for model_code in C.DEMAND_MODELS:
+            model_folders = [
+                p
+                for p in parsed
+                if p[1] == size_key and p[2].lower() == model_code.lower()
+            ]
+            if not model_folders:
+                continue
+
+            lines.append(rf'\subsection{{{model_display_map.get(model_code, model_code)}}}')
             lines.append('')
+
+            for regime_label, regime_key in [('Classical', 'classical'), ('Model-Informed', 'model_informed')]:
+                lines.append(rf'\subsubsection{{{regime_label}}}')
+                lines.append('')
+
+                for sensitivity_label, sensitivity_key in [('Low Price Sensitivity', 'low'), ('High Price Sensitivity', 'high')]:
+                    selected = [
+                        folder
+                        for folder, _, _, sensitivity, regime in model_folders
+                        if regime == regime_key and sensitivity == sensitivity_key
+                    ]
+                    selected = sorted(selected, key=lambda f: f.name.lower())
+                    if not selected:
+                        continue
+
+                    lines.append(rf'\paragraph{{{sensitivity_label}}}')
+                    lines.append('')
+
+                    for folder in selected:
+                        lines.append(rf'\input{{{folder.name}/results_table.tex}}')
+                        lines.append('')
 
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
@@ -524,8 +641,7 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
 
 def main():
     """Generate LaTeX tables for all result folders."""
-    
-    results_dir = Path('results')
+    results_dir = _resolve_results_dir()
     
     if not results_dir.exists():
         print(f"Error: {results_dir} not found")
