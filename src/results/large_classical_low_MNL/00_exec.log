@@ -8,17 +8,17 @@ GT_MODEL: MNL
 ============================================================
 RL Training Seeds: 15, RL Training Steps: [200000, 1000000, 5000000, 10000000], Estimation Episodes: 50
 
-Observation sampling time: 0.5882 seconds
-Estimation_MNL  time: 0.0206s | beta: -0.001424, lambda: 0.501409
-  LL: -37551.748254, AIC: 75105.497, BIC: 75112.667
+Observation sampling time: 0.5443 seconds
+Estimation_MNL  time: 0.0175s | beta: -0.001613, lambda: 0.504924
+  LL: -37417.258371, AIC: 74836.517, BIC: 74843.685
 
-Estimation_MMNL_5PT time: 1.4194s | lambda: 0.501409
-  LL: -37547.396502, AIC: 75112.793, BIC: 75177.327
-Betas: ['-0.005295', '-0.001654', '-0.000896', '-0.000575', '-0.000387']
-Weights: ['0.115803', '0.107453', '0.543075', '0.104212', '0.129456']
+Estimation_MMNL_5PT time: 0.5058s | lambda: 0.504924
+  LL: -37416.511351, AIC: 74851.023, BIC: 74915.536
+Betas: ['-0.002430', '-0.000411', '-0.000383', '-0.000331', '-0.000273']
+Weights: ['0.599994', '0.100002', '0.100002', '0.100002', '0.100001']
 
-Estimation_MMNL_2PT time: 0.9848s | lambda: 0.501409
-  LL: -37547.523980, AIC: 75101.048, BIC: 75122.559
-Betas: ['-0.004393', '-0.000642']
+Estimation_MMNL_2PT time: 0.4439s | lambda: 0.504924
+  LL: -37416.481758, AIC: 74838.964, BIC: 74860.468
+Betas: ['-0.003570', '-0.001107']
 Weights: ['0.200000', '0.800000']
 

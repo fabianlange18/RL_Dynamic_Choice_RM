@@ -8,17 +8,17 @@ GT_MODEL: NLogit
 ============================================================
 RL Training Seeds: 15, RL Training Steps: [200000, 1000000, 5000000, 10000000], Estimation Episodes: 50
 
-Observation sampling time: 0.6400 seconds
-Estimation_MNL  time: 0.0154s | beta: -0.007005, lambda: 0.495512
-  LL: -34858.119179, AIC: 69718.238, BIC: 69725.464
+Observation sampling time: 0.6608 seconds
+Estimation_MNL  time: 0.0150s | beta: -0.006960, lambda: 0.498754
+  LL: -35079.358494, AIC: 70160.717, BIC: 70167.948
 
-Estimation_MMNL_5PT time: 2.1182s | lambda: 0.495512
-  LL: -34842.413634, AIC: 69702.827, BIC: 69767.861
-Betas: ['-0.014281', '-0.006246', '-0.006245', '-0.006245', '-0.006244']
-Weights: ['0.100000', '0.113120', '0.113401', '0.560460', '0.113018']
+Estimation_MMNL_5PT time: 2.2882s | lambda: 0.498754
+  LL: -35064.061458, AIC: 70146.123, BIC: 70211.198
+Betas: ['-0.013930', '-0.006223', '-0.006223', '-0.006223', '-0.006222']
+Weights: ['0.100000', '0.100009', '0.108568', '0.591414', '0.100009']
 
-Estimation_MMNL_2PT time: 1.5666s | lambda: 0.495512
-  LL: -34844.129979, AIC: 69694.260, BIC: 69715.938
-Betas: ['-0.011235', '-0.005948']
+Estimation_MMNL_2PT time: 1.0080s | lambda: 0.498754
+  LL: -35064.732313, AIC: 70135.465, BIC: 70157.156
+Betas: ['-0.011171', '-0.005905']
 Weights: ['0.200000', '0.800000']
 
