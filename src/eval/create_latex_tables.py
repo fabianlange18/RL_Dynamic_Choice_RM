@@ -504,12 +504,12 @@ def create_latex_table(data: List[Dict], timestep: str) -> str:
     timestep_label = _format_steps_with_dots(timestep_int)
     
     # Non-floating table block to avoid float-queue overflows when including many result tables.
-    latex.append(rf'\noindent\textbf{{Training Results over {timestep_label} Steps (Sample Size: 15)}}')
-    latex.append(r'')
     latex.append(r'\begin{center}')
     latex.append(r'  \small')
     latex.append(r'  \begin{tabular}{l|rr|rr|rr|rr}')
     latex.append(r'    \toprule')
+    latex.append(rf'    \multicolumn{{9}}{{c}}{{\textbf{{Training Results over {timestep_label} Steps (Sample Size: 15)}}}} \\')
+    latex.append(r'    \midrule')
     
     # Header
     latex.append(r'    Method & \multicolumn{2}{c|}{Training Time (s)} & '
@@ -600,9 +600,19 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
             normalized_regime = 'model_informed'
         parsed.append((folder, size_key, model, sensitivity.lower(), normalized_regime))
 
+    section_titles = {
+        'small': 'Experimental Results - Small number of products (n=10)',
+        'large': 'Experimental Results - Large number of products (n=100)',
+    }
+
+    regime_titles_default = {
+        'classical': 'Classical approach over all possible product assortments',
+        'model_informed': 'Model-Informed approach over efficient product assortments',
+    }
+
     lines = []
-    for size_label, size_key in [('Small number of products', 'small'), ('Large number of products', 'large')]:
-        lines.append(rf'\section{{{size_label}}}')
+    for size_key in ['small', 'large']:
+        lines.append(rf'\section{{{section_titles.get(size_key, size_key)}}}')
         lines.append('')
 
         for model_code in C.DEMAND_MODELS:
@@ -617,7 +627,8 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
             lines.append(rf'\subsection{{{model_display_map.get(model_code, model_code)}}}')
             lines.append('')
 
-            for regime_label, regime_key in [('Classical', 'classical'), ('Model-Informed', 'model_informed')]:
+            for regime_key in ['classical', 'model_informed']:
+                regime_label = regime_titles_default[regime_key]
                 lines.append(rf'\subsubsection{{{regime_label}}}')
                 lines.append('')
 
