@@ -475,7 +475,7 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     return '\n'.join(latex)
 
 
-def create_latex_table(timesteps: Dict[str, List[Dict]]) -> str:
+def create_latex_table(timesteps: Dict[str, List[Dict]], folder_name: str) -> str:
     """Create one compact LaTeX table with DP/ADP once and RL blocks by training steps."""
     if not timesteps:
         return ''
@@ -527,11 +527,29 @@ def create_latex_table(timesteps: Dict[str, List[Dict]]) -> str:
 
     baseline_dp_rows, baseline_adp_rows, _ = split_rows(timesteps[sorted_timesteps[0]])
 
+    model_display = extract_model_display_name(folder_name)
+    _, sensitivity, regime_kind = _parse_result_folder_name(folder_name)
+    size_match = re.match(r'^(small|large)_', folder_name, flags=re.IGNORECASE)
+    size_label = size_match.group(1).lower() if size_match else 'unknown'
+
+    sensitivity_label = sensitivity.lower() if sensitivity else 'unknown'
+    regime_lookup = {
+        'classical': 'all sets',
+        'all': 'all sets',
+        'model_informed': 'eff. sets',
+        'effsets': 'eff. sets',
+    }
+    regime_label = regime_lookup.get(regime_kind.lower(), 'unknown')
+    table_title = (
+        f'Results: GT {model_display} - {sensitivity_label} - '
+        f'{regime_label} - {size_label} (Sample Size: 15)'
+    )
+
     latex.append(r'\begin{center}')
     latex.append(r'  \small')
     latex.append(r'  \begin{tabular}{l|rr|rr|rr|rr}')
     latex.append(r'    \toprule')
-    latex.append(r'    \multicolumn{9}{c}{\textbf{Training Results (RL blocks by training steps, Sample Size: 15)}} \\')
+    latex.append(rf'    \multicolumn{{9}}{{c}}{{\textbf{{{table_title}}}}} \\')
     latex.append(r'    \midrule')
     latex.append(
         r'    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & '\
@@ -691,12 +709,16 @@ def main():
         output_file = folder / 'results_table.tex'
         
         with open(output_file, 'w') as f:
+            f.write('\n\\begin{samepage}\n')
+
             # Write metadata section
             f.write(create_metadata_section(parsed['metadata'], folder.name))
             
             # Write one compact table with DP/ADP once and RL methods by timestep blocks.
-            latex_code = create_latex_table(parsed['timesteps'])
+            latex_code = create_latex_table(parsed['timesteps'], folder.name)
             f.write(latex_code)
+
+            f.write('\\end{samepage}\n\n')
         
         print(f'  ✓ Created: {folder.name}/results_table.tex\n')
 
