@@ -29,3 +29,6 @@ DP_MNL  time: 0.3789s | V(0,C): 81189.60 | avg reward: 79693.54
 DP_MMNL_5PT time: 0.3851s | V(0,C): 79993.38 | avg reward: 79694.48
 DP_MMNL_2PT time: 0.3787s | V(0,C): 79892.95 | avg reward: 79717.59
 ADP_MNL  time: 0.5739s | V(0,C): 73720.05 | avg reward: 78635.28
+ADP_MMNL_5PT time: 0.5775s | V(0,C): 73227.93 | avg reward: 78443.67
+ADP_MMNL_2PT time: 0.5677s | V(0,C): 73022.12 | avg reward: 78645.56
+ADP_ENV time: 159.6105s | V(0,C): 47057.74 | avg reward: 79470.52

@@ -13,3 +13,6 @@ Academic license 2826830 - for non-commercial use only - registered to fa___@stu
 [efficient_sets] Disposed Gurobi default environment
 [efficient_sets] Released Gurobi slot 2
 [efficient_sets] Removed pending marker: /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/slurm/.gurobi_slots_license_2826830/effsets_pending/task_21
+Training DQN (seed 1/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━ 20,000/20,000  [ 0:00:35 < 0:00:00 , 641 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━━━━━━ 80,000/80,000  [ 0:13:29 < 0:00:00 , 89 it/s ]
