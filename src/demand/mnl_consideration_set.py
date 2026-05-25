@@ -4,6 +4,12 @@ from functools import lru_cache
 import src.constants as C
 
 
+# Static arrays derived from constants to avoid recomputing them on every call.
+_PRICES = np.asarray(C.r, dtype=float)
+_N_PRODUCTS = len(_PRICES)
+_CONSIDERATION_PROB = 1.0 / (1.0 + np.exp(_PRICES * -C.MNL_CONSIDERATION_LOGIT_SLOPE))
+
+
 @lru_cache(maxsize=C.MNL_CONSIDERATION_SUBSET_CACHE_SIZE)
 def subset_membership_matrix(k):
     """Return a boolean matrix with all subset memberships for k items."""
@@ -24,22 +30,19 @@ def mnl_consideration_set_probabilities(action_binary, beta=None, n_draws=None, 
     For large offer sets, a simple Monte Carlo estimator samples latent
     consideration sets directly and averages the resulting MNL probabilities.
     """
-    prices = np.asarray(C.r, dtype=float)
     action_binary = np.asarray(action_binary, dtype=int)
-    n_products = len(prices)
 
     offered_indices = np.where(action_binary == 1)[0]
-    probabilities = np.zeros(n_products + 1, dtype=float)
+    probabilities = np.zeros(_N_PRODUCTS + 1, dtype=float)
 
     if len(offered_indices) == 0:
         probabilities[-1] = 1.0
         return probabilities
 
-    consideration_prob = 1.0 / (1.0 + np.exp(prices * -C.MNL_CONSIDERATION_LOGIT_SLOPE))
     k = len(offered_indices)
-    q = consideration_prob[offered_indices]
+    q = _CONSIDERATION_PROB[offered_indices]
     one_minus_q = 1.0 - q
-    exp_utility_offered = np.exp(beta * prices[offered_indices])
+    exp_utility_offered = np.exp(beta * _PRICES[offered_indices])
 
     if k <= C.MNL_CONSIDERATION_EXACT_MAX_PRODUCTS:
         subset_matrix = subset_membership_matrix(k)
@@ -59,23 +62,16 @@ def mnl_consideration_set_probabilities(action_binary, beta=None, n_draws=None, 
     else:
         n_mc_draws = int(C.MNL_CONSIDERATION_MONTE_CARLO_DRAWS if n_draws is None else n_draws)
         rng = np.random.default_rng() if seed is None else np.random.default_rng(seed)
-        probability_sums = np.zeros(n_products + 1, dtype=float)
 
-        for _ in range(n_mc_draws):
-            considered_mask = rng.random(k) < q
-            considered_indices = offered_indices[considered_mask]
+        # Vectorized Monte Carlo over latent consideration draws.
+        considered_matrix = (rng.random((n_mc_draws, k)) < q[None, :]).astype(float)
+        weighted_utilities = considered_matrix * exp_utility_offered[None, :]
+        denominators = 1.0 + np.sum(weighted_utilities, axis=1)
+        draw_probabilities = weighted_utilities / denominators[:, None]
 
-            if len(considered_indices) == 0:
-                probability_sums[-1] += 1.0
-                continue
+        probabilities[offered_indices] = np.mean(draw_probabilities, axis=0)
+        probabilities[-1] = float(np.mean(1.0 / denominators))
 
-            exp_utility = np.exp(beta * prices[considered_indices])
-            denominator = 1.0 + np.sum(exp_utility)
-
-            probability_sums[considered_indices] += exp_utility / denominator
-            probability_sums[-1] += 1.0 / denominator
-
-        probabilities = probability_sums / float(n_mc_draws)
         total_prob = float(np.sum(probabilities))
         if total_prob > 0.0 and abs(total_prob - 1.0) > C.MNL_CONSIDERATION_NORMALIZATION_TOLERANCE:
             probabilities /= total_prob
