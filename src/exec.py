@@ -185,6 +185,7 @@ def main():
     exec_phase = os.environ.get("EXEC_PHASE", "")  # "" (all), "1" (DP/ADP only), "2" (RL/Eval only)
     is_phase_1_only = exec_phase == "1"
     is_phase_2_only = exec_phase == "2"
+    phase1_time_results = {}
     
     # Log task configuration at start
     task_id = os.environ.get("TASK_ID", "N/A")
@@ -212,16 +213,23 @@ def main():
         
         beta_mnl = dp_adp_data["beta_mnl"]
         lambda_mnl = dp_adp_data["lambda_mnl"]
+        betas_mmnl_5pt = dp_adp_data["betas_mmnl_5pt"]
+        weights_mmnl_5pt = dp_adp_data["weights_mmnl_5pt"]
+        lambda_mmnl_5pt = dp_adp_data["lambda_mmnl_5pt"]
+        betas_mmnl_2pt = dp_adp_data["betas_mmnl_2pt"]
+        weights_mmnl_2pt = dp_adp_data["weights_mmnl_2pt"]
+        lambda_mmnl_2pt = dp_adp_data["lambda_mmnl_2pt"]
+
         pi_mnl = dp_adp_data["pi_mnl"]
+        pi_mmnl_5pt = dp_adp_data["pi_mmnl_5pt"]
+        pi_mmnl_2pt = dp_adp_data["pi_mmnl_2pt"]
+
         efficient_sets_mnl = dp_adp_data["efficient_sets_mnl"]
+        efficient_sets_mmnl_5pt = dp_adp_data["efficient_sets_mmnl_5pt"]
+        efficient_sets_mmnl_2pt = dp_adp_data["efficient_sets_mmnl_2pt"]
         efficient_sets_rl = dp_adp_data["efficient_sets_rl"]
-        
-        time_results = {}  # Will be populated during RL/eval
-        
-        # Jump to RL training phase
-        goto_rl_phase = True
-    else:
-        goto_rl_phase = False
+
+        phase1_time_results = dp_adp_data.get("phase1_time_results", {})
     
     # ========== PHASE 1: Sampling, Estimation, Efficient Sets, DP/ADP ==========
     if not is_phase_2_only:
@@ -463,24 +471,7 @@ def main():
             _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
             log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
 
-        # If phase 1 only, save intermediate results and exit
-        if is_phase_1_only:
-            dp_adp_pkl = os.path.join(C.OUTPUT_DIR, "dp_adp_intermediate.pkl")
-            dp_adp_data = {
-                "beta_mnl": beta_mnl,
-                "lambda_mnl": lambda_mnl,
-                "pi_mnl": pi_mnl,
-                "efficient_sets_mnl": efficient_sets_mnl,
-                "efficient_sets_rl": efficient_sets_rl,
-            }
-            with open(dp_adp_pkl, "wb") as f:
-                pickle.dump(dp_adp_data, f)
-            log_message(f"Saved intermediate DP/ADP results to {dp_adp_pkl}")
-            log_message("Phase 1 complete. Run Phase 2 (EXEC_PHASE=2) to continue with RL training and evaluation.")
-            return
-
-        # Otherwise continue to RL phase
-        time_results = {
+        phase1_time_results = {
             "Sampling":                sampling_time,
             "Estimation_MNL":          estimation_mnl_time,
             "Estimation_MMNL_5PT":     estimation_mmnl_5pt_time,
@@ -491,11 +482,34 @@ def main():
             "DP_MNL":                  dp_mnl_time,
             "DP_MMNL_5PT":             dp_mmnl_5pt_time,
             "DP_MMNL_2PT":             dp_mmnl_2pt_time,
-            "ADP_MNL":                 adp_mnl_time,
-            "ADP_MMNL_5PT":            adp_mmnl_5pt_time,
-            "ADP_MMNL_2PT":            adp_mmnl_2pt_time,
-            "ADP_ENV":                 adp_env_time,
         }
+
+        # If phase 1 only, save intermediate results and exit
+        if is_phase_1_only:
+            dp_adp_pkl = os.path.join(C.OUTPUT_DIR, "dp_adp_intermediate.pkl")
+            dp_adp_data = {
+                "beta_mnl": beta_mnl,
+                "lambda_mnl": lambda_mnl,
+                "betas_mmnl_5pt": betas_mmnl_5pt,
+                "weights_mmnl_5pt": weights_mmnl_5pt,
+                "lambda_mmnl_5pt": lambda_mmnl_5pt,
+                "betas_mmnl_2pt": betas_mmnl_2pt,
+                "weights_mmnl_2pt": weights_mmnl_2pt,
+                "lambda_mmnl_2pt": lambda_mmnl_2pt,
+                "pi_mnl": pi_mnl,
+                "pi_mmnl_5pt": pi_mmnl_5pt,
+                "pi_mmnl_2pt": pi_mmnl_2pt,
+                "efficient_sets_mnl": efficient_sets_mnl,
+                "efficient_sets_mmnl_5pt": efficient_sets_mmnl_5pt,
+                "efficient_sets_mmnl_2pt": efficient_sets_mmnl_2pt,
+                "efficient_sets_rl": efficient_sets_rl,
+                "phase1_time_results": phase1_time_results,
+            }
+            with open(dp_adp_pkl, "wb") as f:
+                pickle.dump(dp_adp_data, f)
+            log_message(f"Saved intermediate DP/ADP results to {dp_adp_pkl}")
+            log_message("Phase 1 complete. Run Phase 2 (EXEC_PHASE=2) to continue with RL training and evaluation.")
+            return
     
     # ========== PHASE 2: RL Training and Evaluation ==========
     if not is_phase_1_only:
@@ -549,16 +563,16 @@ def main():
         log_message(f"ADP_ENV time: {adp_env_time:.4f}s | V(0,C): {v_adp_env[0, C.C]:.2f} | avg reward: {_avg_adp_env:.2f}")
 
         time_results = {
-            "Sampling":                sampling_time,
-            "Estimation_MNL":          estimation_mnl_time,
-            "Estimation_MMNL_5PT":     estimation_mmnl_5pt_time,
-            "Estimation_MMNL_2PT":     estimation_mmnl_2pt_time,
-            "EfficientSets_MNL":       efficient_sets_time_mnl,
-            "EfficientSets_MMNL_5PT":  efficient_sets_time_mmnl_5pt,
-            "EfficientSets_MMNL_2PT":  efficient_sets_time_mmnl_2pt,
-            "DP_MNL":                  dp_mnl_time,
-            "DP_MMNL_5PT":             dp_mmnl_5pt_time,
-            "DP_MMNL_2PT":             dp_mmnl_2pt_time,
+            "Sampling":                phase1_time_results.get("Sampling", 0.0),
+            "Estimation_MNL":          phase1_time_results.get("Estimation_MNL", 0.0),
+            "Estimation_MMNL_5PT":     phase1_time_results.get("Estimation_MMNL_5PT", 0.0),
+            "Estimation_MMNL_2PT":     phase1_time_results.get("Estimation_MMNL_2PT", 0.0),
+            "EfficientSets_MNL":       phase1_time_results.get("EfficientSets_MNL", 0.0),
+            "EfficientSets_MMNL_5PT":  phase1_time_results.get("EfficientSets_MMNL_5PT", 0.0),
+            "EfficientSets_MMNL_2PT":  phase1_time_results.get("EfficientSets_MMNL_2PT", 0.0),
+            "DP_MNL":                  phase1_time_results.get("DP_MNL", 0.0),
+            "DP_MMNL_5PT":             phase1_time_results.get("DP_MMNL_5PT", 0.0),
+            "DP_MMNL_2PT":             phase1_time_results.get("DP_MMNL_2PT", 0.0),
             "ADP_MNL":                 adp_mnl_time,
             "ADP_MMNL_5PT":            adp_mmnl_5pt_time,
             "ADP_MMNL_2PT":            adp_mmnl_2pt_time,
@@ -571,9 +585,9 @@ def main():
         for step in C.TOTAL_TIMESTEPS:
             training_times_by_step[step].append(
                 {
-                    "DP_MNL": dp_mnl_time,
-                    "DP_MMNL_5PT": dp_mmnl_5pt_time,
-                    "DP_MMNL_2PT": dp_mmnl_2pt_time,
+                    "DP_MNL": phase1_time_results.get("DP_MNL", 0.0),
+                    "DP_MMNL_5PT": phase1_time_results.get("DP_MMNL_5PT", 0.0),
+                    "DP_MMNL_2PT": phase1_time_results.get("DP_MMNL_2PT", 0.0),
                     "ADP_MNL": adp_mnl_time,
                     "ADP_MMNL_5PT": adp_mmnl_5pt_time,
                     "ADP_MMNL_2PT": adp_mmnl_2pt_time,
@@ -582,8 +596,9 @@ def main():
             )
 
         # Delete large DP arrays early to free memory before evaluation
-        del v_mnl, v_mmnl_5pt, v_mmnl_2pt
-        gc.collect()
+        if not is_phase_2_only:
+            del v_mnl, v_mmnl_5pt, v_mmnl_2pt
+            gc.collect()
 
         dp_policy_configs = {
             "DP_MNL": {
