@@ -491,7 +491,6 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
     latex.append(r'\end{center}')
-    latex.append(r'\vspace{0.5em}')
     latex.append('')
 
     return '\n'.join(latex)
@@ -588,7 +587,6 @@ def create_latex_table(timesteps: Dict[str, List[Dict]], folder_name: str) -> st
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
     latex.append(r'\end{center}')
-    latex.append(r'\vspace{0.5em}')
     latex.append('')
 
     return '\n'.join(latex)
@@ -601,8 +599,8 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
         'MMNL_2PT': 'MMNL 2PT',
         'MMNL_5PT': 'MMNL 5PT',
         'Probit': 'Probit',
-        'MNLrefPrice': 'MNL with Reference Price',
-        'MNLConsidSet': 'MNL with Consideration Set',
+        'MNLrefPrice': 'MNL Reference Price',
+        'MNLConsidSet': 'MNL Consideration Set',
         'TMNL': 'TMNL',
         'NLogit': 'Nested Logit',
     }

@@ -181,6 +181,11 @@ def _wait_for_effsets_priority(log_fn, poll_seconds=60):
 def main():
     """Main execution function."""
     
+    # Determine execution phase
+    exec_phase = os.environ.get("EXEC_PHASE", "")  # "" (all), "1" (DP/ADP only), "2" (RL/Eval only)
+    is_phase_1_only = exec_phase == "1"
+    is_phase_2_only = exec_phase == "2"
+    
     # Log task configuration at start
     task_id = os.environ.get("TASK_ID", "N/A")
     log_message(f"\n{'='*60}")
@@ -189,223 +194,328 @@ def main():
     log_message(f"TRAIN_ON_ALL_SETS: {c.TRAIN_ON_ALL_SETS}")
     log_message(f"HIGH_SENSITIVITY: {c.HIGH_SENSITIVITY}")
     log_message(f"GT_MODEL: {c.GT_MODEL}")
+    if exec_phase:
+        log_message(f"EXEC_PHASE: {exec_phase}")
     log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
-    uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and not c.TRAIN_ON_ALL_SETS
-    _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
-    if _pending_marker:
-        open(_pending_marker, "w").close()
-        log_gurobi_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
-
-    # -- Shared observations: collect once, estimate all models ----------
-    t0 = time.perf_counter()
-    _env = TalluriExample2(efficient_sets=None)
-    observations = collect_transaction_data(_env)
-    _env.close()
-    sampling_time = time.perf_counter() - t0
-    log_message(f"Observation sampling time: {sampling_time:.4f} seconds")
-
-    estimator = ScipyEstimator(observations)
-
-    t0 = time.perf_counter()
-    estimation_mnl_result = estimator.estimate_mnl()
-    estimation_mnl_time = time.perf_counter() - t0
-
-    t0 = time.perf_counter()
-    estimation_mmnl_5pt_result = estimator.estimate_mmnl()
-    estimation_mmnl_5pt_time = time.perf_counter() - t0
-
-    t0 = time.perf_counter()
-    estimation_mmnl_2pt_result = estimator.estimate_mmnl(K=2)
-    estimation_mmnl_2pt_time = time.perf_counter() - t0
-
-    beta_mnl   = estimation_mnl_result["beta"]
-    lambda_mnl = estimation_mnl_result["lambda"]
-    ll_mnl = estimation_mnl_result["final_log_likelihood"]
-    aic_mnl = estimation_mnl_result["aic"]
-    bic_mnl = estimation_mnl_result["bic"]
-
-    betas_mmnl_5pt = estimation_mmnl_5pt_result["betas"]
-    weights_mmnl_5pt = estimation_mmnl_5pt_result["mixing_weights"]
-    lambda_mmnl_5pt = estimation_mmnl_5pt_result["lambda"]
-    ll_mmnl_5pt = estimation_mmnl_5pt_result["final_log_likelihood"]
-    aic_mmnl_5pt = estimation_mmnl_5pt_result["aic"]
-    bic_mmnl_5pt = estimation_mmnl_5pt_result["bic"]
-
-    betas_mmnl_2pt = estimation_mmnl_2pt_result["betas"]
-    weights_mmnl_2pt = estimation_mmnl_2pt_result["mixing_weights"]
-    lambda_mmnl_2pt = estimation_mmnl_2pt_result["lambda"]
-    ll_mmnl_2pt = estimation_mmnl_2pt_result["final_log_likelihood"]
-    aic_mmnl_2pt = estimation_mmnl_2pt_result["aic"]
-    bic_mmnl_2pt = estimation_mmnl_2pt_result["bic"]
-
-    log_message(f"Estimation_MNL  time: {estimation_mnl_time:.4f}s | beta: {beta_mnl:.6f}, lambda: {lambda_mnl:.6f}")
-    log_message(f"  LL: {ll_mnl:.6f}, AIC: {aic_mnl:.3f}, BIC: {bic_mnl:.3f}\n")
-
-    log_message(f"Estimation_MMNL_5PT time: {estimation_mmnl_5pt_time:.4f}s | lambda: {lambda_mmnl_5pt:.6f}")
-    log_message(f"  LL: {ll_mmnl_5pt:.6f}, AIC: {aic_mmnl_5pt:.3f}, BIC: {bic_mmnl_5pt:.3f}")
-    log_message(f"Betas: {[f'{b:.6f}' for b in betas_mmnl_5pt]}")
-    log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_5pt]}\n")
-
-    log_message(f"Estimation_MMNL_2PT time: {estimation_mmnl_2pt_time:.4f}s | lambda: {lambda_mmnl_2pt:.6f}")
-    log_message(f"  LL: {ll_mmnl_2pt:.6f}, AIC: {aic_mmnl_2pt:.3f}, BIC: {bic_mmnl_2pt:.3f}")
-    log_message(f"Betas: {[f'{b:.6f}' for b in betas_mmnl_2pt]}")
-    log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_2pt]}\n")
-
-    del observations
-    del estimator
-    gc.collect()
-
-    # -- Efficient sets ---------------------------------------------------
-    if c.TRAIN_ON_ALL_SETS:
-        efficient_sets_mnl  = None
-        efficient_sets_mmnl_5pt = None
-        efficient_sets_mmnl_2pt = None
-        efficient_sets_rl = None
-        efficient_sets_time_mnl  = 0.0
-        efficient_sets_time_mmnl_5pt = 0.0
-        efficient_sets_time_mmnl_2pt = 0.0
+# ========== PHASE 2: Load precomputed DP/ADP if specified ==========
+    if is_phase_2_only:
+        dp_adp_pkl = os.path.join(C.OUTPUT_DIR, "dp_adp_intermediate.pkl")
+        if not os.path.exists(dp_adp_pkl):
+            log_message(f"ERROR: EXEC_PHASE=2 but intermediate file not found: {dp_adp_pkl}")
+            return
+        with open(dp_adp_pkl, "rb") as f:
+            dp_adp_data = pickle.load(f)
+        
+        log_message("Loaded pre-computed DP/ADP results")
+        
+        beta_mnl = dp_adp_data["beta_mnl"]
+        lambda_mnl = dp_adp_data["lambda_mnl"]
+        pi_mnl = dp_adp_data["pi_mnl"]
+        efficient_sets_mnl = dp_adp_data["efficient_sets_mnl"]
+        efficient_sets_rl = dp_adp_data["efficient_sets_rl"]
+        
+        time_results = {}  # Will be populated during RL/eval
+        
+        # Jump to RL training phase
+        goto_rl_phase = True
     else:
-        if uses_gurobi_efficient_sets:
-            with gurobi_slot_lock("efficient_sets"):
+        goto_rl_phase = False
+    
+    # ========== PHASE 1: Sampling, Estimation, Efficient Sets, DP/ADP ==========
+    if not is_phase_2_only:
+        uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and not c.TRAIN_ON_ALL_SETS
+        _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
+        if _pending_marker:
+            open(_pending_marker, "w").close()
+            log_gurobi_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
+
+        # -- Shared observations: collect once, estimate all models ----------
+        t0 = time.perf_counter()
+        _env = TalluriExample2(efficient_sets=None)
+        observations = collect_transaction_data(_env)
+        _env.close()
+        sampling_time = time.perf_counter() - t0
+        log_message(f"Observation sampling time: {sampling_time:.4f} seconds")
+
+        estimator = ScipyEstimator(observations)
+
+        t0 = time.perf_counter()
+        estimation_mnl_result = estimator.estimate_mnl()
+        estimation_mnl_time = time.perf_counter() - t0
+
+        t0 = time.perf_counter()
+        estimation_mmnl_5pt_result = estimator.estimate_mmnl()
+        estimation_mmnl_5pt_time = time.perf_counter() - t0
+
+        t0 = time.perf_counter()
+        estimation_mmnl_2pt_result = estimator.estimate_mmnl(K=2)
+        estimation_mmnl_2pt_time = time.perf_counter() - t0
+
+        beta_mnl   = estimation_mnl_result["beta"]
+        lambda_mnl = estimation_mnl_result["lambda"]
+        ll_mnl = estimation_mnl_result["final_log_likelihood"]
+        aic_mnl = estimation_mnl_result["aic"]
+        bic_mnl = estimation_mnl_result["bic"]
+
+        betas_mmnl_5pt = estimation_mmnl_5pt_result["betas"]
+        weights_mmnl_5pt = estimation_mmnl_5pt_result["mixing_weights"]
+        lambda_mmnl_5pt = estimation_mmnl_5pt_result["lambda"]
+        ll_mmnl_5pt = estimation_mmnl_5pt_result["final_log_likelihood"]
+        aic_mmnl_5pt = estimation_mmnl_5pt_result["aic"]
+        bic_mmnl_5pt = estimation_mmnl_5pt_result["bic"]
+
+        betas_mmnl_2pt = estimation_mmnl_2pt_result["betas"]
+        weights_mmnl_2pt = estimation_mmnl_2pt_result["mixing_weights"]
+        lambda_mmnl_2pt = estimation_mmnl_2pt_result["lambda"]
+        ll_mmnl_2pt = estimation_mmnl_2pt_result["final_log_likelihood"]
+        aic_mmnl_2pt = estimation_mmnl_2pt_result["aic"]
+        bic_mmnl_2pt = estimation_mmnl_2pt_result["bic"]
+
+        log_message(f"Estimation_MNL  time: {estimation_mnl_time:.4f}s | beta: {beta_mnl:.6f}, lambda: {lambda_mnl:.6f}")
+        log_message(f"  LL: {ll_mnl:.6f}, AIC: {aic_mnl:.3f}, BIC: {bic_mnl:.3f}\n")
+
+        log_message(f"Estimation_MMNL_5PT time: {estimation_mmnl_5pt_time:.4f}s | lambda: {lambda_mmnl_5pt:.6f}")
+        log_message(f"  LL: {ll_mmnl_5pt:.6f}, AIC: {aic_mmnl_5pt:.3f}, BIC: {bic_mmnl_5pt:.3f}")
+        log_message(f"Betas: {[f'{b:.6f}' for b in betas_mmnl_5pt]}")
+        log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_5pt]}\n")
+
+        log_message(f"Estimation_MMNL_2PT time: {estimation_mmnl_2pt_time:.4f}s | lambda: {lambda_mmnl_2pt:.6f}")
+        log_message(f"  LL: {ll_mmnl_2pt:.6f}, AIC: {aic_mmnl_2pt:.3f}, BIC: {bic_mmnl_2pt:.3f}")
+        log_message(f"Betas: {[f'{b:.6f}' for b in betas_mmnl_2pt]}")
+        log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_2pt]}\n")
+
+        del observations
+        del estimator
+        gc.collect()
+
+        # -- Efficient sets ---------------------------------------------------
+        if c.TRAIN_ON_ALL_SETS:
+            efficient_sets_mnl  = None
+            efficient_sets_mmnl_5pt = None
+            efficient_sets_mmnl_2pt = None
+            efficient_sets_rl = None
+            efficient_sets_time_mnl  = 0.0
+            efficient_sets_time_mmnl_5pt = 0.0
+            efficient_sets_time_mmnl_2pt = 0.0
+        else:
+            if uses_gurobi_efficient_sets:
+                with gurobi_slot_lock("efficient_sets"):
+                    import gurobipy as gp
+
+                    with gp.Env() as gurobi_env:
+                        t0 = time.perf_counter()
+                        efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl, env=gurobi_env)
+                        efficient_sets_time_mnl = time.perf_counter() - t0
+                        log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+
+                        t0 = time.perf_counter()
+                        efficient_sets_mmnl_5pt = compute_efficient_sets(
+                            model="MMNL_5PT",
+                            env=gurobi_env,
+                            segment_betas=betas_mmnl_5pt,
+                            segment_weights=weights_mmnl_5pt,
+                        )
+                        efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+                        log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+
+                        t0 = time.perf_counter()
+                        efficient_sets_mmnl_2pt = compute_efficient_sets(
+                            model="MMNL_2PT",
+                            env=gurobi_env,
+                            segment_betas=betas_mmnl_2pt,
+                            segment_weights=weights_mmnl_2pt,
+                        )
+                        efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+                        log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+
+                    # Flush lingering Gurobi references before the slot lock releases.
+                    gc.collect()
+            else:
+                # Non-Gurobi path: compute efficient sets without env
+                t0 = time.perf_counter()
+                efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
+                efficient_sets_time_mnl = time.perf_counter() - t0
+                log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+
+                t0 = time.perf_counter()
+                efficient_sets_mmnl_5pt = compute_efficient_sets(
+                    model="MMNL_5PT",
+                    segment_betas=betas_mmnl_5pt,
+                    segment_weights=weights_mmnl_5pt,
+                )
+                efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+                log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+
+                t0 = time.perf_counter()
+                efficient_sets_mmnl_2pt = compute_efficient_sets(
+                    model="MMNL_2PT",
+                    segment_betas=betas_mmnl_2pt,
+                    segment_weights=weights_mmnl_2pt,
+                )
+                efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+                log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+
+        if _pending_marker and os.path.exists(_pending_marker):
+            os.remove(_pending_marker)
+            log_gurobi_message(f"[efficient_sets] Removed pending marker: {_pending_marker}")
+
+        efficient_sets_rl_candidates = [
+            efficient_sets_mnl,
+            efficient_sets_mmnl_5pt,
+            efficient_sets_mmnl_2pt,
+        ]
+        efficient_sets_rl = None
+        for _sets in efficient_sets_rl_candidates:
+            if _sets:
+                efficient_sets_rl = set(_sets) if efficient_sets_rl is None else (efficient_sets_rl | set(_sets))
+        
+
+        # -- DP solutions (with memory optimization: delete after use) -------
+        uses_gurobi_dp = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
+        if uses_gurobi_dp:
+            _wait_for_effsets_priority(log_gurobi_message)
+        
+        if uses_gurobi_dp:
+            with gurobi_slot_lock("dp"):
                 import gurobipy as gp
 
                 with gp.Env() as gurobi_env:
                     t0 = time.perf_counter()
-                    efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl, env=gurobi_env)
-                    efficient_sets_time_mnl = time.perf_counter() - t0
-                    log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+                    v_mnl, pi_mnl = solve_by_dp(
+                        efficient_sets=efficient_sets_mnl,
+                        estimated_beta=beta_mnl,
+                        estimated_lambda=lambda_mnl,
+                        model="MNL",
+                        env=gurobi_env,
+                    )
+                    dp_mnl_time = time.perf_counter() - t0
+                    _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
+                    log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
 
                     t0 = time.perf_counter()
-                    efficient_sets_mmnl_5pt = compute_efficient_sets(
+                    v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
+                        efficient_sets=efficient_sets_mmnl_5pt,
+                        estimated_beta=None,
+                        estimated_lambda=lambda_mmnl_5pt,
                         model="MMNL_5PT",
                         env=gurobi_env,
                         segment_betas=betas_mmnl_5pt,
                         segment_weights=weights_mmnl_5pt,
                     )
-                    efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
-                    log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+                    dp_mmnl_5pt_time = time.perf_counter() - t0
+                    _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+                    log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
 
                     t0 = time.perf_counter()
-                    efficient_sets_mmnl_2pt = compute_efficient_sets(
+                    v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
+                        efficient_sets=efficient_sets_mmnl_2pt,
+                        estimated_beta=None,
+                        estimated_lambda=lambda_mmnl_2pt,
                         model="MMNL_2PT",
                         env=gurobi_env,
                         segment_betas=betas_mmnl_2pt,
                         segment_weights=weights_mmnl_2pt,
                     )
-                    efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
-                    log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+                    dp_mmnl_2pt_time = time.perf_counter() - t0
+                    _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+                    log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
 
-                # Flush lingering Gurobi references before the slot lock releases.
-                gc.collect()
+            # Flush lingering Gurobi references before the slot lock releases.
+            gc.collect()
         else:
-            # Non-Gurobi path: compute efficient sets without env
+            # Non-Gurobi path: solve DP without env
             t0 = time.perf_counter()
-            efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
-            efficient_sets_time_mnl = time.perf_counter() - t0
-            log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+            v_mnl, pi_mnl = solve_by_dp(
+                efficient_sets=efficient_sets_mnl,
+                estimated_beta=beta_mnl,
+                estimated_lambda=lambda_mnl,
+                model="MNL",
+            )
+            dp_mnl_time = time.perf_counter() - t0
+            _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
+            log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
 
             t0 = time.perf_counter()
-            efficient_sets_mmnl_5pt = compute_efficient_sets(
+            v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
+                efficient_sets=efficient_sets_mmnl_5pt,
+                estimated_beta=None,
+                estimated_lambda=lambda_mmnl_5pt,
                 model="MMNL_5PT",
                 segment_betas=betas_mmnl_5pt,
                 segment_weights=weights_mmnl_5pt,
             )
-            efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
-            log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+            dp_mmnl_5pt_time = time.perf_counter() - t0
+            _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+            log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
 
             t0 = time.perf_counter()
-            efficient_sets_mmnl_2pt = compute_efficient_sets(
+            v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
+                efficient_sets=efficient_sets_mmnl_2pt,
+                estimated_beta=None,
+                estimated_lambda=lambda_mmnl_2pt,
                 model="MMNL_2PT",
                 segment_betas=betas_mmnl_2pt,
                 segment_weights=weights_mmnl_2pt,
             )
-            efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
-            log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+            dp_mmnl_2pt_time = time.perf_counter() - t0
+            _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+            log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
 
-    if _pending_marker and os.path.exists(_pending_marker):
-        os.remove(_pending_marker)
-        log_gurobi_message(f"[efficient_sets] Removed pending marker: {_pending_marker}")
+        # If phase 1 only, save intermediate results and exit
+        if is_phase_1_only:
+            dp_adp_pkl = os.path.join(C.OUTPUT_DIR, "dp_adp_intermediate.pkl")
+            dp_adp_data = {
+                "beta_mnl": beta_mnl,
+                "lambda_mnl": lambda_mnl,
+                "pi_mnl": pi_mnl,
+                "efficient_sets_mnl": efficient_sets_mnl,
+                "efficient_sets_rl": efficient_sets_rl,
+            }
+            with open(dp_adp_pkl, "wb") as f:
+                pickle.dump(dp_adp_data, f)
+            log_message(f"Saved intermediate DP/ADP results to {dp_adp_pkl}")
+            log_message("Phase 1 complete. Run Phase 2 (EXEC_PHASE=2) to continue with RL training and evaluation.")
+            return
 
-    efficient_sets_rl_candidates = [
-        efficient_sets_mnl,
-        efficient_sets_mmnl_5pt,
-        efficient_sets_mmnl_2pt,
-    ]
-    efficient_sets_rl = None
-    for _sets in efficient_sets_rl_candidates:
-        if _sets:
-            efficient_sets_rl = set(_sets) if efficient_sets_rl is None else (efficient_sets_rl | set(_sets))
+        # Otherwise continue to RL phase
+        time_results = {
+            "Sampling":                sampling_time,
+            "Estimation_MNL":          estimation_mnl_time,
+            "Estimation_MMNL_5PT":     estimation_mmnl_5pt_time,
+            "Estimation_MMNL_2PT":     estimation_mmnl_2pt_time,
+            "EfficientSets_MNL":       efficient_sets_time_mnl,
+            "EfficientSets_MMNL_5PT":  efficient_sets_time_mmnl_5pt,
+            "EfficientSets_MMNL_2PT":  efficient_sets_time_mmnl_2pt,
+            "DP_MNL":                  dp_mnl_time,
+            "DP_MMNL_5PT":             dp_mmnl_5pt_time,
+            "DP_MMNL_2PT":             dp_mmnl_2pt_time,
+            "ADP_MNL":                 adp_mnl_time,
+            "ADP_MMNL_5PT":            adp_mmnl_5pt_time,
+            "ADP_MMNL_2PT":            adp_mmnl_2pt_time,
+            "ADP_ENV":                 adp_env_time,
+        }
     
-
-    # -- DP solutions (with memory optimization: delete after use) -------
-    uses_gurobi_dp = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
-    if uses_gurobi_dp:
-        _wait_for_effsets_priority(log_gurobi_message)
-    
-    if uses_gurobi_dp:
-        with gurobi_slot_lock("dp"):
-            import gurobipy as gp
-
-            with gp.Env() as gurobi_env:
-                t0 = time.perf_counter()
-                v_mnl, pi_mnl = solve_by_dp(
-                    efficient_sets=efficient_sets_mnl,
-                    estimated_beta=beta_mnl,
-                    estimated_lambda=lambda_mnl,
-                    model="MNL",
-                    env=gurobi_env,
-                )
-                dp_mnl_time = time.perf_counter() - t0
-                _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
-                log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
-
-                t0 = time.perf_counter()
-                v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
-                    efficient_sets=efficient_sets_mmnl_5pt,
-                    estimated_beta=None,
-                    estimated_lambda=lambda_mmnl_5pt,
-                    model="MMNL_5PT",
-                    env=gurobi_env,
-                    segment_betas=betas_mmnl_5pt,
-                    segment_weights=weights_mmnl_5pt,
-                )
-                dp_mmnl_5pt_time = time.perf_counter() - t0
-                _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
-                log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
-
-                t0 = time.perf_counter()
-                v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
-                    efficient_sets=efficient_sets_mmnl_2pt,
-                    estimated_beta=None,
-                    estimated_lambda=lambda_mmnl_2pt,
-                    model="MMNL_2PT",
-                    env=gurobi_env,
-                    segment_betas=betas_mmnl_2pt,
-                    segment_weights=weights_mmnl_2pt,
-                )
-                dp_mmnl_2pt_time = time.perf_counter() - t0
-                _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
-                log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
-
-            # Flush lingering Gurobi references before the slot lock releases.
-            gc.collect()
-    else:
-        # Non-Gurobi path: solve DP without env
+    # ========== PHASE 2: RL Training and Evaluation ==========
+    if not is_phase_1_only:
+        adp_mnl_time = 0.0
+        adp_mmnl_5pt_time = 0.0
+        adp_mmnl_2pt_time = 0.0
+        adp_env_time = 0.0
         t0 = time.perf_counter()
-        v_mnl, pi_mnl = solve_by_dp(
+        v_adp_mnl, pi_adp_mnl = solve_by_adp(
             efficient_sets=efficient_sets_mnl,
             estimated_beta=beta_mnl,
             estimated_lambda=lambda_mnl,
             model="MNL",
         )
-        dp_mnl_time = time.perf_counter() - t0
-        _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
-        log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
+        adp_mnl_time = time.perf_counter() - t0
+        _avg_adp_mnl = sum(simulate(efficient_sets_mnl, pi_adp_mnl, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"ADP_MNL  time: {adp_mnl_time:.4f}s | V(0,C): {v_adp_mnl[0, C.C]:.2f} | avg reward: {_avg_adp_mnl:.2f}")
 
         t0 = time.perf_counter()
-        v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
+        v_adp_mmnl_5pt, pi_adp_mmnl_5pt = solve_by_adp(
             efficient_sets=efficient_sets_mmnl_5pt,
             estimated_beta=None,
             estimated_lambda=lambda_mmnl_5pt,
@@ -413,12 +523,12 @@ def main():
             segment_betas=betas_mmnl_5pt,
             segment_weights=weights_mmnl_5pt,
         )
-        dp_mmnl_5pt_time = time.perf_counter() - t0
-        _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
-        log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
+        adp_mmnl_5pt_time = time.perf_counter() - t0
+        _avg_adp_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_adp_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"ADP_MMNL_5PT time: {adp_mmnl_5pt_time:.4f}s | V(0,C): {v_adp_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_adp_mmnl_5pt:.2f}")
 
         t0 = time.perf_counter()
-        v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
+        v_adp_mmnl_2pt, pi_adp_mmnl_2pt = solve_by_adp(
             efficient_sets=efficient_sets_mmnl_2pt,
             estimated_beta=None,
             estimated_lambda=lambda_mmnl_2pt,
@@ -426,168 +536,127 @@ def main():
             segment_betas=betas_mmnl_2pt,
             segment_weights=weights_mmnl_2pt,
         )
-        dp_mmnl_2pt_time = time.perf_counter() - t0
-        _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
-        log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
+        adp_mmnl_2pt_time = time.perf_counter() - t0
+        _avg_adp_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_adp_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"ADP_MMNL_2PT time: {adp_mmnl_2pt_time:.4f}s | V(0,C): {v_adp_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_adp_mmnl_2pt:.2f}")
 
-    adp_mnl_time = 0.0
-    adp_mmnl_5pt_time = 0.0
-    adp_mmnl_2pt_time = 0.0
-    adp_env_time = 0.0
-    t0 = time.perf_counter()
-    v_adp_mnl, pi_adp_mnl = solve_by_adp(
-        efficient_sets=efficient_sets_mnl,
-        estimated_beta=beta_mnl,
-        estimated_lambda=lambda_mnl,
-        model="MNL",
-    )
-    adp_mnl_time = time.perf_counter() - t0
-    _avg_adp_mnl = sum(simulate(efficient_sets_mnl, pi_adp_mnl, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"ADP_MNL  time: {adp_mnl_time:.4f}s | V(0,C): {v_adp_mnl[0, C.C]:.2f} | avg reward: {_avg_adp_mnl:.2f}")
+        t0 = time.perf_counter()
+        v_adp_env, pi_adp_env = solve_by_adp_env_rollout(
+            efficient_sets=efficient_sets_rl,
+        )
+        adp_env_time = time.perf_counter() - t0
+        _avg_adp_env = sum(simulate(efficient_sets_rl, pi_adp_env, seed=i)[0] for i in range(1000)) / 1000
+        log_message(f"ADP_ENV time: {adp_env_time:.4f}s | V(0,C): {v_adp_env[0, C.C]:.2f} | avg reward: {_avg_adp_env:.2f}")
 
-    t0 = time.perf_counter()
-    v_adp_mmnl_5pt, pi_adp_mmnl_5pt = solve_by_adp(
-        efficient_sets=efficient_sets_mmnl_5pt,
-        estimated_beta=None,
-        estimated_lambda=lambda_mmnl_5pt,
-        model="MMNL_5PT",
-        segment_betas=betas_mmnl_5pt,
-        segment_weights=weights_mmnl_5pt,
-    )
-    adp_mmnl_5pt_time = time.perf_counter() - t0
-    _avg_adp_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_adp_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"ADP_MMNL_5PT time: {adp_mmnl_5pt_time:.4f}s | V(0,C): {v_adp_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_adp_mmnl_5pt:.2f}")
+        time_results = {
+            "Sampling":                sampling_time,
+            "Estimation_MNL":          estimation_mnl_time,
+            "Estimation_MMNL_5PT":     estimation_mmnl_5pt_time,
+            "Estimation_MMNL_2PT":     estimation_mmnl_2pt_time,
+            "EfficientSets_MNL":       efficient_sets_time_mnl,
+            "EfficientSets_MMNL_5PT":  efficient_sets_time_mmnl_5pt,
+            "EfficientSets_MMNL_2PT":  efficient_sets_time_mmnl_2pt,
+            "DP_MNL":                  dp_mnl_time,
+            "DP_MMNL_5PT":             dp_mmnl_5pt_time,
+            "DP_MMNL_2PT":             dp_mmnl_2pt_time,
+            "ADP_MNL":                 adp_mnl_time,
+            "ADP_MMNL_5PT":            adp_mmnl_5pt_time,
+            "ADP_MMNL_2PT":            adp_mmnl_2pt_time,
+            "ADP_ENV":                 adp_env_time,
+        }
 
-    t0 = time.perf_counter()
-    v_adp_mmnl_2pt, pi_adp_mmnl_2pt = solve_by_adp(
-        efficient_sets=efficient_sets_mmnl_2pt,
-        estimated_beta=None,
-        estimated_lambda=lambda_mmnl_2pt,
-        model="MMNL_2PT",
-        segment_betas=betas_mmnl_2pt,
-        segment_weights=weights_mmnl_2pt,
-    )
-    adp_mmnl_2pt_time = time.perf_counter() - t0
-    _avg_adp_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_adp_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"ADP_MMNL_2PT time: {adp_mmnl_2pt_time:.4f}s | V(0,C): {v_adp_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_adp_mmnl_2pt:.2f}")
+        # RL always trains against MNL policy using MNL efficient sets
+        training_times_by_step = train_rl(dp_pi=pi_mnl, efficient_sets=efficient_sets_rl)
 
-    t0 = time.perf_counter()
-    v_adp_env, pi_adp_env = solve_by_adp_env_rollout(
-        efficient_sets=efficient_sets_rl,
-    )
-    adp_env_time = time.perf_counter() - t0
-    _avg_adp_env = sum(simulate(efficient_sets_rl, pi_adp_env, seed=i)[0] for i in range(1000)) / 1000
-    log_message(f"ADP_ENV time: {adp_env_time:.4f}s | V(0,C): {v_adp_env[0, C.C]:.2f} | avg reward: {_avg_adp_env:.2f}")
+        for step in C.TOTAL_TIMESTEPS:
+            training_times_by_step[step].append(
+                {
+                    "DP_MNL": dp_mnl_time,
+                    "DP_MMNL_5PT": dp_mmnl_5pt_time,
+                    "DP_MMNL_2PT": dp_mmnl_2pt_time,
+                    "ADP_MNL": adp_mnl_time,
+                    "ADP_MMNL_5PT": adp_mmnl_5pt_time,
+                    "ADP_MMNL_2PT": adp_mmnl_2pt_time,
+                    "ADP_ENV": adp_env_time,
+                }
+            )
 
-    time_results = {
-        "Sampling":                sampling_time,
-        "Estimation_MNL":          estimation_mnl_time,
-        "Estimation_MMNL_5PT":     estimation_mmnl_5pt_time,
-        "Estimation_MMNL_2PT":     estimation_mmnl_2pt_time,
-        "EfficientSets_MNL":       efficient_sets_time_mnl,
-        "EfficientSets_MMNL_5PT":  efficient_sets_time_mmnl_5pt,
-        "EfficientSets_MMNL_2PT":  efficient_sets_time_mmnl_2pt,
-        "DP_MNL":                  dp_mnl_time,
-        "DP_MMNL_5PT":             dp_mmnl_5pt_time,
-        "DP_MMNL_2PT":             dp_mmnl_2pt_time,
-        "ADP_MNL":                 adp_mnl_time,
-        "ADP_MMNL_5PT":            adp_mmnl_5pt_time,
-        "ADP_MMNL_2PT":            adp_mmnl_2pt_time,
-        "ADP_ENV":                 adp_env_time,
-    }
+        # Delete large DP arrays early to free memory before evaluation
+        del v_mnl, v_mmnl_5pt, v_mmnl_2pt
+        gc.collect()
 
-    # RL always trains against MNL policy using MNL efficient sets
-    training_times_by_step = train_rl(dp_pi=pi_mnl, efficient_sets=efficient_sets_rl)
+        dp_policy_configs = {
+            "DP_MNL": {
+                "pi": pi_mnl,
+                "efficient_sets": efficient_sets_mnl,
+            },
+            "DP_MMNL_5PT": {
+                "pi": pi_mmnl_5pt,
+                "efficient_sets": efficient_sets_mmnl_5pt,
+            },
+            "DP_MMNL_2PT": {
+                "pi": pi_mmnl_2pt,
+                "efficient_sets": efficient_sets_mmnl_2pt,
+            },
+        }
 
-    for step in C.TOTAL_TIMESTEPS:
-        training_times_by_step[step].append(
+        dp_policy_configs.update(
             {
-                "DP_MNL": dp_mnl_time,
-                "DP_MMNL_5PT": dp_mmnl_5pt_time,
-                "DP_MMNL_2PT": dp_mmnl_2pt_time,
-                "ADP_MNL": adp_mnl_time,
-                "ADP_MMNL_5PT": adp_mmnl_5pt_time,
-                "ADP_MMNL_2PT": adp_mmnl_2pt_time,
-                "ADP_ENV": adp_env_time,
+                "ADP_MNL": {
+                    "pi": pi_adp_mnl,
+                    "efficient_sets": efficient_sets_mnl,
+                },
+                "ADP_MMNL_5PT": {
+                    "pi": pi_adp_mmnl_5pt,
+                    "efficient_sets": efficient_sets_mmnl_5pt,
+                },
+                "ADP_MMNL_2PT": {
+                    "pi": pi_adp_mmnl_2pt,
+                    "efficient_sets": efficient_sets_mmnl_2pt,
+                },
+                "ADP_ENV": {
+                    "pi": pi_adp_env,
+                    "efficient_sets": efficient_sets_rl,
+                },
             }
         )
 
-    # Delete large DP arrays early to free memory before evaluation
-    del v_mnl, v_mmnl_5pt, v_mmnl_2pt
-    gc.collect()
+        evaluation_results_by_step = evaluate_saved_models(
+            dp_policy_configs=dp_policy_configs,
+            rl_efficient_sets=efficient_sets_rl,
+        )
 
-    dp_policy_configs = {
-        "DP_MNL": {
-            "pi": pi_mnl,
-            "efficient_sets": efficient_sets_mnl,
-        },
-        "DP_MMNL_5PT": {
-            "pi": pi_mmnl_5pt,
-            "efficient_sets": efficient_sets_mmnl_5pt,
-        },
-        "DP_MMNL_2PT": {
-            "pi": pi_mmnl_2pt,
-            "efficient_sets": efficient_sets_mmnl_2pt,
-        },
-    }
+        for step in C.TOTAL_TIMESTEPS:
+            table_str = print_evaluation_table(training_times_by_step[step], evaluation_results_by_step[step])
+            log_message(f"\n=== {step:,} training timesteps ===\n{table_str}")
 
-    dp_policy_configs.update(
-        {
-            "ADP_MNL": {
-                "pi": pi_adp_mnl,
-                "efficient_sets": efficient_sets_mnl,
-            },
-            "ADP_MMNL_5PT": {
-                "pi": pi_adp_mmnl_5pt,
-                "efficient_sets": efficient_sets_mmnl_5pt,
-            },
-            "ADP_MMNL_2PT": {
-                "pi": pi_adp_mmnl_2pt,
-                "efficient_sets": efficient_sets_mmnl_2pt,
-            },
-            "ADP_ENV": {
-                "pi": pi_adp_env,
-                "efficient_sets": efficient_sets_rl,
-            },
+        data = {
+            "beta_mnl": beta_mnl,
+            "lambda_mnl": lambda_mnl,
+            "betas_mmnl_5pt": betas_mmnl_5pt,
+            "weights_mmnl_5pt": weights_mmnl_5pt,
+            "betas_mmnl_2pt": betas_mmnl_2pt,
+            "weights_mmnl_2pt": weights_mmnl_2pt,
+            "lambda_mmnl_5pt": lambda_mmnl_5pt,
+            "lambda_mmnl_2pt": lambda_mmnl_2pt,
+            "efficient_sets_mnl": efficient_sets_mnl,
+            "efficient_sets_mmnl_5pt": efficient_sets_mmnl_5pt,
+            "efficient_sets_mmnl_2pt": efficient_sets_mmnl_2pt,
+            "efficient_sets_rl": efficient_sets_rl,
+            "pi_mnl": pi_mnl,
+            "pi_mmnl_5pt": pi_mmnl_5pt,
+            "pi_mmnl_2pt": pi_mmnl_2pt,
+            "pi_adp_mnl": pi_adp_mnl,
+            "pi_adp_mmnl_5pt": pi_adp_mmnl_5pt,
+            "pi_adp_mmnl_2pt": pi_adp_mmnl_2pt,
+            "pi_adp_env": pi_adp_env,
+            "time_results": time_results,
+            "training_times_by_step": training_times_by_step,
+            "evaluation_results_by_step": evaluation_results_by_step,
         }
-    )
 
-    evaluation_results_by_step = evaluate_saved_models(
-        dp_policy_configs=dp_policy_configs,
-        rl_efficient_sets=efficient_sets_rl,
-    )
-
-    for step in C.TOTAL_TIMESTEPS:
-        table_str = print_evaluation_table(training_times_by_step[step], evaluation_results_by_step[step])
-        log_message(f"\n=== {step:,} training timesteps ===\n{table_str}")
-
-    data = {
-        "beta_mnl": beta_mnl,
-        "lambda_mnl": lambda_mnl,
-        "betas_mmnl_5pt": betas_mmnl_5pt,
-        "weights_mmnl_5pt": weights_mmnl_5pt,
-        "betas_mmnl_2pt": betas_mmnl_2pt,
-        "weights_mmnl_2pt": weights_mmnl_2pt,
-        "lambda_mmnl_5pt": lambda_mmnl_5pt,
-        "lambda_mmnl_2pt": lambda_mmnl_2pt,
-        "efficient_sets_mnl": efficient_sets_mnl,
-        "efficient_sets_mmnl_5pt": efficient_sets_mmnl_5pt,
-        "efficient_sets_mmnl_2pt": efficient_sets_mmnl_2pt,
-        "efficient_sets_rl": efficient_sets_rl,
-        "pi_mnl": pi_mnl,
-        "pi_mmnl_5pt": pi_mmnl_5pt,
-        "pi_mmnl_2pt": pi_mmnl_2pt,
-        "pi_adp_mnl": pi_adp_mnl,
-        "pi_adp_mmnl_5pt": pi_adp_mmnl_5pt,
-        "pi_adp_mmnl_2pt": pi_adp_mmnl_2pt,
-        "pi_adp_env": pi_adp_env,
-        "time_results": time_results,
-        "training_times_by_step": training_times_by_step,
-        "evaluation_results_by_step": evaluation_results_by_step,
-    }
-
-    with open(f"{C.OUTPUT_DIR}/results.pkl", "wb") as f:
-        pickle.dump(data, f)
+        with open(f"{C.OUTPUT_DIR}/results.pkl", "wb") as f:
+            pickle.dump(data, f)
 
 
 if __name__ == "__main__":
