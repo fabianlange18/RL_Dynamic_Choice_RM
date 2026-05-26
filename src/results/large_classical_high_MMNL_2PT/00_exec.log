@@ -22,3 +22,4 @@ Estimation_MMNL_2PT time: 0.4305s | lambda: 0.496414
 Betas: ['-0.006598', '-0.000157']
 Weights: ['0.756640', '0.243360']
 
+DP_MNL  time: 43074.4175s | V(0,C): 78123.66 | avg reward: 74472.91

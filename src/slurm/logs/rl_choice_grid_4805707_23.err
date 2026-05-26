@@ -7,3 +7,19 @@ I0000 00:00:1779714953.067341 3676101 port.cc:153] oneDNN custom operations are 
 I0000 00:00:1779714953.089474 3676101 cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
 /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=150, x=36; using empty-offer fallback
   v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=69, x=28; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=20, x=32; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=19, x=98; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=18, x=165; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=16, x=46; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=5, x=15; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:353: RuntimeWarning: Gurobi did not return a feasible solution at t=4, x=83; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:365: RuntimeWarning: Gurobi did not return a feasible solution at t=362, x=124; using empty-offer fallback
+  v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(

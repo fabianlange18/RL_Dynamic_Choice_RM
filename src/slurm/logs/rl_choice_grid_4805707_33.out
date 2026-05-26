@@ -368,3 +368,24 @@ Training A2C (seed 15/15)
 Training TRPO (seed 15/15)
  100% ━━━━━━━━━━━━━━━━━━━━━━ 106,496/100,000  [ 0:00:27 < 0:00:00 , 3,575 it/s ]
  100% ━━━━━━━━━━━━━━━━━━━━━━ 401,408/400,000  [ 0:01:54 < 0:00:00 , 3,430 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 507,904/500,000  [ 0:02:28 < 0:00:00 , 3,190 it/s ]
+Training PPO (seed 15/15)
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 106,496/100,000  [ 0:00:41 < 0:00:00 , 2,354 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 401,408/400,000  [ 0:02:47 < 0:00:00 , 2,209 it/s ]
+ 100% ━━━━━━━━━━━━━━━━━━━━━━ 507,904/500,000  [ 0:03:33 < 0:00:00 , 2,355 it/s ]
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n009
+Job ID: 4805743
+Array Job ID: 4805707_33
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 10:04:37
+CPU Efficiency: 48.18% of 20:54:48 core-walltime
+Job Wall-clock time: 10:27:24
+Memory Utilized: 1.54 GB
+Memory Efficiency: 15.40% of 10.00 GB (10.00 GB/node)
