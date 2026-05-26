@@ -1,0 +1,76 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT MNL with Reference Price - low sensitivity - eff. sets - small (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{0.57 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.501951} \\
+    Estim. Time & 0.02s & 0.23s & 0.10s \\
+    Estim. $\beta$ & -0.002456 & \makecell[tr]{-0.0025, -0.0025, -0.0025 \\ -0.0025, -0.0025} & -0.0025, -0.0025 \\
+    Estim. Weights & - & \makecell[tr]{0.5723, 0.1091, 0.1147 \\ 0.1022, 0.1017} & 0.7784, 0.2216 \\
+    Log Likelihood & -17058.16 & -17058.16 & -17058.16 \\
+    AIC & 34118.32 & 34134.32 & 34122.32 \\
+    BIC & 34125.56 & 34199.47 & 34144.04 \\
+    DP $V(0,C)$ & 56224.49 & 56224.59 & 56224.48 \\
+    Sim. Rew. (n=1000) & 59616.71 & 59616.71 & 59616.71 \\
+    ADP $V(0,C)$ & 56266.59 & 56266.72 & 56266.59 \\
+    ADP Sim. Rew. (n=1000) & 64073.93 & 64075.69 & 64073.93 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\vspace{0.5em}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT MNL with Reference Price - low sensitivity - eff. sets - small (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      &     0.37 &    -- &    58952.7 &    4136.98 & 100.00* &    0.00 &   85.41 &    5.23 \\
+    DP\_MMNL\_5PT &     0.37 &    -- &    58952.7 &    4136.98 &  100.00 &    0.00 &   85.41 &    5.23 \\
+    DP\_MMNL\_2PT &     0.36 &    -- &    58952.7 &    4136.98 &  100.00 &    0.00 &   85.41 &    5.23 \\
+    \midrule
+    ADP\_MNL     &     0.53 &    -- &    63926.3 &    5035.49 &  108.41 &    3.01 &   75.14 &    5.42 \\
+    ADP\_MMNL\_5PT &     0.53 &    -- &    63974.7 &    5041.01 &  108.50 &    3.09 &   75.21 &    5.43 \\
+    ADP\_MMNL\_2PT &     0.52 &    -- &    63926.3 &    5035.49 &  108.41 &    3.01 &   75.14 &    5.42 \\
+    ADP\_ENV     &     0.63 &    -- &    61575.0 &    4267.63 &  104.47 &    1.97 &   80.50 &    4.98 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    DQN          &    17.44 &     1.54 &    59296.7 &    4208.24 &  100.58 &    1.09 &   84.29 &    5.51 \\
+    QRDQN        &    93.14 &     8.17 &    51913.7 &   12334.06 &   87.78 &   18.99 &   54.38 &   18.32 \\
+    ARS          &     8.47 &     0.12 &    62740.7 &    6014.70 &  106.34 &    5.45 &   75.21 &    6.94 \\
+    A2C          &    21.28 &     1.69 &    54122.3 &    4634.27 &   91.87 &    5.67 &   89.80 &    6.06 \\
+    TRPO         &    23.67 &     0.77 &    58195.7 &    4082.97 &   98.75 &    2.41 &   85.69 &    5.97 \\
+    PPO          &    43.86 &     3.68 &    54665.7 &    5448.77 &   92.59 &    4.25 &   89.69 &    4.95 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    DQN          &    88.65 &     7.83 &    59432.0 &    3956.01 &  100.85 &    1.73 &   84.25 &    5.49 \\
+    QRDQN        &   469.32 &    43.86 &    51913.7 &   12334.06 &   87.78 &   18.99 &   54.38 &   18.32 \\
+    ARS          &    42.30 &     0.57 &    63970.0 &    5585.59 &  108.45 &    4.30 &   73.05 &    6.33 \\
+    A2C          &   109.07 &     9.16 &    56513.0 &    4659.57 &   95.95 &    5.81 &   88.11 &    7.14 \\
+    TRPO         &   117.82 &     4.43 &    63962.0 &    5084.22 &  108.53 &    4.72 &   76.22 &    8.29 \\
+    PPO          &   210.65 &    16.20 &    56126.7 &    4165.11 &   95.21 &    2.45 &   88.76 &    5.99 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    DQN          &   177.89 &    15.85 &    59388.3 &    4293.02 &  100.74 &    1.55 &   84.18 &    5.15 \\
+    QRDQN        &   937.90 &    77.63 &    51913.7 &   12334.06 &   87.78 &   18.99 &   54.38 &   18.32 \\
+    ARS          &    84.68 &     1.20 &    64386.7 &    5203.21 &  109.22 &    4.42 &   73.26 &    5.75 \\
+    A2C          &   218.03 &    16.04 &    56916.0 &    4579.86 &   96.63 &    5.64 &   87.75 &    6.85 \\
+    TRPO         &   231.25 &     8.01 &    64495.0 &    5221.30 &  109.39 &    4.20 &   74.23 &    5.69 \\
+    PPO          &   421.03 &    28.56 &    56465.3 &    4346.62 &   95.76 &    2.28 &   88.79 &    4.99 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\vspace{0.5em}
+\end{samepage}
+
