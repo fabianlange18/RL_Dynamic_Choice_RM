@@ -1,6 +1,12 @@
 import numpy as np
+from functools import lru_cache
 
 import src.constants as C
+
+
+_PRICES = np.asarray(C.r, dtype=float)
+_J = len(_PRICES)
+_GLOBAL_RNG = np.random.default_rng()
 
 
 # def probit_probabilities(action_binary, beta, seed=None):
@@ -72,38 +78,41 @@ def _default_block_sigma(n_products):
     return sigma
 
 
+@lru_cache(maxsize=4)
+def _default_block_cholesky(n_products):
+    """Cached Cholesky factor for the default block covariance."""
+    sigma = _default_block_sigma(n_products)
+    return np.linalg.cholesky(sigma)
+
+
 def probit_probabilities(action_binary, beta, seed=None):
     """Return one-draw multinomial probit outcome with MVN error terms.
 
     If Sigma is None, a default block-structured covariance is used.
     Sigma must be shaped (J+1, J+1), including outside option covariance.
     """
-
-    prices = np.asarray(C.r, dtype=float)
     action_binary = np.asarray(action_binary)
-    active_indices = np.where(action_binary == 1)[0]
+    active_indices = np.flatnonzero(action_binary)
 
-    J = len(prices)
+    J = _J
     counts = np.zeros(J + 1, dtype=float)
 
     if len(active_indices) == 0:
         counts[-1] = 1.0
         return counts
 
-    Sigma = _default_block_sigma(J)
+    L = _default_block_cholesky(J)
+    rng = _GLOBAL_RNG if seed is None else np.random.default_rng(seed)
 
-    rng = np.random.default_rng(seed)
-
-    # ---- DRAW MULTIVARIATE ERRORS ----
-    # Include outside option → dimension J+1
-    eps = rng.multivariate_normal(mean=np.zeros(J + 1), cov=Sigma)
+    # One MVN draw via cached Cholesky factor: eps ~ N(0, Sigma).
+    eps = L @ rng.normal(0.0, 1.0, size=J + 1)
 
     # split
     eps_inside = eps[:J]
     eps_outside = eps[-1]
 
     utilities = np.full(J, -np.inf, dtype=float)
-    utilities[active_indices] = beta * prices[active_indices] + eps_inside[active_indices]
+    utilities[active_indices] = beta * _PRICES[active_indices] + eps_inside[active_indices]
 
     chosen = int(np.argmax(utilities))
 
