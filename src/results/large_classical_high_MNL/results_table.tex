@@ -9,20 +9,57 @@
     Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
     \midrule
     Obs. Sampling Time & \multicolumn{3}{c}{0.54 s} \\
-    Estim. $\lambda$ & \multicolumn{3}{c}{0.503649} \\
-    Estim. Time & 0.01s & 0.79s & 0.31s \\
-    Estim. $\beta$ & -0.005043 & \makecell[tr]{-0.0055, -0.0053, -0.0051 \\ -0.0049, -0.0033} & -0.0054, -0.0037 \\
-    Estim. Weights & - & \makecell[tr]{0.1013, 0.5761, 0.1000 \\ 0.1002, 0.1225} & 0.7981, 0.2019 \\
-    Log Likelihood & -37303.41 & -37303.22 & -37303.22 \\
-    AIC & 74608.82 & 74624.45 & 74612.45 \\
-    BIC & 74616.04 & 74689.47 & 74634.12 \\
-    DP $V(0,C)$ & N/A & N/A & N/A \\
-    Sim. Rew. (n=1000) & N/A & N/A & N/A \\
-    ADP $V(0,C)$ & N/A & N/A & N/A \\
-    ADP Sim. Rew. (n=1000) & N/A & N/A & N/A \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.501344} \\
+    Estim. Time & 0.03s & 1.30s & 0.61s \\
+    Estim. $\beta$ & -0.004998 & \makecell[tr]{-0.0050, -0.0050, -0.0050 \\ -0.0050, -0.0050} & -0.0050, -0.0050 \\
+    Estim. Weights & - & \makecell[tr]{0.1600, 0.1000, 0.1097 \\ 0.5302, 0.1000} & 0.7713, 0.2287 \\
+    Log Likelihood & -37074.01 & -37074.01 & -37074.01 \\
+    AIC & 74150.01 & 74166.01 & 74154.01 \\
+    BIC & 74157.23 & 74230.97 & 74175.67 \\
+    DP $V(0,C)$ & 79739.72 & 79535.41 & 79665.66 \\
+    Sim. Rew. (n=1000) & 79736.53 & 79518.49 & 79660.59 \\
+    ADP $V(0,C)$ & 58161.68 & 58162.03 & 58161.69 \\
+    ADP Sim. Rew. (n=1000) & 65936.85 & 65936.85 & 65936.85 \\
     \bottomrule
   \end{tabular}
 \end{center}
-\vspace{0.5em}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT MNL - high sensitivity - all sets - large (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      & 44090.19 &    -- &    79422.8 &    4847.17 & 100.00* &    0.00 &   89.98 &    5.12 \\
+    DP\_MMNL\_5PT & 90489.56 &    -- &    79094.5 &    4930.34 &   99.58 &    0.49 &   90.45 &    5.19 \\
+    DP\_MMNL\_2PT & 91493.82 &    -- &    79207.7 &    4764.34 &   99.74 &    0.49 &   89.59 &    4.92 \\
+    \midrule
+    ADP\_MNL     &     0.95 &    -- &    65675.4 &    3961.56 &   82.70 &    0.96 &   93.77 &    5.21 \\
+    ADP\_MMNL\_5PT &     1.12 &    -- &    65675.4 &    3961.56 &   82.70 &    0.96 &   93.77 &    5.21 \\
+    ADP\_MMNL\_2PT &     1.05 &    -- &    65675.4 &    3961.56 &   82.70 &    0.96 &   93.77 &    5.21 \\
+    ADP\_ENV     &    53.04 &    -- &    59559.5 &    2485.06 &   75.12 &    2.71 &   97.73 &    2.77 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    A2C          &    19.68 &     0.05 &    59035.6 &    2857.85 &   74.43 &    2.62 &   97.37 &    2.99 \\
+    TRPO         &    28.23 &     0.29 &    59995.8 &    3777.01 &   75.61 &    3.34 &   97.51 &    3.01 \\
+    PPO          &    44.90 &     0.76 &    60188.8 &    2345.36 &   75.95 &    3.51 &   97.01 &    3.10 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    A2C          &   101.26 &     0.42 &    62208.7 &    4430.69 &   78.34 &    3.10 &   96.86 &    3.24 \\
+    TRPO         &   139.04 &     1.35 &    63653.4 &    3334.65 &   80.25 &    3.25 &   96.86 &    3.31 \\
+    PPO          &   210.67 &     3.03 &    64798.1 &    3469.19 &   81.69 &    3.34 &   96.29 &    4.13 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    A2C          &   205.00 &     2.53 &    63037.5 &    4011.35 &   79.40 &    2.70 &   96.90 &    3.17 \\
+    TRPO         &   289.60 &     2.80 &    66146.8 &    3342.23 &   83.40 &    3.37 &   96.54 &    3.28 \\
+    PPO          &   418.70 &     3.27 &    66191.0 &    4112.70 &   83.37 &    2.42 &   95.86 &    4.55 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
 \end{samepage}
 

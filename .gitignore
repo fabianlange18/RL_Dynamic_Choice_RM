@@ -3,5 +3,6 @@
 *.zip
 *.pkl
 .env
+.DS_Store
 
 .rl_venv/*

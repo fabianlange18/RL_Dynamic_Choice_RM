@@ -8,21 +8,58 @@
     \midrule
     Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
     \midrule
-    Obs. Sampling Time & \multicolumn{3}{c}{0.58 s} \\
-    Estim. $\lambda$ & \multicolumn{3}{c}{0.500604} \\
-    Estim. Time & 0.01s & 0.83s & 0.27s \\
-    Estim. $\beta$ & -0.008821 & \makecell[tr]{-0.0088, -0.0088, -0.0088 \\ -0.0088, -0.0088} & -0.0088, -0.0088 \\
-    Estim. Weights & - & \makecell[tr]{0.1291, 0.2874, 0.1000 \\ 0.3834, 0.1000} & 0.7997, 0.2003 \\
-    Log Likelihood & -31096.53 & -31096.53 & -31096.53 \\
-    AIC & 62195.06 & 62211.06 & 62199.06 \\
-    BIC & 62202.26 & 62275.90 & 62220.67 \\
-    DP $V(0,C)$ & 52380.34 & N/A & N/A \\
-    Sim. Rew. (n=1000) & 49586.09 & N/A & N/A \\
-    ADP $V(0,C)$ & N/A & N/A & N/A \\
-    ADP Sim. Rew. (n=1000) & N/A & N/A & N/A \\
+    Obs. Sampling Time & \multicolumn{3}{c}{0.60 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.497244} \\
+    Estim. Time & 0.01s & 1.00s & 0.33s \\
+    Estim. $\beta$ & -0.008789 & \makecell[tr]{-0.0088, -0.0088, -0.0088 \\ -0.0088, -0.0088} & -0.0088, -0.0088 \\
+    Estim. Weights & - & \makecell[tr]{0.1003, 0.5989, 0.1003 \\ 0.1003, 0.1003} & 0.7997, 0.2003 \\
+    Log Likelihood & -31083.43 & -31083.43 & -31083.43 \\
+    AIC & 62168.86 & 62184.86 & 62172.86 \\
+    BIC & 62176.06 & 62249.68 & 62194.47 \\
+    DP $V(0,C)$ & 52217.32 & 52194.70 & 52178.66 \\
+    Sim. Rew. (n=1000) & 49583.60 & 49446.09 & 49500.81 \\
+    ADP $V(0,C)$ & 43360.53 & 43360.53 & 43360.54 \\
+    ADP Sim. Rew. (n=1000) & 44730.38 & 44730.98 & 44730.98 \\
     \bottomrule
   \end{tabular}
 \end{center}
-\vspace{0.5em}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT TMNL - high sensitivity - all sets - large (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      & 37778.05 &    -- &    49564.2 &    1915.92 & 100.00* &    0.00 &   96.18 &    3.17 \\
+    DP\_MMNL\_5PT & 122474.44 &    -- &    49397.3 &    2360.18 &   99.63 &    1.40 &   95.14 &    4.26 \\
+    DP\_MMNL\_2PT & 93484.08 &    -- &    49413.3 &    2047.77 &   99.69 &    0.43 &   95.75 &    3.47 \\
+    \midrule
+    ADP\_MNL     &     0.96 &    -- &    44559.2 &    1552.26 &   89.92 &    1.11 &   96.94 &    3.19 \\
+    ADP\_MMNL\_5PT &     1.13 &    -- &    44559.8 &    1553.26 &   89.92 &    1.11 &   96.94 &    3.19 \\
+    ADP\_MMNL\_2PT &     1.05 &    -- &    44559.8 &    1553.26 &   89.92 &    1.11 &   96.94 &    3.19 \\
+    ADP\_ENV     &    57.54 &    -- &    45845.2 &    1391.11 &   92.53 &    1.30 &   97.91 &    2.45 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    A2C          &    20.34 &     0.09 &    42234.3 &    1156.30 &   85.31 &    3.42 &   98.70 &    2.32 \\
+    TRPO         &    28.92 &     0.30 &    43129.8 &    1641.41 &   87.10 &    3.71 &   98.85 &    1.54 \\
+    PPO          &    43.72 &     0.23 &    42765.5 &    1211.93 &   86.34 &    2.04 &   98.67 &    2.41 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    A2C          &   104.80 &     0.67 &    44495.6 &    2086.39 &   89.84 &    4.32 &   98.63 &    2.42 \\
+    TRPO         &   141.52 &     1.04 &    43860.1 &    1209.85 &   88.57 &    2.75 &   99.50 &    1.05 \\
+    PPO          &   210.14 &     1.28 &    43758.4 &     813.22 &   88.42 &    3.78 &   99.39 &    1.21 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    A2C          &   211.87 &     2.80 &    44804.8 &    2062.90 &   90.48 &    4.38 &   98.45 &    2.53 \\
+    TRPO         &   291.70 &     2.81 &    45246.8 &    1466.99 &   91.39 &    3.72 &   99.42 &    1.32 \\
+    PPO          &   419.97 &     1.91 &    44657.7 &    1246.85 &   90.20 &    3.36 &   99.35 &    1.22 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
 \end{samepage}
 

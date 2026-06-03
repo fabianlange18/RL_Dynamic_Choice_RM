@@ -5,21 +5,47 @@ LARGE_PRODUCT_SET: True
 TRAIN_ON_ALL_SETS: True
 HIGH_SENSITIVITY: True
 GT_MODEL: MMNL_5PT
+EXEC_PHASE: 1
 ============================================================
 RL Training Seeds: 15, RL Training Steps: [1000000, 5000000, 10000000], Estimation Episodes: 50
 
-Observation sampling time: 1.1063 seconds
-Estimation_MNL  time: 0.0116s | beta: -0.005022, lambda: 0.497220
-  LL: -37178.585760, AIC: 74359.172, BIC: 74366.392
+Observation sampling time: 1.0617 seconds
+Estimation_MNL  time: 0.0160s | beta: -0.005140, lambda: 0.504040
+  LL: -37274.984185, AIC: 74551.968, BIC: 74559.195
 
-Estimation_MMNL_5PT time: 1.1769s | lambda: 0.497220
-  LL: -37169.804689, AIC: 74357.609, BIC: 74422.596
-Betas: ['-0.005921', '-0.005862', '-0.004980', '-0.004701', '-0.000170']
-Weights: ['0.101095', '0.579686', '0.100000', '0.100137', '0.119082']
+Estimation_MMNL_5PT time: 2.7255s | lambda: 0.504040
+  LL: -37265.509924, AIC: 74549.020, BIC: 74614.063
+Betas: ['-0.005796', '-0.005793', '-0.005764', '-0.005761', '-0.000000']
+Weights: ['0.101802', '0.102359', '0.570158', '0.110011', '0.115670']
 
-Estimation_MMNL_2PT time: 0.2854s | lambda: 0.497220
-  LL: -37169.869747, AIC: 74345.739, BIC: 74367.402
-Betas: ['-0.005881', '-0.001422']
+Estimation_MMNL_2PT time: 0.4286s | lambda: 0.504040
+  LL: -37265.785496, AIC: 74537.571, BIC: 74559.252
+Betas: ['-0.006011', '-0.001488']
 Weights: ['0.800000', '0.200000']
 
-DP_MNL  time: 43210.2972s | V(0,C): 78921.91 | avg reward: 77957.69
+
+============================================================
+TASK_ID: 43
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: True
+GT_MODEL: MMNL_5PT
+EXEC_PHASE: 1
+============================================================
+RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000], Estimation Episodes: 50
+
+Observation sampling time: 1.0975 seconds
+Estimation_MNL  time: 0.0227s | beta: -0.005161, lambda: 0.496141
+  LL: -36753.887594, AIC: 73509.775, BIC: 73516.988
+
+Estimation_MMNL_5PT time: 1.3177s | lambda: 0.496141
+  LL: -36748.034430, AIC: 73514.069, BIC: 73578.987
+Betas: ['-0.005699', '-0.005685', '-0.005684', '-0.005666', '-0.000155']
+Weights: ['0.100000', '0.600000', '0.100000', '0.100000', '0.100000']
+
+Estimation_MMNL_2PT time: 0.2713s | lambda: 0.496141
+  LL: -36748.279773, AIC: 73502.560, BIC: 73524.199
+Betas: ['-0.005934', '-0.001945']
+Weights: ['0.800000', '0.200000']
+
+DP_MNL  time: 42824.5566s | V(0,C): 77704.62 | avg reward: 77965.46
