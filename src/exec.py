@@ -178,13 +178,51 @@ def _wait_for_effsets_priority(log_fn, poll_seconds=60):
         time.sleep(poll_seconds)
 
 
+def _dp_adp_checkpoint_path():
+    return os.path.join(C.OUTPUT_DIR, "dp_adp_intermediate.pkl")
+
+
+def _save_dp_adp_checkpoint(data):
+    path = _dp_adp_checkpoint_path()
+    with open(path, "wb") as f:
+        pickle.dump(data, f)
+    log_message(f"Saved intermediate DP/ADP results to {path}")
+
+
+def _load_dp_adp_checkpoint(required=False):
+    path = _dp_adp_checkpoint_path()
+    if not os.path.exists(path):
+        if required:
+            log_message(f"ERROR: required intermediate file not found: {path}")
+        return None
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def _missing_keys(data, keys):
+    return [k for k in keys if k not in data]
+
+
 def main():
     """Main execution function."""
     
     # Determine execution phase
-    exec_phase = os.environ.get("EXEC_PHASE", "")  # "" (all), "1" (DP/ADP only), "2" (RL/Eval only)
+    exec_phase = os.environ.get("EXEC_PHASE", "").strip().upper()
+    # Supported values:
+    # "" (all), "1" (legacy phase 1), "2" (RL/Eval only),
+    # "1_PREP", "1_DP_MNL", "1_DP_MMNL_5PT", "1_DP_MMNL_2PT" (split DP pipeline)
     is_phase_1_only = exec_phase == "1"
     is_phase_2_only = exec_phase == "2"
+    is_phase_1_prep_only = exec_phase == "1_PREP"
+    is_phase_1_dp_mnl_only = exec_phase == "1_DP_MNL"
+    is_phase_1_dp_mmnl_5pt_only = exec_phase == "1_DP_MMNL_5PT"
+    is_phase_1_dp_mmnl_2pt_only = exec_phase == "1_DP_MMNL_2PT"
+    is_phase_1_split_only = (
+        is_phase_1_prep_only
+        or is_phase_1_dp_mnl_only
+        or is_phase_1_dp_mmnl_5pt_only
+        or is_phase_1_dp_mmnl_2pt_only
+    )
     phase1_time_results = {}
     
     # Log task configuration at start
@@ -200,14 +238,351 @@ def main():
     log_message(f"{'='*60}")
     log_message(f"RL Training Seeds: {C.N_EVAL_EPISODES}, RL Training Steps: {C.TOTAL_TIMESTEPS}, Estimation Episodes: {C.N_ESTIMATION_EPISODES}\n")
 
+    # ========== SPLIT PHASE 1: Persist after each DP sub-step ==========
+    if is_phase_1_split_only:
+        uses_gurobi_efficient_sets = c.LARGE_PRODUCT_SET and not c.TRAIN_ON_ALL_SETS
+
+        if is_phase_1_prep_only:
+            _pending_marker = _effsets_pending_path() if uses_gurobi_efficient_sets else None
+            if _pending_marker:
+                open(_pending_marker, "w").close()
+                log_gurobi_message(f"[efficient_sets] Registered pending marker: {_pending_marker}")
+
+            t0 = time.perf_counter()
+            _env = TalluriExample2(efficient_sets=None)
+            observations = collect_transaction_data(_env)
+            _env.close()
+            sampling_time = time.perf_counter() - t0
+            log_message(f"Observation sampling time: {sampling_time:.4f} seconds")
+
+            estimator = ScipyEstimator(observations)
+
+            t0 = time.perf_counter()
+            estimation_mnl_result = estimator.estimate_mnl()
+            estimation_mnl_time = time.perf_counter() - t0
+
+            t0 = time.perf_counter()
+            estimation_mmnl_5pt_result = estimator.estimate_mmnl()
+            estimation_mmnl_5pt_time = time.perf_counter() - t0
+
+            t0 = time.perf_counter()
+            estimation_mmnl_2pt_result = estimator.estimate_mmnl(K=2)
+            estimation_mmnl_2pt_time = time.perf_counter() - t0
+
+            beta_mnl = estimation_mnl_result["beta"]
+            lambda_mnl = estimation_mnl_result["lambda"]
+            ll_mnl = estimation_mnl_result["final_log_likelihood"]
+            aic_mnl = estimation_mnl_result["aic"]
+            bic_mnl = estimation_mnl_result["bic"]
+
+            betas_mmnl_5pt = estimation_mmnl_5pt_result["betas"]
+            weights_mmnl_5pt = estimation_mmnl_5pt_result["mixing_weights"]
+            lambda_mmnl_5pt = estimation_mmnl_5pt_result["lambda"]
+            ll_mmnl_5pt = estimation_mmnl_5pt_result["final_log_likelihood"]
+            aic_mmnl_5pt = estimation_mmnl_5pt_result["aic"]
+            bic_mmnl_5pt = estimation_mmnl_5pt_result["bic"]
+
+            betas_mmnl_2pt = estimation_mmnl_2pt_result["betas"]
+            weights_mmnl_2pt = estimation_mmnl_2pt_result["mixing_weights"]
+            lambda_mmnl_2pt = estimation_mmnl_2pt_result["lambda"]
+            ll_mmnl_2pt = estimation_mmnl_2pt_result["final_log_likelihood"]
+            aic_mmnl_2pt = estimation_mmnl_2pt_result["aic"]
+            bic_mmnl_2pt = estimation_mmnl_2pt_result["bic"]
+
+            log_message(f"Estimation_MNL  time: {estimation_mnl_time:.4f}s | beta: {beta_mnl:.6f}, lambda: {lambda_mnl:.6f}")
+            log_message(f"  LL: {ll_mnl:.6f}, AIC: {aic_mnl:.3f}, BIC: {bic_mnl:.3f}\n")
+
+            log_message(f"Estimation_MMNL_5PT time: {estimation_mmnl_5pt_time:.4f}s | lambda: {lambda_mmnl_5pt:.6f}")
+            log_message(f"  LL: {ll_mmnl_5pt:.6f}, AIC: {aic_mmnl_5pt:.3f}, BIC: {bic_mmnl_5pt:.3f}")
+            log_message(f"Betas: {[f'{b:.6f}' for b in betas_mmnl_5pt]}")
+            log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_5pt]}\n")
+
+            log_message(f"Estimation_MMNL_2PT time: {estimation_mmnl_2pt_time:.4f}s | lambda: {lambda_mmnl_2pt:.6f}")
+            log_message(f"  LL: {ll_mmnl_2pt:.6f}, AIC: {aic_mmnl_2pt:.3f}, BIC: {bic_mmnl_2pt:.3f}")
+            log_message(f"Betas: {[f'{b:.6f}' for b in betas_mmnl_2pt]}")
+            log_message(f"Weights: {[f'{w:.6f}' for w in weights_mmnl_2pt]}\n")
+
+            del observations
+            del estimator
+            gc.collect()
+
+            if c.TRAIN_ON_ALL_SETS:
+                efficient_sets_mnl = None
+                efficient_sets_mmnl_5pt = None
+                efficient_sets_mmnl_2pt = None
+                efficient_sets_time_mnl = 0.0
+                efficient_sets_time_mmnl_5pt = 0.0
+                efficient_sets_time_mmnl_2pt = 0.0
+            else:
+                if uses_gurobi_efficient_sets:
+                    with gurobi_slot_lock("efficient_sets"):
+                        import gurobipy as gp
+
+                        with gp.Env() as gurobi_env:
+                            t0 = time.perf_counter()
+                            efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl, env=gurobi_env)
+                            efficient_sets_time_mnl = time.perf_counter() - t0
+                            log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+
+                            t0 = time.perf_counter()
+                            efficient_sets_mmnl_5pt = compute_efficient_sets(
+                                model="MMNL_5PT",
+                                env=gurobi_env,
+                                segment_betas=betas_mmnl_5pt,
+                                segment_weights=weights_mmnl_5pt,
+                            )
+                            efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+                            log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+
+                            t0 = time.perf_counter()
+                            efficient_sets_mmnl_2pt = compute_efficient_sets(
+                                model="MMNL_2PT",
+                                env=gurobi_env,
+                                segment_betas=betas_mmnl_2pt,
+                                segment_weights=weights_mmnl_2pt,
+                            )
+                            efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+                            log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+
+                        gc.collect()
+                else:
+                    t0 = time.perf_counter()
+                    efficient_sets_mnl = compute_efficient_sets(model="MNL", beta=beta_mnl)
+                    efficient_sets_time_mnl = time.perf_counter() - t0
+                    log_message(f"MNL  efficient sets time: {efficient_sets_time_mnl:.4f}s | sets: {efficient_sets_mnl}")
+
+                    t0 = time.perf_counter()
+                    efficient_sets_mmnl_5pt = compute_efficient_sets(
+                        model="MMNL_5PT",
+                        segment_betas=betas_mmnl_5pt,
+                        segment_weights=weights_mmnl_5pt,
+                    )
+                    efficient_sets_time_mmnl_5pt = time.perf_counter() - t0
+                    log_message(f"MMNL 5PT efficient sets time: {efficient_sets_time_mmnl_5pt:.4f}s | sets: {efficient_sets_mmnl_5pt}")
+
+                    t0 = time.perf_counter()
+                    efficient_sets_mmnl_2pt = compute_efficient_sets(
+                        model="MMNL_2PT",
+                        segment_betas=betas_mmnl_2pt,
+                        segment_weights=weights_mmnl_2pt,
+                    )
+                    efficient_sets_time_mmnl_2pt = time.perf_counter() - t0
+                    log_message(f"MMNL 2PT efficient sets time: {efficient_sets_time_mmnl_2pt:.4f}s | sets: {efficient_sets_mmnl_2pt}")
+
+            if _pending_marker and os.path.exists(_pending_marker):
+                os.remove(_pending_marker)
+                log_gurobi_message(f"[efficient_sets] Removed pending marker: {_pending_marker}")
+
+            efficient_sets_rl_candidates = [
+                efficient_sets_mnl,
+                efficient_sets_mmnl_5pt,
+                efficient_sets_mmnl_2pt,
+            ]
+            efficient_sets_rl = None
+            for _sets in efficient_sets_rl_candidates:
+                if _sets:
+                    efficient_sets_rl = set(_sets) if efficient_sets_rl is None else (efficient_sets_rl | set(_sets))
+
+            phase1_time_results = {
+                "Sampling": sampling_time,
+                "Estimation_MNL": estimation_mnl_time,
+                "Estimation_MMNL_5PT": estimation_mmnl_5pt_time,
+                "Estimation_MMNL_2PT": estimation_mmnl_2pt_time,
+                "EfficientSets_MNL": efficient_sets_time_mnl,
+                "EfficientSets_MMNL_5PT": efficient_sets_time_mmnl_5pt,
+                "EfficientSets_MMNL_2PT": efficient_sets_time_mmnl_2pt,
+                "DP_MNL": 0.0,
+                "DP_MMNL_5PT": 0.0,
+                "DP_MMNL_2PT": 0.0,
+            }
+
+            _save_dp_adp_checkpoint(
+                {
+                    "beta_mnl": beta_mnl,
+                    "lambda_mnl": lambda_mnl,
+                    "betas_mmnl_5pt": betas_mmnl_5pt,
+                    "weights_mmnl_5pt": weights_mmnl_5pt,
+                    "lambda_mmnl_5pt": lambda_mmnl_5pt,
+                    "betas_mmnl_2pt": betas_mmnl_2pt,
+                    "weights_mmnl_2pt": weights_mmnl_2pt,
+                    "lambda_mmnl_2pt": lambda_mmnl_2pt,
+                    "efficient_sets_mnl": efficient_sets_mnl,
+                    "efficient_sets_mmnl_5pt": efficient_sets_mmnl_5pt,
+                    "efficient_sets_mmnl_2pt": efficient_sets_mmnl_2pt,
+                    "efficient_sets_rl": efficient_sets_rl,
+                    "phase1_time_results": phase1_time_results,
+                }
+            )
+            log_message("Phase 1 prep complete. Next run one DP sub-step phase.")
+            return
+
+        # DP sub-steps load from checkpoint written by 1_PREP
+        dp_adp_data = _load_dp_adp_checkpoint(required=True)
+        if dp_adp_data is None:
+            return
+
+        required_prep_keys = [
+            "beta_mnl",
+            "lambda_mnl",
+            "betas_mmnl_5pt",
+            "weights_mmnl_5pt",
+            "lambda_mmnl_5pt",
+            "betas_mmnl_2pt",
+            "weights_mmnl_2pt",
+            "lambda_mmnl_2pt",
+            "efficient_sets_mnl",
+            "efficient_sets_mmnl_5pt",
+            "efficient_sets_mmnl_2pt",
+            "efficient_sets_rl",
+        ]
+        missing = _missing_keys(dp_adp_data, required_prep_keys)
+        if missing:
+            log_message(
+                "ERROR: intermediate file is missing prep fields. Run EXEC_PHASE=1_PREP first. Missing: "
+                + ", ".join(missing)
+            )
+            return
+
+        beta_mnl = dp_adp_data["beta_mnl"]
+        lambda_mnl = dp_adp_data["lambda_mnl"]
+        betas_mmnl_5pt = dp_adp_data["betas_mmnl_5pt"]
+        weights_mmnl_5pt = dp_adp_data["weights_mmnl_5pt"]
+        lambda_mmnl_5pt = dp_adp_data["lambda_mmnl_5pt"]
+        betas_mmnl_2pt = dp_adp_data["betas_mmnl_2pt"]
+        weights_mmnl_2pt = dp_adp_data["weights_mmnl_2pt"]
+        lambda_mmnl_2pt = dp_adp_data["lambda_mmnl_2pt"]
+
+        efficient_sets_mnl = dp_adp_data["efficient_sets_mnl"]
+        efficient_sets_mmnl_5pt = dp_adp_data["efficient_sets_mmnl_5pt"]
+        efficient_sets_mmnl_2pt = dp_adp_data["efficient_sets_mmnl_2pt"]
+
+        phase1_time_results = dp_adp_data.get("phase1_time_results", {})
+        uses_gurobi_dp = c.LARGE_PRODUCT_SET and c.TRAIN_ON_ALL_SETS
+        if uses_gurobi_dp:
+            _wait_for_effsets_priority(log_gurobi_message)
+
+        def _run_selected_dp_step(env=None):
+            if is_phase_1_dp_mnl_only:
+                t0 = time.perf_counter()
+                if uses_gurobi_dp:
+                    v_mnl, pi_mnl = solve_by_dp(
+                        efficient_sets=efficient_sets_mnl,
+                        estimated_beta=beta_mnl,
+                        estimated_lambda=lambda_mnl,
+                        model="MNL",
+                        env=env,
+                    )
+                else:
+                    v_mnl, pi_mnl = solve_by_dp(
+                        efficient_sets=efficient_sets_mnl,
+                        estimated_beta=beta_mnl,
+                        estimated_lambda=lambda_mnl,
+                        model="MNL",
+                    )
+                dp_mnl_time = time.perf_counter() - t0
+                _avg_mnl = sum(simulate(efficient_sets_mnl, pi_mnl, seed=i)[0] for i in range(1000)) / 1000
+                log_message(f"DP_MNL  time: {dp_mnl_time:.4f}s | V(0,C): {v_mnl[0, C.C]:.2f} | avg reward: {_avg_mnl:.2f}")
+                dp_adp_data["pi_mnl"] = pi_mnl
+                phase1_time_results["DP_MNL"] = dp_mnl_time
+            elif is_phase_1_dp_mmnl_5pt_only:
+                t0 = time.perf_counter()
+                if uses_gurobi_dp:
+                    v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
+                        efficient_sets=efficient_sets_mmnl_5pt,
+                        estimated_beta=None,
+                        estimated_lambda=lambda_mmnl_5pt,
+                        model="MMNL_5PT",
+                        env=env,
+                        segment_betas=betas_mmnl_5pt,
+                        segment_weights=weights_mmnl_5pt,
+                    )
+                else:
+                    v_mmnl_5pt, pi_mmnl_5pt = solve_by_dp(
+                        efficient_sets=efficient_sets_mmnl_5pt,
+                        estimated_beta=None,
+                        estimated_lambda=lambda_mmnl_5pt,
+                        model="MMNL_5PT",
+                        segment_betas=betas_mmnl_5pt,
+                        segment_weights=weights_mmnl_5pt,
+                    )
+                dp_mmnl_5pt_time = time.perf_counter() - t0
+                _avg_mmnl_5pt = sum(simulate(efficient_sets_mmnl_5pt, pi_mmnl_5pt, seed=i)[0] for i in range(1000)) / 1000
+                log_message(f"DP_MMNL_5PT time: {dp_mmnl_5pt_time:.4f}s | V(0,C): {v_mmnl_5pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_5pt:.2f}")
+                dp_adp_data["pi_mmnl_5pt"] = pi_mmnl_5pt
+                phase1_time_results["DP_MMNL_5PT"] = dp_mmnl_5pt_time
+            elif is_phase_1_dp_mmnl_2pt_only:
+                t0 = time.perf_counter()
+                if uses_gurobi_dp:
+                    v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
+                        efficient_sets=efficient_sets_mmnl_2pt,
+                        estimated_beta=None,
+                        estimated_lambda=lambda_mmnl_2pt,
+                        model="MMNL_2PT",
+                        env=env,
+                        segment_betas=betas_mmnl_2pt,
+                        segment_weights=weights_mmnl_2pt,
+                    )
+                else:
+                    v_mmnl_2pt, pi_mmnl_2pt = solve_by_dp(
+                        efficient_sets=efficient_sets_mmnl_2pt,
+                        estimated_beta=None,
+                        estimated_lambda=lambda_mmnl_2pt,
+                        model="MMNL_2PT",
+                        segment_betas=betas_mmnl_2pt,
+                        segment_weights=weights_mmnl_2pt,
+                    )
+                dp_mmnl_2pt_time = time.perf_counter() - t0
+                _avg_mmnl_2pt = sum(simulate(efficient_sets_mmnl_2pt, pi_mmnl_2pt, seed=i)[0] for i in range(1000)) / 1000
+                log_message(f"DP_MMNL_2PT time: {dp_mmnl_2pt_time:.4f}s | V(0,C): {v_mmnl_2pt[0, C.C]:.2f} | avg reward: {_avg_mmnl_2pt:.2f}")
+                dp_adp_data["pi_mmnl_2pt"] = pi_mmnl_2pt
+                phase1_time_results["DP_MMNL_2PT"] = dp_mmnl_2pt_time
+
+        if uses_gurobi_dp:
+            with gurobi_slot_lock("dp"):
+                import gurobipy as gp
+
+                with gp.Env() as gurobi_env:
+                    _run_selected_dp_step(env=gurobi_env)
+
+            gc.collect()
+        else:
+            _run_selected_dp_step(env=None)
+
+        dp_adp_data["phase1_time_results"] = phase1_time_results
+        _save_dp_adp_checkpoint(dp_adp_data)
+        log_message(f"Completed split phase step: {exec_phase}")
+        return
+
 # ========== PHASE 2: Load precomputed DP/ADP if specified ==========
     if is_phase_2_only:
-        dp_adp_pkl = os.path.join(C.OUTPUT_DIR, "dp_adp_intermediate.pkl")
-        if not os.path.exists(dp_adp_pkl):
-            log_message(f"ERROR: EXEC_PHASE=2 but intermediate file not found: {dp_adp_pkl}")
+        dp_adp_data = _load_dp_adp_checkpoint(required=True)
+        if dp_adp_data is None:
             return
-        with open(dp_adp_pkl, "rb") as f:
-            dp_adp_data = pickle.load(f)
+
+        required_phase2_keys = [
+            "beta_mnl",
+            "lambda_mnl",
+            "betas_mmnl_5pt",
+            "weights_mmnl_5pt",
+            "lambda_mmnl_5pt",
+            "betas_mmnl_2pt",
+            "weights_mmnl_2pt",
+            "lambda_mmnl_2pt",
+            "pi_mnl",
+            "pi_mmnl_5pt",
+            "pi_mmnl_2pt",
+            "efficient_sets_mnl",
+            "efficient_sets_mmnl_5pt",
+            "efficient_sets_mmnl_2pt",
+            "efficient_sets_rl",
+        ]
+        missing = _missing_keys(dp_adp_data, required_phase2_keys)
+        if missing:
+            log_message(
+                "ERROR: EXEC_PHASE=2 requires completed DP sub-steps. Missing fields in intermediate file: "
+                + ", ".join(missing)
+            )
+            return
         
         log_message("Loaded pre-computed DP/ADP results")
         
@@ -486,7 +861,6 @@ def main():
 
         # If phase 1 only, save intermediate results and exit
         if is_phase_1_only:
-            dp_adp_pkl = os.path.join(C.OUTPUT_DIR, "dp_adp_intermediate.pkl")
             dp_adp_data = {
                 "beta_mnl": beta_mnl,
                 "lambda_mnl": lambda_mnl,
@@ -505,9 +879,7 @@ def main():
                 "efficient_sets_rl": efficient_sets_rl,
                 "phase1_time_results": phase1_time_results,
             }
-            with open(dp_adp_pkl, "wb") as f:
-                pickle.dump(dp_adp_data, f)
-            log_message(f"Saved intermediate DP/ADP results to {dp_adp_pkl}")
+            _save_dp_adp_checkpoint(dp_adp_data)
             log_message("Phase 1 complete. Run Phase 2 (EXEC_PHASE=2) to continue with RL training and evaluation.")
             return
     

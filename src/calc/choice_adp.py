@@ -80,7 +80,7 @@ def _precompute_action_stats_from_env(
     env = TalluriExample2(efficient_sets=None, use_multibinary_action_space=True)
 
     # Use a capacity > 1 so inventory drop robustly identifies a purchase.
-    probe_inventory = 2 if C.C >= 2 else 1
+    probe_inventory = C.ADP_PROBE_INVENTORY_CAP if C.C >= C.ADP_PROBE_INVENTORY_CAP else 1
 
     for a in range(n_actions):
         rewards = np.zeros(n_rollouts_per_action, dtype=np.float64)
@@ -203,10 +203,10 @@ def solve_by_adp(
     model="MNL",
     segment_betas=None,
     segment_weights=None,
-    max_actions=4096,
-    n_state_samples=64,
-    ridge_lambda=1e-6,
-    random_seed=0,
+    max_actions=C.ADP_DEFAULT_MAX_ACTIONS,
+    n_state_samples=C.ADP_DEFAULT_N_STATE_SAMPLES,
+    ridge_lambda=C.ADP_DEFAULT_RIDGE_LAMBDA,
+    random_seed=C.ADP_DEFAULT_RANDOM_SEED,
 ):
     """
     Approximate Dynamic Programming (ADP) solver using fitted value iteration.
@@ -257,11 +257,11 @@ def solve_by_adp(
 
 def solve_by_adp_env_rollout(
     efficient_sets=None,
-    max_actions=4096,
-    n_state_samples=64,
-    ridge_lambda=1e-6,
-    random_seed=0,
-    n_rollouts_per_action=256,
+    max_actions=C.ADP_DEFAULT_MAX_ACTIONS,
+    n_state_samples=C.ADP_DEFAULT_N_STATE_SAMPLES,
+    ridge_lambda=C.ADP_DEFAULT_RIDGE_LAMBDA,
+    random_seed=C.ADP_DEFAULT_RANDOM_SEED,
+    n_rollouts_per_action=C.ADP_ENV_DEFAULT_N_ROLLOUTS_PER_ACTION,
 ):
     """
     Model-free ADP variant using one-step simulator rollouts for action statistics.

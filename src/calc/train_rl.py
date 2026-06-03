@@ -17,7 +17,7 @@ def _use_multibinary_action_space(algorithm_name):
 def _create_train_env(algorithm_name, efficient_sets):
     return make_vec_env(
         TalluriExample2,
-        n_envs=4,
+        n_envs=C.RL_TRAIN_N_ENVS,
         vec_env_cls=DummyVecEnv,
         env_kwargs={
             "efficient_sets": efficient_sets,
@@ -38,7 +38,7 @@ def train_rl(dp_pi=None, efficient_sets=None):
 
             print(f"Training {algorithm_name} (seed {seed + 1}/{C.N_EVAL_EPISODES})")
             train_env = _create_train_env(algorithm_name, efficient_sets)
-            model = algorithm_cls("MlpPolicy", train_env, verbose=0)
+            model = algorithm_cls("MlpPolicy", train_env, verbose=C.RL_MODEL_VERBOSE)
 
             prev_steps = 0
             cumulative_time = 0.0
@@ -57,19 +57,19 @@ def train_rl(dp_pi=None, efficient_sets=None):
                 prev_steps = total_steps
 
             if C.LEARNING_CURVE_ENABLED and dp_pi is not None:
-                plt.figure(figsize=(8, 5))
+                plt.figure(figsize=C.RL_LEARNING_CURVE_FIGSIZE)
                 x = np.asarray(eval_callback.timesteps, dtype=float)
                 y = np.asarray(eval_callback.pct_optimal_mean, dtype=float)
                 y_std = np.asarray(eval_callback.pct_optimal_std, dtype=float)
                 plt.plot(x, y, marker="o", label="Mean % of optimal")
-                plt.fill_between(x, y - y_std, y + y_std, alpha=0.2, label="±1 SD")
+                plt.fill_between(x, y - y_std, y + y_std, alpha=C.RL_LEARNING_CURVE_FILL_ALPHA, label="±1 SD")
                 plt.xlabel("Training timesteps")
                 plt.ylabel("% of DP optimal reward")
                 plt.title(f"Learning performance over training ({algorithm_name})")
-                plt.grid(True, alpha=0.3)
+                plt.grid(True, alpha=C.RL_LEARNING_CURVE_GRID_ALPHA)
                 plt.legend()
                 plt.tight_layout()
-                plt.savefig(f"{C.OUTPUT_DIR}/{algorithm_name}_learning_curve.png", dpi=150)
+                plt.savefig(f"{C.OUTPUT_DIR}/{algorithm_name}_learning_curve.png", dpi=C.RL_LEARNING_CURVE_DPI)
                 plt.close()
 
         if not C.LEARNING_CURVE_ENABLED:

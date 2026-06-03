@@ -6,12 +6,18 @@ import os
 import sys
 from pathlib import Path
 
-# Ensure `src` package imports resolve when executed as a script.
-REPO_ROOT = Path(__file__).resolve().parents[2]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-import src.constants as C
+try:
+    import src.constants as C
+except ModuleNotFoundError:
+    # Ensure `src` package imports resolve when executed as a script.
+    REPO_ROOT = Path(__file__).resolve().parents[2]
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+    import src.constants as C
+else:
+    REPO_ROOT = Path(__file__).resolve().parents[2]
+    if str(REPO_ROOT) not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
 
 
 def _mask(value):
@@ -86,8 +92,9 @@ def run_single(task_id):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run one experiment from the 64-case grid.")
-    parser.add_argument("--task-id", type=int, required=True, help="Index in [0, 63] for the experiment grid")
+    n_cases = len(build_grid())
+    parser = argparse.ArgumentParser(description=f"Run one experiment from the {n_cases}-case grid.")
+    parser.add_argument("--task-id", type=int, required=True, help=f"Index in [0, {n_cases - 1}] for the experiment grid")
     args = parser.parse_args()
 
     run_single(args.task_id)

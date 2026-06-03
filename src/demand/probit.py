@@ -9,45 +9,45 @@ _J = len(_PRICES)
 _GLOBAL_RNG = np.random.default_rng()
 
 
-# def probit_probabilities(action_binary, beta, seed=None):
-#     """Return one-draw Probit outcome probabilities.
+def probit_probabilities(action_binary, beta, seed=None):
+    """Return one-draw Probit outcome probabilities.
 
-#     Applied formulation:
-#         U_i = beta * r_i + epsilon_i,  epsilon_i ~ N(0, 1),
-#         U_0 = epsilon_0,  epsilon_0 ~ N(0, 1),
-#         choose argmax among offered products and the outside option.
+    Applied formulation:
+        U_i = beta * r_i + epsilon_i,  epsilon_i ~ N(0, 1),
+        U_0 = epsilon_0,  epsilon_0 ~ N(0, 1),
+        choose argmax among offered products and the outside option.
 
-#     This implementation intentionally uses exactly one utility draw.
-#     """
-#     prices = np.asarray(C.r, dtype=float)
-#     action_binary = np.asarray(action_binary)
-#     active_indices = np.where(action_binary == 1)[0]
+    This implementation intentionally uses exactly one utility draw.
+    """
+    prices = np.asarray(C.r, dtype=float)
+    action_binary = np.asarray(action_binary)
+    active_indices = np.where(action_binary == 1)[0]
 
-#     counts = np.zeros(len(prices) + 1, dtype=float)
-#     if len(active_indices) == 0:
-#         counts[-1] = 1.0
-#         return counts
+    counts = np.zeros(len(prices) + 1, dtype=float)
+    if len(active_indices) == 0:
+        counts[-1] = 1.0
+        return counts
 
-#     rng = np.random.default_rng() if seed is None else np.random.default_rng(int(seed))
-#     outside_utility = float(rng.normal(0.0, 1.0))
-#     utilities = np.full(len(prices), -np.inf, dtype=float)
-#     utilities[active_indices] = beta * prices[active_indices] + rng.normal(0.0, 1.0, size=len(active_indices))
+    rng = np.random.default_rng() if seed is None else np.random.default_rng(int(seed))
+    outside_utility = float(rng.normal(0.0, 1.0))
+    utilities = np.full(len(prices), -np.inf, dtype=float)
+    utilities[active_indices] = beta * prices[active_indices] + rng.normal(0.0, 1.0, size=len(active_indices))
 
-#     chosen = int(np.argmax(utilities))
-#     if utilities[chosen] > outside_utility:
-#         counts[chosen] = 1.0
-#     else:
-#         counts[-1] = 1.0
+    chosen = int(np.argmax(utilities))
+    if utilities[chosen] > outside_utility:
+        counts[chosen] = 1.0
+    else:
+        counts[-1] = 1.0
 
-#     return counts
+    return counts
 
 
 def _default_block_sigma(n_products):
     """Build a default block-structured covariance for product + outside errors."""
-    n_blocks = 2
-    rho_within = 0.35
-    rho_between = 0.10
-    rho_outside = 0.05
+    n_blocks = C.PROBIT_DEFAULT_BLOCKS
+    rho_within = C.PROBIT_DEFAULT_RHO_WITHIN
+    rho_between = C.PROBIT_DEFAULT_RHO_BETWEEN
+    rho_outside = C.PROBIT_DEFAULT_RHO_OUTSIDE
 
     n_alt = int(n_products) + 1
     sigma = np.full((n_alt, n_alt), rho_between, dtype=float)
@@ -70,22 +70,22 @@ def _default_block_sigma(n_products):
 
     # Ensure numerical PSD and unit variances.
     eigvals, eigvecs = np.linalg.eigh(sigma)
-    eigvals = np.clip(eigvals, 1e-8, None)
+    eigvals = np.clip(eigvals, C.PROBIT_EIGENVALUE_FLOOR, None)
     sigma = (eigvecs * eigvals) @ eigvecs.T
-    std = np.sqrt(np.clip(np.diag(sigma), 1e-12, None))
+    std = np.sqrt(np.clip(np.diag(sigma), C.PROBIT_STD_FLOOR, None))
     sigma = sigma / np.outer(std, std)
     np.fill_diagonal(sigma, 1.0)
     return sigma
 
 
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=C.PROBIT_CHOLESKY_CACHE_SIZE)
 def _default_block_cholesky(n_products):
     """Cached Cholesky factor for the default block covariance."""
     sigma = _default_block_sigma(n_products)
     return np.linalg.cholesky(sigma)
 
 
-def probit_probabilities(action_binary, beta, seed=None):
+def multivariate_probit_probabilities(action_binary, beta, seed=None):
     """Return one-draw multinomial probit outcome with MVN error terms.
 
     If Sigma is None, a default block-structured covariance is used.

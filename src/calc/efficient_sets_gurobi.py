@@ -107,50 +107,42 @@ def _exclude_action_constraint(model, x_vars, action_int):
 
 
 def _solve_best_marginal_ratio(model, x_vars, q_total, r_total, current_q, current_r, used_actions, tol):
-    """Solve max (R-R0)/(Q-Q0) over feasible offers that weakly dominate current point."""
+    """Solve max (R-R0)/(Q-Q0) in one nonconvex Gurobi solve."""
     eps_q = C.EFFICIENT_SET_FRONTIER_Q_EPS
-    dinkelbach_tol = C.EFFICIENT_SET_DINKELBACH_TOL
 
     c_q = model.addConstr(q_total >= float(current_q) + eps_q, name="frontier_q_lb")
     c_r = model.addConstr(r_total >= float(current_r) - tol, name="frontier_r_lb")
     ng_constraints = [_exclude_action_constraint(model, x_vars, action) for action in used_actions]
+    max_price = float(np.max(C.r))
+    ratio_bound = max_price / max(float(eps_q), 1e-12)
+    ratio = model.addVar(lb=-ratio_bound, ub=ratio_bound, vtype=GRB.CONTINUOUS, name="marginal_ratio")
+    ratio_link = model.addConstr(
+        (r_total - float(current_r)) >= ratio * (q_total - float(current_q)),
+        name="marginal_ratio_link",
+    )
 
     try:
-        eta = 0.0
-        best = None
+        model.Params.NonConvex = 2
+        model.setObjective(ratio, GRB.MAXIMIZE)
+        model.optimize()
 
-        for _ in range(C.EFFICIENT_SET_DINKELBACH_MAX_ITER):
-            objective = (r_total - float(current_r)) - float(eta) * (q_total - float(current_q))
-            model.setObjective(objective, GRB.MAXIMIZE)
-            model.optimize()
+        if model.Status not in (GRB.OPTIMAL, GRB.TIME_LIMIT, GRB.SUBOPTIMAL):
+            return None
+        if model.SolCount == 0:
+            return None
 
-            if model.Status not in (GRB.OPTIMAL, GRB.TIME_LIMIT, GRB.SUBOPTIMAL):
-                return None
-            if model.SolCount == 0:
-                return None
+        q_val = float(q_total.X)
+        r_val = float(r_total.X)
+        dq = q_val - float(current_q)
 
-            q_val = float(q_total.X)
-            r_val = float(r_total.X)
-            dq = q_val - float(current_q)
-            dr = r_val - float(current_r)
+        if dq <= eps_q:
+            return None
 
-            if dq <= eps_q:
-                return None
-
-            action_int = _action_int_from_binary([x_vars[i].X for i in range(len(x_vars))])
-            best = (action_int, q_val, r_val)
-
-            transformed_value = dr - float(eta) * dq
-            if abs(transformed_value) <= dinkelbach_tol:
-                return best
-
-            new_eta = dr / dq
-            if abs(new_eta - eta) <= dinkelbach_tol:
-                return best
-            eta = new_eta
-
-        return best
+        action_int = _action_int_from_binary([x_vars[i].X for i in range(len(x_vars))])
+        return (action_int, q_val, r_val)
     finally:
+        model.remove(ratio_link)
+        model.remove(ratio)
         model.remove(c_q)
         model.remove(c_r)
         for constr in ng_constraints:

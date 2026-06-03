@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=cpu
 #SBATCH --job-name=rl_choice_phase1
-#SBATCH --array=3,7,11,15,19,23,27,31,35,39,43,47,51,55,59,63
+#SBATCH --array=3,7,11,15,19,23,27,31,35,39,43,47,51,55,59,63,67,71
 #SBATCH --time=72:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=10G
@@ -70,15 +70,6 @@ export GUROBI_MAX_SLOTS=2
 export GUROBI_SLOT_LOCK_DIR="${SLURM_SUBMIT_DIR}/src/slurm/.gurobi_slots_license_${LICENSEID}"
 mkdir -p "${GUROBI_SLOT_LOCK_DIR}"
 
-# PHASE 1: DP/ADP computation (sampling, estimation, efficient sets, DP/ADP)
-export EXEC_PHASE=1
-
-echo "=========================================="
-echo "PHASE 1: DP/ADP Computation"
-echo "Task ID: ${SLURM_ARRAY_TASK_ID}"
-echo "Job ID: ${SLURM_JOB_ID}"
-echo "=========================================="
+export EXEC_PHASE="${EXEC_PHASE:-1_PREP}"
 
 python src/slurm/run_experiment_grid.py --task-id "${SLURM_ARRAY_TASK_ID}"
-
-echo "PHASE 1 completed at $(date)"

@@ -1,6 +1,6 @@
 from src.demand.mnl import mnl_probabilities
 from src.demand.mmnl import mmnl_probabilities
-from src.demand.probit import probit_probabilities
+from src.demand.probit import probit_probabilities, multivariate_probit_probabilities
 from src.demand.mnl_reference_price import mnl_reference_price_probabilities
 from src.demand.mnl_consideration_set import mnl_consideration_set_probabilities
 from src.demand.tmnl import tmnl_probabilities
@@ -41,6 +41,8 @@ def get_buying_probabilities_by_model(
 			)
 		case "Probit":
 			probabilities = probit_probabilities(action_binary, beta=beta, seed=seed)
+		case "MProbit":
+			probabilities = multivariate_probit_probabilities(action_binary, beta=beta, seed=seed)
 		case "MNLrefPrice":
 			probabilities = mnl_reference_price_probabilities(
 				action_binary,

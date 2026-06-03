@@ -9,7 +9,7 @@ def _action_int_to_binary(action_int):
     return np.array([(action_int >> i) & 1 for i in range(C.n)], dtype=int)
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=C.EFFICIENT_SET_BRUTE_CACHE_SIZE)
 def _identify_efficient_sets(model, beta=None, segment_betas=None, segment_weights=None):
     beta = None if beta is None else float(beta)
     segment_betas = None if segment_betas is None else tuple(float(b) for b in segment_betas)
@@ -32,7 +32,7 @@ def _identify_efficient_sets(model, beta=None, segment_betas=None, segment_weigh
         r_value = float(np.dot(C.r, buying_probabilities))
         offer_set_metrics.append({"action": action_int, "Q": q_value, "R": r_value})
 
-    tol = 1e-12
+    tol = C.EFFICIENT_SET_BRUTE_TOL
     efficient_sequence = [0]
     current = offer_set_metrics[0]
 

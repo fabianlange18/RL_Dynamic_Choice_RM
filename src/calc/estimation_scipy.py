@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from scipy.optimize import minimize
 
@@ -50,14 +49,14 @@ class ScipyEstimator:
         self.n = len(C.r)
         self.lambda_val = self._estimate_lambda(observations)
         self._beta_bounds = tuple(C.ESTIMATION_BETA_BOUNDS)
-        self._optimizer_method = os.getenv("SCIPY_ESTIMATION_METHOD", "L-BFGS-B")
-        self._maxiter = int(os.getenv("SCIPY_ESTIMATION_MAXITER", "500"))
-        self._random_seed = int(os.getenv("SCIPY_ESTIMATION_SEED", "42"))
-        self._mnl_restarts = int(os.getenv("SCIPY_MNL_RESTARTS", "3"))
-        self._mmnl_restarts = int(os.getenv("SCIPY_MMNL_RESTARTS", "7"))
-        self._mmnl2_min_weight = float(os.getenv("SCIPY_MMNL2_MIN_WEIGHT", "0.2"))
-        self._mmnl5_min_weight = float(os.getenv("SCIPY_MMNL5_MIN_WEIGHT", "0.1"))
-        self._mmnl_min_weight_floor = float(os.getenv("SCIPY_MMNL_MIN_WEIGHT_FLOOR", "1e-8"))
+        self._optimizer_method = C.SCIPY_ESTIMATION_METHOD
+        self._maxiter = int(C.SCIPY_ESTIMATION_MAXITER_DEFAULT)
+        self._random_seed = int(C.SCIPY_ESTIMATION_SEED_DEFAULT)
+        self._mnl_restarts = int(C.SCIPY_MNL_RESTARTS_DEFAULT)
+        self._mmnl_restarts = int(C.SCIPY_MMNL_RESTARTS_DEFAULT)
+        self._mmnl2_min_weight = float(C.SCIPY_MMNL2_MIN_WEIGHT_DEFAULT)
+        self._mmnl5_min_weight = float(C.SCIPY_MMNL5_MIN_WEIGHT_DEFAULT)
+        self._mmnl_min_weight_floor = float(C.SCIPY_MMNL_MIN_WEIGHT_FLOOR_DEFAULT)
 
         self._prices = None
         self._available = None
@@ -133,18 +132,18 @@ class ScipyEstimator:
             free_weights = np.asarray(params[n_segments:], dtype=float)
             last_weight = 1.0 - np.sum(free_weights)
             if last_weight < float(min_weight):
-                return 1e100
+                return C.SCIPY_INFEASIBLE_OBJECTIVE_VALUE
             weights = np.concatenate([free_weights, np.asarray([last_weight], dtype=float)])
             mixture_probabilities = segment_choice_probabilities @ weights
 
-        return -float(np.sum(np.log(np.clip(mixture_probabilities, 1e-300, None))))
+        return -float(np.sum(np.log(np.clip(mixture_probabilities, C.SCIPY_NEG_LOG_LIKELIHOOD_FLOOR, None))))
 
     def _initial_params(self, n_segments, restart_index, rng, min_weight):
         beta_low, beta_high = self._beta_bounds
         base_betas = np.linspace(beta_low, beta_high, int(n_segments) + 2, dtype=float)[1:-1]
 
         if restart_index > 0:
-            jitter_scale = 0.1 * (beta_high - beta_low)
+            jitter_scale = C.SCIPY_BETA_JITTER_SCALE_FRACTION * (beta_high - beta_low)
             base_betas = np.clip(
                 base_betas + rng.normal(scale=jitter_scale, size=int(n_segments)),
                 beta_low,
@@ -203,11 +202,11 @@ class ScipyEstimator:
 
         # Guard against pathological edge solutions that can collapse efficient sets to only the empty set.
         beta_low = float(self._beta_bounds[0])
-        edge_tol = 1e-6
+        edge_tol = C.SCIPY_BETA_EDGE_TOL
         fitted_betas = np.asarray(best_result.x[:n_segments], dtype=float)
         all_on_lower_bound = bool(np.all(np.abs(fitted_betas - beta_low) <= edge_tol))
-        if all_on_lower_bound and self._arrival_purchase_rate > 0.5 and beta_low < -0.01:
-            fallback_low = -0.01
+        if all_on_lower_bound and self._arrival_purchase_rate > C.SCIPY_BETA_FALLBACK_MIN_PURCHASE_RATE and beta_low < C.SCIPY_BETA_FALLBACK_THRESHOLD:
+            fallback_low = C.SCIPY_BETA_FALLBACK_LOWER_BOUND
             fallback_bounds = [(fallback_low, float(self._beta_bounds[1]))] * n_segments + weight_bounds
             fallback_result = None
             for restart_index in range(int(restart_count)):
@@ -223,7 +222,7 @@ class ScipyEstimator:
                 if fallback_result is None or result.fun < fallback_result.fun:
                     fallback_result = result
 
-            if fallback_result is not None and fallback_result.success and fallback_result.fun <= best_result.fun + 1e-6:
+            if fallback_result is not None and fallback_result.success and fallback_result.fun <= best_result.fun + C.SCIPY_FALLBACK_OBJECTIVE_TOL:
                 print(
                     "scipy estimation fallback: moved beta lower bound from "
                     f"{beta_low} to {fallback_low} to avoid degenerate lower-bound solution"
@@ -273,9 +272,9 @@ class ScipyEstimator:
         min_weight = max(min_weight, float(self._mmnl_min_weight_floor))
 
         # Enforce simplex feasibility: K * min_weight < 1.
-        feasible_upper = (1.0 - 1e-9) / float(K)
+        feasible_upper = (1.0 - C.SCIPY_MMNL_FEASIBILITY_EPS) / float(K)
         if min_weight >= feasible_upper:
-            min_weight = max(float(self._mmnl_min_weight_floor), 0.95 * feasible_upper)
+            min_weight = max(float(self._mmnl_min_weight_floor), C.SCIPY_MMNL_FEASIBLE_UPPER_SCALE * feasible_upper)
 
         return float(min_weight)
 
@@ -316,7 +315,7 @@ class ScipyEstimator:
 if __name__ == "__main__":
     from src.talluri_env import TalluriExample2
 
-    test_episodes = int(os.getenv("SCIPY_TEST_EPISODES", "5"))
+    test_episodes = int(C.SCIPY_TEST_EPISODES_DEFAULT)
     environment = TalluriExample2(efficient_sets=None)
 
     try:

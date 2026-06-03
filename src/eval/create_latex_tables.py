@@ -282,6 +282,7 @@ def extract_model_display_name(folder_name: str) -> str:
         'MMNL_5PT': 'MMNL 5PT',
         'MMNL_2PT': 'MMNL 2PT',
         'Probit': 'Probit',
+        'MProbit': 'Multivariate Probit',
         'MNLrefPrice': 'MNL with Reference Price',
         'MNLConsidSet': 'MNL with Consideration Set',
         'TMNL': 'TMNL',
@@ -399,6 +400,7 @@ def _result_folder_sort_key(folder: Path) -> Tuple[int, int, int, str]:
 def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     """Create LaTeX section with metadata in a more beautiful format."""
     latex = []
+    _, _, regime_kind = _parse_result_folder_name(folder_name)
 
     mmnl_5pt_betas = _parse_mmnl_betas(metadata.get('estimation_mmnl_5pt_betas', ''))
     mmnl_5pt_beta_text = _format_multiline_values([_format_decimal(beta, 4) for beta in mmnl_5pt_betas], max_per_line=3) if mmnl_5pt_betas else 'N/A'
@@ -459,34 +461,16 @@ def create_metadata_section(metadata: Dict, folder_name: str) -> str:
     est_2pt_bic = _format_decimal(metadata.get('estimation_mmnl_2pt_bic', 'N/A'), 2)
     latex.append(f"    BIC & {est_mnl_bic} & {est_5pt_bic} & {est_2pt_bic} \\\\")
 
-    if 'effsets' in folder_name.lower():
+    if regime_kind.lower() in {'model_informed', 'effsets'}:
         eff_mnl_time = fmt_seconds(metadata.get('mnl_effsets_time', 'N/A'))
         eff_5pt_time = fmt_seconds(metadata.get('mmnl_5pt_effsets_time', 'N/A'))
         eff_2pt_time = fmt_seconds(metadata.get('mmnl_2pt_effsets_time', 'N/A'))
         latex.append(f"    Eff. Sets Time & {eff_mnl_time} & {eff_5pt_time} & {eff_2pt_time} \\\\")
         latex.append(f"    \\# Eff. Sets & {mnl_effsets_count} & {mmnl_5pt_effsets_count} & {mmnl_2pt_effsets_count} \\\\")
 
-    dp_mnl_value = metadata.get('dp_mnl_value', 'N/A')
-    dp_5pt_value = metadata.get('dp_mmnl_5pt_value', 'N/A')
-    dp_2pt_value = metadata.get('dp_mmnl_2pt_value', 'N/A')
-    latex.append(f"    DP $V(0,C)$ & {dp_mnl_value} & {dp_5pt_value} & {dp_2pt_value} \\\\")
 
-    dp_mnl_sim_reward = metadata.get('dp_mnl_sim_reward', 'N/A')
-    dp_5pt_sim_reward = metadata.get('dp_mmnl_5pt_sim_reward', 'N/A')
-    dp_2pt_sim_reward = metadata.get('dp_mmnl_2pt_sim_reward', 'N/A')
-    latex.append(
-        f"    Sim. Rew. (n=1000) & {dp_mnl_sim_reward} & {dp_5pt_sim_reward} & {dp_2pt_sim_reward} \\\\")
 
-    adp_mnl_value = metadata.get('adp_mnl_value', 'N/A')
-    adp_5pt_value = metadata.get('adp_mmnl_5pt_value', 'N/A')
-    adp_2pt_value = metadata.get('adp_mmnl_2pt_value', 'N/A')
-    latex.append(f"    ADP $V(0,C)$ & {adp_mnl_value} & {adp_5pt_value} & {adp_2pt_value} \\\\")
 
-    adp_mnl_sim_reward = metadata.get('adp_mnl_sim_reward', 'N/A')
-    adp_5pt_sim_reward = metadata.get('adp_mmnl_5pt_sim_reward', 'N/A')
-    adp_2pt_sim_reward = metadata.get('adp_mmnl_2pt_sim_reward', 'N/A')
-    latex.append(
-        f"    ADP Sim. Rew. (n=1000) & {adp_mnl_sim_reward} & {adp_5pt_sim_reward} & {adp_2pt_sim_reward} \\\\")
 
     latex.append(r'    \bottomrule')
     latex.append(r'  \end{tabular}')
@@ -599,6 +583,7 @@ def create_master_latex_file(result_folders: List[Path], output_path: Path) -> N
         'MMNL_2PT': 'MMNL 2PT',
         'MMNL_5PT': 'MMNL 5PT',
         'Probit': 'Probit',
+        'MProbit': 'Multivariate Probit',
         'MNLrefPrice': 'MNL Reference Price',
         'MNLConsidSet': 'MNL Consideration Set',
         'TMNL': 'TMNL',
