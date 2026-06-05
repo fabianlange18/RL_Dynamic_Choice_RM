@@ -1,0 +1,20 @@
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4914840/gurobi_4914840_67/gurobi.lic, exists=True, WLSACCESSID=307c...7435, LICENSEID=2831089
+Running task_id=67 with HIGH_SENSITIVITY=True, GT_MODEL=TMNL, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+scipy estimation data: obs=9945, alts=101, memory=7.67 MiB
+scipy estimation mode: raw prices, beta_bounds=(-0.05, -1e-07), purchase_rate|arrival=0.9175
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n039
+Job ID: 4914840
+Array Job ID: 4914765_67
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:00:07
+CPU Efficiency: 9.72% of 00:01:12 core-walltime
+Job Wall-clock time: 00:00:36
+Memory Utilized: 249.24 MB
+Memory Efficiency: 2.43% of 10.00 GB (10.00 GB/node)

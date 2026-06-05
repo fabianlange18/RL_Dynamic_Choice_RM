@@ -14,9 +14,14 @@ pip install -r requirements.txt
 python src/exec.py
 ```
 
-**Submit 24 parallel experiments to Slurm:**
+**Submit all experiments to Slurm:**
 ```bash
-sbatch src/slurm/submit_experiment_grid.sbatch
+sh src/slurm/submit_two_phase.sh
+```
+
+**Retry experiments**
+```bash
+sbatch --array=67,71 --export=ALL,EXEC_PHASE=1_PREP --job-name=rl_choice_p1_prep_retry src/slurm/submit_phase1_dpadp.sbatch
 ```
 
 ## Structure

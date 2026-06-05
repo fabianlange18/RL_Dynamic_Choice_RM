@@ -3,6 +3,10 @@ from functools import lru_cache
 
 import src.constants as C
 
+PRICES = np.asarray(C.r, dtype=float)
+CONSIDERATION_PROB = 1.0 / (1.0 + np.exp(PRICES * -C.MNL_CONSIDERATION_LOGIT_SLOPE))
+ONE_MINUS_CONSIDERATION_PROB = 1.0 - CONSIDERATION_PROB
+
 
 @lru_cache(maxsize=C.MNL_CONSIDERATION_SUBSET_CACHE_SIZE)
 def subset_membership_matrix(k):
@@ -19,22 +23,15 @@ def unit_interval_legendre_quadrature(n_points):
     return 0.5 * (x + 1.0), 0.5 * w
 
 
-def mnl_consideration_set_probabilities(action_binary, beta=None):
-    """Compute MNL probabilities with latent consideration sets.
+@lru_cache(maxsize=C.MNL_CONSIDERATION_QUADRATURE_CACHE_SIZE)
+def _exp_utility(beta):
+    return np.exp(beta * PRICES)
 
-    Applied formulation:
-        Z_i ~ Bernoulli(q_i), independently for i in A,
-        q_i = 1 / (1 + exp(-0.0125 * r_i)),
-        C = {i in A : Z_i = 1},
-        P(i | A) = sum_{C subseteq A} P(C | A) * P_MNL(i | C).
 
-    For large offer sets, the equivalent integral
-        1 / (1 + s) = int_0^1 t^s dt
-    is used to avoid explicit subset enumeration.
-    """
-    prices = np.asarray(C.r, dtype=float)
-    action_binary = np.asarray(action_binary, dtype=int)
-    n_products = len(prices)
+@lru_cache(maxsize=C.MNL_CONSIDERATION_QUADRATURE_CACHE_SIZE)
+def _mnl_consideration_set_probabilities(action_tuple, beta):
+    action_binary = np.asarray(action_tuple, dtype=np.uint8)
+    n_products = len(PRICES)
 
     offered_indices = np.where(action_binary == 1)[0]
     probabilities = np.zeros(n_products + 1, dtype=float)
@@ -43,11 +40,10 @@ def mnl_consideration_set_probabilities(action_binary, beta=None):
         probabilities[-1] = 1.0
         return probabilities
 
-    consideration_prob = 1.0 / (1.0 + np.exp(prices * -C.MNL_CONSIDERATION_LOGIT_SLOPE))
     k = len(offered_indices)
-    q = consideration_prob[offered_indices]
-    one_minus_q = 1.0 - q
-    exp_utility_offered = np.exp(beta * prices[offered_indices])
+    q = CONSIDERATION_PROB[offered_indices]
+    one_minus_q = ONE_MINUS_CONSIDERATION_PROB[offered_indices]
+    exp_utility_offered = _exp_utility(beta)[offered_indices]
 
     if k <= C.MNL_CONSIDERATION_EXACT_MAX_PRODUCTS:
         subset_matrix = subset_membership_matrix(k)
@@ -88,3 +84,20 @@ def mnl_consideration_set_probabilities(action_binary, beta=None):
             probabilities /= total_prob
 
     return probabilities
+
+
+def mnl_consideration_set_probabilities(action_binary, beta=None):
+    """Compute MNL probabilities with latent consideration sets.
+
+    Applied formulation:
+        Z_i ~ Bernoulli(q_i), independently for i in A,
+        q_i = 1 / (1 + exp(-0.0125 * r_i)),
+        C = {i in A : Z_i = 1},
+        P(i | A) = sum_{C subseteq A} P(C | A) * P_MNL(i | C).
+
+    For large offer sets, the equivalent integral
+        1 / (1 + s) = int_0^1 t^s dt
+    is used to avoid explicit subset enumeration.
+    """
+    action_tuple = tuple(np.asarray(action_binary, dtype=np.uint8).tolist())
+    return _mnl_consideration_set_probabilities(action_tuple, float(beta))

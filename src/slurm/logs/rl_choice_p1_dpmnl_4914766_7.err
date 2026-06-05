@@ -1,0 +1,14 @@
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:468: RuntimeWarning: Gurobi did not return a feasible solution at t=386, x=8; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:468: RuntimeWarning: Gurobi did not return a feasible solution at t=339, x=37; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:468: RuntimeWarning: Gurobi did not return a feasible solution at t=234, x=73; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:468: RuntimeWarning: Gurobi did not return a feasible solution at t=231, x=24; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:468: RuntimeWarning: Gurobi did not return a feasible solution at t=161, x=130; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:468: RuntimeWarning: Gurobi did not return a feasible solution at t=122, x=26; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(
+/pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/exec.py:468: RuntimeWarning: Gurobi did not return a feasible solution at t=107, x=156; using empty-offer fallback
+  v_mnl, pi_mnl = solve_by_dp(

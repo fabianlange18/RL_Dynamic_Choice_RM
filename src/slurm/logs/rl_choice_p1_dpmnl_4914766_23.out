@@ -1,0 +1,41 @@
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4914850/gurobi_4914850_23/gurobi.lic, exists=True, WLSACCESSID=980b...1937, LICENSEID=2826902
+Running task_id=23 with HIGH_SENSITIVITY=False, GT_MODEL=MNLrefPrice, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2826902
+Academic license 2826902 - for non-commercial use only - registered to b2___@campus.vwa-goettingen.de
+[dp] Disposed Gurobi default environment
+[dp] Released Gurobi slot 1
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n029
+Job ID: 4914850
+Array Job ID: 4914766_23
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 1-01:14:16
+CPU Efficiency: 96.39% of 1-02:11:02 core-walltime
+Job Wall-clock time: 13:05:31
+Memory Utilized: 405.31 MB
+Memory Efficiency: 3.96% of 10.00 GB (10.00 GB/node)

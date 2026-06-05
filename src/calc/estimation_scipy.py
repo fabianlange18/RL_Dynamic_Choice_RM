@@ -197,7 +197,16 @@ class ScipyEstimator:
                 best_result = result
 
         if best_result is None or not best_result.success:
-            message = "No optimization result returned." if best_result is None else str(best_result.message)
+            if best_result is None:
+                message = "No optimization result returned."
+            else:
+                # Provide richer diagnostics for debugging optimizer failures
+                message = (
+                    f"{getattr(best_result, 'message', '')} | fun={getattr(best_result, 'fun', None)}"
+                    f" | x_shape={None if getattr(best_result, 'x', None) is None else getattr(best_result, 'x').shape}"
+                    f" | nfev={getattr(best_result, 'nfev', None)} | nit={getattr(best_result, 'nit', None)}"
+                    f" | status={getattr(best_result, 'status', None)}"
+                )
             raise RuntimeError(f"SciPy estimation failed for {n_segments} segment(s): {message}")
 
         # Guard against pathological edge solutions that can collapse efficient sets to only the empty set.

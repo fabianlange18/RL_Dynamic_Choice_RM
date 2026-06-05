@@ -1,0 +1,52 @@
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4914861/gurobi_4914861_67/gurobi.lic, exists=True, WLSACCESSID=307c...7435, LICENSEID=2831089
+Running task_id=67 with HIGH_SENSITIVITY=True, GT_MODEL=TMNL, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 2
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2831089
+Academic license 2831089 - for non-commercial use only - registered to eh___@laoia.com
+[dp] Disposed Gurobi default environment
+[dp] Released Gurobi slot 2
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n039
+Job ID: 4914861
+Array Job ID: 4914766_67
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 20:41:20
+CPU Efficiency: 94.30% of 21:56:22 core-walltime
+Job Wall-clock time: 10:58:11
+Memory Utilized: 429.65 MB
+Memory Efficiency: 4.20% of 10.00 GB (10.00 GB/node)

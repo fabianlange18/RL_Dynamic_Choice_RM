@@ -1,0 +1,41 @@
+
+============================================================
+TASK_ID: 43
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: True
+GT_MODEL: MMNL_2PT
+EXEC_PHASE: 1_PREP
+============================================================
+RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
+
+Observation sampling time: 0.9364 seconds
+Estimation_MNL  time: 0.0111s | beta: -0.004983, lambda: 0.497241
+  LL: -37171.496992, AIC: 74344.994, BIC: 74352.214
+
+Estimation_MMNL_5PT time: 1.5704s | lambda: 0.497241
+  LL: -37137.045217, AIC: 74292.090, BIC: 74357.067
+Betas: ['-0.012724', '-0.004113', '-0.004111', '-0.004109', '-0.004107']
+Weights: ['0.100000', '0.100000', '0.184902', '0.501224', '0.113875']
+
+Estimation_MMNL_2PT time: 0.9243s | lambda: 0.497241
+  LL: -37138.116444, AIC: 74282.233, BIC: 74303.892
+Betas: ['-0.009879', '-0.003710']
+Weights: ['0.200000', '0.800000']
+
+Saved intermediate DP/ADP results to /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_high_MMNL_2PT/dp_adp_intermediate.pkl
+Phase 1 prep complete. Next run one DP sub-step phase.
+
+============================================================
+TASK_ID: 43
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: True
+GT_MODEL: MMNL_2PT
+EXEC_PHASE: 1_DP_MNL
+============================================================
+RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
+
+DP_MNL  time: 43270.9597s | V(0,C): 79220.41 | avg reward: 74346.45
+Saved intermediate DP/ADP results to /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_high_MMNL_2PT/dp_adp_intermediate.pkl
+Completed split phase step: 1_DP_MNL

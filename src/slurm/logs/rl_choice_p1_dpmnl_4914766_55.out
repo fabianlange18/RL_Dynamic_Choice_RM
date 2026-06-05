@@ -1,0 +1,63 @@
+Gurobi preflight: GRB_LICENSE_FILE=/scratch/slurm_tmpdir/job_4914858/gurobi_4914858_55/gurobi.lic, exists=True, WLSACCESSID=705b...3a31, LICENSEID=2831087
+Running task_id=55 with HIGH_SENSITIVITY=True, GT_MODEL=MProbit, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 2
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2831087
+Academic license 2831087 - for non-commercial use only - registered to uj___@laoia.com
+[dp] Disposed Gurobi default environment
+[dp] Released Gurobi slot 2
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc3n037
+Job ID: 4914858
+Array Job ID: 4914766_55
+Cluster: uc3
+User/Group: ma_fablange/ma_ma
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 19:01:11
+CPU Efficiency: 92.26% of 20:36:54 core-walltime
+Job Wall-clock time: 10:18:27
+Memory Utilized: 400.85 MB
+Memory Efficiency: 3.91% of 10.00 GB (10.00 GB/node)

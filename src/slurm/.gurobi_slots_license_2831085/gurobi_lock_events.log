@@ -1,0 +1,8 @@
+2026-06-04T12:39:22.507443+00:00 action=acquire job_id=4914802 task_id=41 phase=efficient_sets slot=1
+2026-06-04T12:39:24.996830+00:00 action=acquire job_id=4914805 task_id=45 phase=efficient_sets slot=2
+2026-06-04T12:51:13.140430+00:00 action=release job_id=4914805 task_id=45 phase=efficient_sets slot=2
+2026-06-04T13:13:17.119476+00:00 action=release job_id=4914802 task_id=41 phase=efficient_sets slot=1
+2026-06-04T13:14:12.098936+00:00 action=acquire job_id=4914855 task_id=43 phase=dp slot=1
+2026-06-04T13:14:13.191696+00:00 action=acquire job_id=4914856 task_id=47 phase=dp slot=2
+2026-06-05T01:15:39.132610+00:00 action=release job_id=4914855 task_id=43 phase=dp slot=1
+2026-06-05T01:24:08.268905+00:00 action=release job_id=4914856 task_id=47 phase=dp slot=2
