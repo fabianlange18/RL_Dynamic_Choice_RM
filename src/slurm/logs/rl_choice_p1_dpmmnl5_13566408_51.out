@@ -1,0 +1,10 @@
+Gurobi preflight: GRB_LICENSE_FILE=/tmp/gurobi_13572934_51/gurobi.lic, exists=True, WLSACCESSID=705b...3a31, LICENSEID=2831087
+Running task_id=51 with HIGH_SENSITIVITY=True, GT_MODEL=Probit, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2831087
+Academic license 2831087 - for non-commercial use only - registered to uj___@laoia.com
+[dp] Disposed Gurobi default environment
+[dp] Released Gurobi slot 1

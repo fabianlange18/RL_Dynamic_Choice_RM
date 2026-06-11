@@ -1,0 +1,67 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT MNL - low sensitivity - all sets - large (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{1.09 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.499476} \\
+    Estim. Time & 0.47s & 1.10s & 0.37s \\
+    Estim. $\beta$ & -0.001571 & \makecell[tr]{-0.0016, -0.0016, -0.0016 \\ -0.0016, -0.0016} & -0.0016, -0.0016 \\
+    Estim. Weights & - & \makecell[tr]{0.1009, 0.5848, 0.1050 \\ 0.1080, 0.1012} & 0.7986, 0.2014 \\
+    Log Likelihood & -37213.06 & -37213.06 & -37213.06 \\
+    AIC & 74428.12 & 74444.12 & 74432.12 \\
+    BIC & 74435.28 & 74508.58 & 74453.60 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT MNL - low sensitivity - all sets - large (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      & 65277.68 &    -- &   101289.0 &    3716.78 & 100.00* &    0.00 &   97.62 &    2.65 \\
+    DP\_MMNL\_5PT & 85333.92 &    -- &   101092.5 &    3782.41 &   99.80 &    0.61 &   97.26 &    2.94 \\
+    DP\_MMNL\_2PT & 101524.91 &    -- &   101160.4 &    3912.00 &   99.87 &    0.55 &   97.33 &    2.90 \\
+    \midrule
+    ADP\_MNL     &     1.30 &    -- &    77386.4 &    1960.82 &   76.49 &    3.01 &   99.82 &    0.55 \\
+    ADP\_MMNL\_5PT &     1.66 &    -- &    77386.4 &    1960.82 &   76.49 &    3.01 &   99.82 &    0.55 \\
+    ADP\_MMNL\_2PT &     1.52 &    -- &    77386.4 &    1960.82 &   76.49 &    3.01 &   99.82 &    0.55 \\
+    ADP\_ENV     &   108.84 &    -- &    69481.0 &    1889.95 &   68.67 &    2.65 &   99.89 &    0.40 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    A2C          &    29.63 &     0.92 &    70470.3 &    2939.45 &   69.64 &    3.34 &   99.93 &    0.27 \\
+    TRPO         &    37.97 &     0.79 &    71514.5 &    2082.88 &   70.68 &    2.84 &   99.86 &    0.42 \\
+    PPO          &    62.41 &     4.33 &    71301.6 &    2249.45 &   70.48 &    3.17 &   99.86 &    0.42 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    A2C          &   151.71 &     4.49 &    73508.7 &    3748.53 &   72.68 &    4.74 &   99.86 &    0.54 \\
+    TRPO         &   185.96 &     3.98 &    75520.1 &    3499.30 &   74.66 &    4.39 &   99.82 &    0.55 \\
+    PPO          &   300.68 &    19.88 &    76158.5 &    2568.11 &   75.28 &    3.56 &   99.89 &    0.40 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    A2C          &   309.50 &     9.35 &    74278.2 &    3816.02 &   73.45 &    4.99 &   99.89 &    0.40 \\
+    TRPO         &   386.58 &    15.10 &    78009.2 &    2942.10 &   77.12 &    4.12 &   99.78 &    0.68 \\
+    PPO          &   607.94 &    32.00 &    78496.2 &    3150.60 &   77.56 &    3.38 &   99.86 &    0.54 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 2.000.000 steps}} \\
+    \midrule
+    A2C          &   610.79 &    17.92 &    74704.9 &    3862.75 &   73.86 &    4.83 &   99.89 &    0.40 \\
+    TRPO         &   806.04 &    46.68 &    82296.7 &    2853.85 &   81.34 &    3.85 &   99.78 &    0.68 \\
+    PPO          &  1190.31 &    36.53 &    81625.4 &    2691.80 &   80.68 &    3.64 &   99.89 &    0.40 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{samepage}
+

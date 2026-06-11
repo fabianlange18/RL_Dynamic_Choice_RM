@@ -1,0 +1,20 @@
+Gurobi preflight: GRB_LICENSE_FILE=/tmp/gurobi_13566493_35/gurobi.lic, exists=True, WLSACCESSID=5d19...057f, LICENSEID=2831084
+Running task_id=35 with HIGH_SENSITIVITY=False, GT_MODEL=NLogit, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 2 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Yielding to 1 active efficient-set task(s); waiting 60s
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 1
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2831084
+Academic license 2831084 - for non-commercial use only - registered to fa___@kabelmail.de
+[dp] Disposed Gurobi default environment
+[dp] Released Gurobi slot 1

@@ -1,0 +1,67 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT TMNL - high sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{1.06 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.497951} \\
+    Estim. Time & 0.03s & 0.44s & 0.22s \\
+    Estim. $\beta$ & -0.004816 & \makecell[tr]{-0.0048, -0.0048, -0.0048 \\ -0.0048, -0.0048} & -0.0048, -0.0048 \\
+    Estim. Weights & - & \makecell[tr]{0.1148, 0.1148, 0.5409 \\ 0.1148, 0.1148} & 0.8000, 0.2000 \\
+    Log Likelihood & -14596.89 & -14596.89 & -14596.89 \\
+    AIC & 29195.78 & 29211.78 & 29199.78 \\
+    BIC & 29203.01 & 29276.86 & 29221.47 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT TMNL - high sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      &     0.68 &    -- &    34993.3 &    2271.14 & 100.00* &    0.00 &   86.41 &    5.37 \\
+    DP\_MMNL\_5PT &     0.75 &    -- &    34993.3 &    2271.14 &  100.00 &    0.00 &   86.41 &    5.37 \\
+    DP\_MMNL\_2PT &     0.72 &    -- &    34993.3 &    2271.14 &  100.00 &    0.00 &   86.41 &    5.37 \\
+    \midrule
+    ADP\_MNL     &     0.99 &    -- &    37715.3 &    2795.79 &  107.76 &    3.51 &   76.86 &    5.53 \\
+    ADP\_MMNL\_5PT &     1.07 &    -- &    37715.3 &    2795.79 &  107.76 &    3.51 &   76.86 &    5.53 \\
+    ADP\_MMNL\_2PT &     1.05 &    -- &    37715.3 &    2795.79 &  107.76 &    3.51 &   76.86 &    5.53 \\
+    ADP\_ENV     &    27.76 &    -- &    37562.7 &    2833.91 &  107.34 &    4.16 &   75.17 &    5.55 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    DQN          &    31.25 &     5.75 &    30338.3 &    3393.64 &   86.71 &    7.89 &   79.03 &    7.47 \\
+    ARS          &    13.16 &     0.31 &    28023.3 &    4647.13 &   79.81 &   10.64 &   73.66 &   14.58 \\
+    A2C          &    31.13 &     3.17 &    37237.3 &    3115.48 &  106.37 &    4.64 &   84.29 &    5.95 \\
+    TRPO         &    34.09 &     1.86 &    35352.3 &    1942.14 &  101.13 &    2.90 &   86.05 &    5.88 \\
+    PPO          &    68.60 &     7.18 &    34825.3 &    2509.69 &   99.49 &    1.92 &   86.45 &    5.34 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    DQN          &   157.01 &    26.94 &    30720.3 &    4126.21 &   87.53 &    7.91 &   82.34 &    8.44 \\
+    ARS          &    65.77 &     1.42 &    34358.7 &    5201.26 &   98.10 &   13.08 &   75.24 &   10.11 \\
+    A2C          &   161.63 &    12.64 &    37296.3 &    3114.31 &  106.54 &    4.76 &   84.94 &    5.29 \\
+    TRPO         &   169.75 &     9.02 &    38310.7 &    2507.21 &  109.48 &    1.17 &   83.82 &    5.22 \\
+    PPO          &   324.99 &    34.81 &    34993.3 &    2271.14 &  100.00 &    0.00 &   86.41 &    5.37 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    DQN          &   317.28 &    53.56 &    30831.7 &    4332.13 &   87.87 &    9.20 &   81.26 &    8.86 \\
+    ARS          &   131.37 &     2.70 &    36788.3 &    2279.05 &  105.27 &    5.05 &   79.78 &    6.60 \\
+    A2C          &   324.54 &    15.83 &    37280.7 &    3116.72 &  106.50 &    4.76 &   84.90 &    5.32 \\
+    TRPO         &   339.47 &    18.54 &    38310.7 &    2507.21 &  109.48 &    1.17 &   83.82 &    5.22 \\
+    PPO          &   645.52 &    73.49 &    38077.7 &    2751.92 &  108.79 &    2.61 &   83.93 &    5.18 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{samepage}
+

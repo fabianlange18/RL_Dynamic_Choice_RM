@@ -1,0 +1,67 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT Nested Logit - low sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{1.08 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.495561} \\
+    Estim. Time & 0.06s & 0.69s & 0.75s \\
+    Estim. $\beta$ & -0.002070 & \makecell[tr]{-0.0051, -0.0037, -0.0013 \\ -0.0012, -0.0008} & -0.0055, -0.0014 \\
+    Estim. Weights & - & \makecell[tr]{0.1268, 0.2183, 0.2183 \\ 0.2183, 0.2183} & 0.2000, 0.8000 \\
+    Log Likelihood & -17133.79 & -17127.18 & -17126.89 \\
+    AIC & 34269.57 & 34272.36 & 34259.78 \\
+    BIC & 34276.80 & 34337.40 & 34281.46 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT Nested Logit - low sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      &     0.63 &    -- &    54870.0 &    4441.38 & 100.00* &    0.00 &   67.78 &    5.11 \\
+    DP\_MMNL\_5PT &     0.71 &    -- &    54870.0 &    4441.38 &  100.00 &    0.00 &   67.78 &    5.11 \\
+    DP\_MMNL\_2PT &     0.68 &    -- &    54870.0 &    4441.38 &  100.00 &    0.00 &   67.78 &    5.11 \\
+    \midrule
+    ADP\_MNL     &     0.95 &    -- &    55985.0 &    4675.22 &  102.02 &    1.89 &   62.27 &    5.01 \\
+    ADP\_MMNL\_5PT &     1.03 &    -- &    55975.0 &    4669.61 &  102.01 &    1.96 &   62.23 &    5.01 \\
+    ADP\_MMNL\_2PT &     1.00 &    -- &    56120.0 &    4689.24 &  102.27 &    2.03 &   62.05 &    4.96 \\
+    ADP\_ENV     &    27.78 &    -- &    56248.3 &    4639.02 &  102.51 &    1.02 &   72.76 &    5.45 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    DQN          &    32.21 &     4.82 &    43321.7 &    5601.22 &   78.96 &    7.91 &   78.74 &    7.19 \\
+    ARS          &    13.28 &     0.62 &    44735.7 &    5315.85 &   81.45 &    6.02 &   81.15 &    7.20 \\
+    A2C          &    33.10 &     4.83 &    52426.3 &    4275.88 &   95.65 &    4.54 &   81.91 &    4.79 \\
+    TRPO         &    34.70 &     3.35 &    54125.0 &    4863.38 &   98.61 &    2.81 &   79.24 &    6.86 \\
+    PPO          &    67.51 &    12.54 &    52763.3 &    4763.16 &   96.17 &    3.86 &   80.79 &    6.83 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    DQN          &   163.04 &    24.33 &    42869.3 &    5074.47 &   78.18 &    7.55 &   76.76 &    6.87 \\
+    ARS          &    66.40 &     2.83 &    48235.3 &    3676.15 &   88.06 &    4.57 &   77.80 &    8.68 \\
+    A2C          &   170.44 &    23.27 &    53664.0 &    4223.05 &   97.87 &    3.31 &   79.17 &    7.23 \\
+    TRPO         &   172.21 &    18.14 &    54901.0 &    4741.55 &  100.06 &    2.99 &   75.93 &    7.90 \\
+    PPO          &   325.53 &    53.66 &    53841.0 &    4470.15 &   98.14 &    2.47 &   80.50 &    5.93 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    DQN          &   328.11 &    45.82 &    43455.7 &    5914.70 &   79.17 &    8.24 &   80.18 &    5.51 \\
+    ARS          &   132.66 &     5.31 &    51040.7 &    4580.45 &   93.09 &    4.90 &   77.84 &    8.81 \\
+    A2C          &   347.33 &    42.80 &    53722.3 &    4244.03 &   97.97 &    3.29 &   79.17 &    7.23 \\
+    TRPO         &   343.09 &    39.28 &    55733.7 &    4879.95 &  101.55 &    2.07 &   73.66 &    7.93 \\
+    PPO          &   643.04 &    87.07 &    54029.0 &    4563.56 &   98.46 &    2.12 &   80.79 &    5.04 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{samepage}
+

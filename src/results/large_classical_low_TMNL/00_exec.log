@@ -9,21 +9,21 @@ EXEC_PHASE: 1_PREP
 ============================================================
 RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
 
-Observation sampling time: 0.6378 seconds
-Estimation_MNL  time: 0.0202s | beta: -0.002681, lambda: 0.504503
-  LL: -35663.303569, AIC: 71328.607, BIC: 71335.739
+Observation sampling time: 1.1219 seconds
+Estimation_MNL  time: 0.0174s | beta: -0.002779, lambda: 0.497658
+  LL: -35636.476624, AIC: 71274.953, BIC: 71282.085
 
-Estimation_MMNL_5PT time: 0.5120s | lambda: 0.504503
-  LL: -35663.303569, AIC: 71344.607, BIC: 71408.792
-Betas: ['-0.002681', '-0.002681', '-0.002681', '-0.002681', '-0.002681']
-Weights: ['0.599920', '0.100000', '0.100011', '0.100000', '0.100068']
+Estimation_MMNL_5PT time: 0.6535s | lambda: 0.497658
+  LL: -35636.476624, AIC: 71290.953, BIC: 71355.139
+Betas: ['-0.002779', '-0.002779', '-0.002779', '-0.002779', '-0.002779']
+Weights: ['0.100000', '0.100000', '0.600000', '0.100000', '0.100000']
 
-Estimation_MMNL_2PT time: 0.2155s | lambda: 0.504503
-  LL: -35663.303569, AIC: 71332.607, BIC: 71354.002
-Betas: ['-0.002681', '-0.002681']
+Estimation_MMNL_2PT time: 0.3016s | lambda: 0.497658
+  LL: -35636.476624, AIC: 71278.953, BIC: 71300.348
+Betas: ['-0.002779', '-0.002779']
 Weights: ['0.800000', '0.200000']
 
-Saved intermediate DP/ADP results to /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_low_TMNL/dp_adp_intermediate.pkl
+Saved intermediate DP/ADP results to /gpfs/bwfor/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_low_TMNL/dp_adp_intermediate.pkl
 Phase 1 prep complete. Next run one DP sub-step phase.
 
 ============================================================
@@ -36,6 +36,117 @@ EXEC_PHASE: 1_DP_MNL
 ============================================================
 RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
 
-DP_MNL  time: 47081.5754s | V(0,C): 95997.99 | avg reward: 102576.67
-Saved intermediate DP/ADP results to /pfs/data6/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_low_TMNL/dp_adp_intermediate.pkl
+DP_MNL  time: 63798.3126s | V(0,C): 94373.73 | avg reward: 101971.33
+Saved intermediate DP/ADP results to /gpfs/bwfor/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_low_TMNL/dp_adp_intermediate.pkl
 Completed split phase step: 1_DP_MNL
+
+============================================================
+TASK_ID: 31
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: False
+GT_MODEL: TMNL
+EXEC_PHASE: 1_DP_MMNL_5PT
+============================================================
+RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
+
+DP_MMNL_5PT time: 84512.9229s | V(0,C): 93370.88 | avg reward: 103073.06
+Saved intermediate DP/ADP results to /gpfs/bwfor/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_low_TMNL/dp_adp_intermediate.pkl
+Completed split phase step: 1_DP_MMNL_5PT
+
+============================================================
+TASK_ID: 31
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: False
+GT_MODEL: TMNL
+EXEC_PHASE: 1_DP_MMNL_2PT
+============================================================
+RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
+
+
+============================================================
+TASK_ID: 31
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: False
+GT_MODEL: TMNL
+EXEC_PHASE: 1_DP_MMNL_2PT
+============================================================
+RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
+
+DP_MMNL_2PT time: 101185.8670s | V(0,C): 94386.05 | avg reward: 102091.37
+Saved intermediate DP/ADP results to /gpfs/bwfor/home/ma/ma_ma/ma_fablange/RL_Dynamic_Choice_RM/src/results/large_classical_low_TMNL/dp_adp_intermediate.pkl
+Completed split phase step: 1_DP_MMNL_2PT
+
+============================================================
+TASK_ID: 31
+LARGE_PRODUCT_SET: True
+TRAIN_ON_ALL_SETS: True
+HIGH_SENSITIVITY: False
+GT_MODEL: TMNL
+EXEC_PHASE: 2
+============================================================
+RL Training Seeds: 15, RL Training Steps: [100000, 500000, 1000000, 2000000], Estimation Episodes: 50
+
+Loaded pre-computed DP/ADP results
+ADP_MNL  time: 1.2843s | V(0,C): 64446.24 | avg reward: 72267.40
+ADP_MMNL_5PT time: 1.6675s | V(0,C): 64446.25 | avg reward: 72267.71
+ADP_MMNL_2PT time: 1.5486s | V(0,C): 64446.24 | avg reward: 72267.40
+ADP_ENV time: 111.7980s | V(0,C): 44283.46 | avg reward: 69200.51
+
+=== 100,000 training timesteps ===
+Method       | TrainTimeMean(s) | TrainTimeStd(s) | RewardMean | RewardStdAcrossRuns | PctOfDP(%) | PctOfDPStd(%) | LoadFactorMean(%) | LoadFactorStdAcrossRuns(%)
+-------------+------------------+-----------------+------------+---------------------+------------+---------------+-------------------+---------------------------
+A2C          | 29.71            | 1.51            | 63992.71   | 3068.08             | 62.62      | 3.26          | 100.00            | 0.00                      
+TRPO         | 41.95            | 2.29            | 64910.82   | 2584.04             | 63.49      | 2.18          | 100.00            | 0.00                      
+PPO          | 78.02            | 6.53            | 67295.98   | 3228.78             | 65.84      | 3.21          | 100.00            | 0.00                      
+DP_MNL       | 63798.31         | 0.00            | 102222.46  | 1607.00             | 100.00     | 0.00          | 99.96             | 0.13                      
+DP_MMNL_5PT  | 84512.92         | 0.00            | 103286.38  | 1577.44             | 101.04     | 0.48          | 99.89             | 0.29                      
+DP_MMNL_2PT  | 101185.87        | 0.00            | 102371.06  | 1579.09             | 100.15     | 0.18          | 99.93             | 0.27                      
+ADP_MNL      | 1.28             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_5PT | 1.67             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_2PT | 1.55             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_ENV      | 111.80           | 0.00            | 69171.13   | 1709.03             | 67.67      | 1.34          | 100.00            | 0.00                      
+
+=== 500,000 training timesteps ===
+Method       | TrainTimeMean(s) | TrainTimeStd(s) | RewardMean | RewardStdAcrossRuns | PctOfDP(%) | PctOfDPStd(%) | LoadFactorMean(%) | LoadFactorStdAcrossRuns(%)
+-------------+------------------+-----------------+------------+---------------------+------------+---------------+-------------------+---------------------------
+A2C          | 152.72           | 7.32            | 70967.58   | 3777.39             | 69.46      | 4.18          | 100.00            | 0.00                      
+TRPO         | 218.48           | 17.21           | 70536.85   | 2644.66             | 69.01      | 2.65          | 100.00            | 0.00                      
+PPO          | 346.99           | 17.96           | 70376.01   | 3117.01             | 68.84      | 2.80          | 100.00            | 0.00                      
+DP_MNL       | 63798.31         | 0.00            | 102222.46  | 1607.00             | 100.00     | 0.00          | 99.96             | 0.13                      
+DP_MMNL_5PT  | 84512.92         | 0.00            | 103286.38  | 1577.44             | 101.04     | 0.48          | 99.89             | 0.29                      
+DP_MMNL_2PT  | 101185.87        | 0.00            | 102371.06  | 1579.09             | 100.15     | 0.18          | 99.93             | 0.27                      
+ADP_MNL      | 1.28             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_5PT | 1.67             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_2PT | 1.55             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_ENV      | 111.80           | 0.00            | 69171.13   | 1709.03             | 67.67      | 1.34          | 100.00            | 0.00                      
+
+=== 1,000,000 training timesteps ===
+Method       | TrainTimeMean(s) | TrainTimeStd(s) | RewardMean | RewardStdAcrossRuns | PctOfDP(%) | PctOfDPStd(%) | LoadFactorMean(%) | LoadFactorStdAcrossRuns(%)
+-------------+------------------+-----------------+------------+---------------------+------------+---------------+-------------------+---------------------------
+A2C          | 312.01           | 14.74           | 72921.43   | 4095.30             | 71.37      | 4.39          | 100.00            | 0.00                      
+TRPO         | 483.42           | 40.60           | 77309.09   | 3321.80             | 75.65      | 3.51          | 100.00            | 0.00                      
+PPO          | 664.92           | 28.93           | 74142.91   | 3215.22             | 72.53      | 3.01          | 100.00            | 0.00                      
+DP_MNL       | 63798.31         | 0.00            | 102222.46  | 1607.00             | 100.00     | 0.00          | 99.96             | 0.13                      
+DP_MMNL_5PT  | 84512.92         | 0.00            | 103286.38  | 1577.44             | 101.04     | 0.48          | 99.89             | 0.29                      
+DP_MMNL_2PT  | 101185.87        | 0.00            | 102371.06  | 1579.09             | 100.15     | 0.18          | 99.93             | 0.27                      
+ADP_MNL      | 1.28             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_5PT | 1.67             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_2PT | 1.55             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_ENV      | 111.80           | 0.00            | 69171.13   | 1709.03             | 67.67      | 1.34          | 100.00            | 0.00                      
+
+=== 2,000,000 training timesteps ===
+Method       | TrainTimeMean(s) | TrainTimeStd(s) | RewardMean | RewardStdAcrossRuns | PctOfDP(%) | PctOfDPStd(%) | LoadFactorMean(%) | LoadFactorStdAcrossRuns(%)
+-------------+------------------+-----------------+------------+---------------------+------------+---------------+-------------------+---------------------------
+A2C          | 630.04           | 33.16           | 73278.89   | 4374.46             | 71.71      | 4.57          | 100.00            | 0.00                      
+TRPO         | 1062.49          | 96.36           | 82758.25   | 2510.95             | 80.97      | 2.58          | 100.00            | 0.00                      
+PPO          | 1251.59          | 33.39           | 77474.80   | 2913.30             | 75.81      | 3.16          | 100.00            | 0.00                      
+DP_MNL       | 63798.31         | 0.00            | 102222.46  | 1607.00             | 100.00     | 0.00          | 99.96             | 0.13                      
+DP_MMNL_5PT  | 84512.92         | 0.00            | 103286.38  | 1577.44             | 101.04     | 0.48          | 99.89             | 0.29                      
+DP_MMNL_2PT  | 101185.87        | 0.00            | 102371.06  | 1579.09             | 100.15     | 0.18          | 99.93             | 0.27                      
+ADP_MNL      | 1.28             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_5PT | 1.67             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_MMNL_2PT | 1.55             | 0.00            | 72221.97   | 1458.24             | 70.66      | 1.51          | 100.00            | 0.00                      
+ADP_ENV      | 111.80           | 0.00            | 69171.13   | 1709.03             | 67.67      | 1.34          | 100.00            | 0.00                      

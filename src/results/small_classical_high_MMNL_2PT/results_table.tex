@@ -1,0 +1,67 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT MMNL 2PT - high sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{1.44 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.493366} \\
+    Estim. Time & 0.03s & 1.80s & 0.55s \\
+    Estim. $\beta$ & -0.004518 & \makecell[tr]{-0.0063, -0.0063, -0.0063 \\ -0.0063, -0.0010} & -0.0063, -0.0010 \\
+    Estim. Weights & - & \makecell[tr]{0.1143, 0.2410, 0.1146 \\ 0.2624, 0.2677} & 0.7322, 0.2678 \\
+    Log Likelihood & -14823.50 & -14784.76 & -14784.76 \\
+    AIC & 29649.01 & 29587.53 & 29575.53 \\
+    BIC & 29656.23 & 29652.52 & 29597.19 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT MMNL 2PT - high sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      &     0.64 &    -- &    37907.7 &    3254.99 & 100.00* &    0.00 &   65.84 &    4.62 \\
+    DP\_MMNL\_5PT &     0.71 &    -- &    37652.0 &    3227.25 &   99.35 &    1.78 &   71.35 &    5.24 \\
+    DP\_MMNL\_2PT &     0.70 &    -- &    37652.0 &    3227.25 &   99.35 &    1.78 &   71.35 &    5.24 \\
+    \midrule
+    ADP\_MNL     &     0.94 &    -- &    37668.0 &    3784.08 &   99.27 &    2.43 &   59.64 &    5.03 \\
+    ADP\_MMNL\_5PT &     1.02 &    -- &    37815.3 &    3649.44 &   99.69 &    2.04 &   61.44 &    4.66 \\
+    ADP\_MMNL\_2PT &     1.00 &    -- &    37815.3 &    3649.44 &   99.69 &    2.04 &   61.44 &    4.66 \\
+    ADP\_ENV     &    33.78 &    -- &    37069.3 &    3257.95 &   97.79 &    1.61 &   72.04 &    5.40 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    DQN          &    32.19 &     2.50 &    31246.3 &    4385.59 &   82.21 &    6.72 &   62.70 &    8.15 \\
+    ARS          &    15.85 &     0.13 &    30295.3 &    4194.37 &   80.30 &   11.28 &   59.24 &   11.57 \\
+    A2C          &    33.00 &     2.45 &    37280.3 &    3253.70 &   98.34 &    1.49 &   73.23 &    6.28 \\
+    TRPO         &    35.24 &     1.80 &    37111.3 &    3468.55 &   97.87 &    2.56 &   72.00 &    7.82 \\
+    PPO          &    64.74 &     5.23 &    37454.0 &    3397.89 &   98.78 &    2.05 &   74.70 &    6.67 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    DQN          &   161.25 &    11.38 &    29310.7 &    5025.10 &   76.98 &    9.26 &   61.05 &    9.63 \\
+    ARS          &    79.19 &     0.53 &    33629.7 &    4820.68 &   88.58 &    8.71 &   66.05 &    7.43 \\
+    A2C          &   170.32 &    10.86 &    37364.7 &    3246.18 &   98.57 &    1.45 &   73.62 &    5.82 \\
+    TRPO         &   174.46 &     8.48 &    37752.7 &    3191.07 &   99.61 &    1.51 &   70.95 &    6.46 \\
+    PPO          &   309.90 &    22.58 &    37457.0 &    3355.01 &   98.79 &    1.68 &   75.89 &    5.66 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    DQN          &   323.26 &    23.50 &    30369.0 &    6159.04 &   79.57 &   11.90 &   59.60 &    9.69 \\
+    ARS          &   158.36 &     1.30 &    35746.3 &    3256.09 &   94.32 &    3.13 &   65.87 &    6.63 \\
+    A2C          &   346.95 &    19.03 &    37323.7 &    3247.02 &   98.46 &    1.47 &   73.51 &    5.78 \\
+    TRPO         &   349.24 &    15.64 &    37596.3 &    3254.47 &   99.19 &    1.37 &   70.09 &    6.53 \\
+    PPO          &   622.82 &    45.00 &    37581.3 &    3434.27 &   99.10 &    1.56 &   75.10 &    5.53 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{samepage}
+

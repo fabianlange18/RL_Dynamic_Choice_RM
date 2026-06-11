@@ -1,0 +1,10 @@
+Gurobi preflight: GRB_LICENSE_FILE=/tmp/gurobi_13572928_27/gurobi.lic, exists=True, WLSACCESSID=1e7a...556e, LICENSEID=2826907
+Running task_id=27 with HIGH_SENSITIVITY=False, GT_MODEL=MNLConsidSet, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+[dp] Waiting for Gurobi slot (max concurrent: 2)
+[dp] Acquired Gurobi slot 2
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID to value 2826907
+Academic license 2826907 - for non-commercial use only - registered to ca___@ruhr-uni-bochum.de
+[dp] Disposed Gurobi default environment
+[dp] Released Gurobi slot 2

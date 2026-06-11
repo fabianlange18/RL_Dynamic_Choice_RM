@@ -1,0 +1,67 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT MNL - low sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{0.92 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.502146} \\
+    Estim. Time & 0.02s & 0.47s & 0.22s \\
+    Estim. $\beta$ & -0.001410 & \makecell[tr]{-0.0014, -0.0014, -0.0014 \\ -0.0014, -0.0014} & -0.0014, -0.0014 \\
+    Estim. Weights & - & \makecell[tr]{0.1037, 0.5961, 0.1002 \\ 0.1000, 0.1000} & 0.7876, 0.2124 \\
+    Log Likelihood & -17717.45 & -17717.45 & -17717.45 \\
+    AIC & 35436.90 & 35452.90 & 35440.90 \\
+    BIC & 35444.14 & 35518.05 & 35462.62 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT MNL - low sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      &     0.66 &    -- &    66388.3 &    5033.42 & 100.00* &    0.00 &   72.29 &    5.35 \\
+    DP\_MMNL\_5PT &     0.72 &    -- &    66388.3 &    5033.42 &  100.00 &    0.00 &   72.29 &    5.35 \\
+    DP\_MMNL\_2PT &     0.70 &    -- &    66388.3 &    5033.42 &  100.00 &    0.00 &   72.29 &    5.35 \\
+    \midrule
+    ADP\_MNL     &     0.95 &    -- &    66388.3 &    5033.42 &  100.00 &    0.00 &   72.29 &    5.35 \\
+    ADP\_MMNL\_5PT &     1.02 &    -- &    66388.3 &    5033.42 &  100.00 &    0.00 &   72.29 &    5.35 \\
+    ADP\_MMNL\_2PT &     1.02 &    -- &    66388.3 &    5033.42 &  100.00 &    0.00 &   72.29 &    5.35 \\
+    ADP\_ENV     &    25.70 &    -- &    64755.7 &    4678.51 &   97.58 &    1.64 &   79.57 &    5.19 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    DQN          &    27.64 &     3.10 &    47345.0 &    5285.34 &   71.40 &    6.82 &   86.99 &    7.16 \\
+    ARS          &    12.41 &     0.10 &    48253.0 &    7421.00 &   72.71 &   10.01 &   80.61 &    9.46 \\
+    A2C          &    28.71 &     2.16 &    62599.0 &    4138.13 &   94.41 &    3.03 &   85.05 &    7.58 \\
+    TRPO         &    31.34 &     1.47 &    62495.3 &    4424.90 &   94.28 &    4.33 &   84.14 &    7.22 \\
+    PPO          &    60.51 &     6.11 &    61853.3 &    4897.18 &   93.21 &    3.39 &   87.03 &    5.40 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    DQN          &   136.94 &    15.81 &    46605.0 &    9960.13 &   70.14 &   13.26 &   83.03 &    8.60 \\
+    ARS          &    62.06 &     0.41 &    58138.3 &    5841.51 &   87.63 &    6.60 &   83.89 &    8.85 \\
+    A2C          &   148.18 &    10.91 &    64290.7 &    4268.44 &   96.94 &    2.67 &   82.59 &    7.78 \\
+    TRPO         &   155.87 &     7.66 &    65923.0 &    5176.47 &   99.29 &    1.35 &   76.61 &    6.87 \\
+    PPO          &   289.16 &    30.52 &    62072.0 &    4267.02 &   93.65 &    4.35 &   86.81 &    6.32 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    DQN          &   277.39 &    28.85 &    47467.7 &    6985.04 &   71.55 &    9.91 &   85.23 &    8.70 \\
+    ARS          &   124.14 &     0.86 &    60255.7 &    5127.47 &   90.82 &    4.91 &   82.05 &    8.77 \\
+    A2C          &   299.79 &    24.92 &    64238.3 &    4250.92 &   96.86 &    2.65 &   82.59 &    7.78 \\
+    TRPO         &   306.95 &    14.70 &    66216.7 &    5195.66 &   99.72 &    0.62 &   76.11 &    6.39 \\
+    PPO          &   574.53 &    46.56 &    62983.0 &    4469.02 &   94.99 &    3.99 &   85.87 &    5.47 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{samepage}
+

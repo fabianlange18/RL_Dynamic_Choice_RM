@@ -1,0 +1,4 @@
+Gurobi preflight: GRB_LICENSE_FILE=/tmp/gurobi_13566470_27/gurobi.lic, exists=True, WLSACCESSID=1e7a...556e, LICENSEID=2826907
+Running task_id=27 with HIGH_SENSITIVITY=False, GT_MODEL=MNLConsidSet, TRAIN_ON_ALL_SETS=True, LARGE_PRODUCT_SET=True
+scipy estimation data: obs=9557, alts=101, memory=7.37 MiB
+scipy estimation mode: raw prices, beta_bounds=(-0.05, -1e-07), purchase_rate|arrival=0.9653

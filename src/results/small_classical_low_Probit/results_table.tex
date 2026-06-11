@@ -1,0 +1,67 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT Probit - low sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{1.34 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.501659} \\
+    Estim. Time & 0.04s & 0.86s & 0.26s \\
+    Estim. $\beta$ & -0.002224 & \makecell[tr]{-0.0035, -0.0021, -0.0021 \\ -0.0021, -0.0021} & -0.0029, -0.0021 \\
+    Estim. Weights & - & \makecell[tr]{0.1000, 0.1000, 0.6000 \\ 0.1000, 0.1000} & 0.2000, 0.8000 \\
+    Log Likelihood & -17232.81 & -17232.79 & -17232.80 \\
+    AIC & 34467.63 & 34483.58 & 34471.61 \\
+    BIC & 34474.87 & 34548.73 & 34493.32 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT Probit - low sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      &     0.64 &    -- &    60743.3 &    3251.81 & 100.00* &    0.00 &   74.16 &    3.66 \\
+    DP\_MMNL\_5PT &     0.72 &    -- &    60743.3 &    3251.81 &  100.00 &    0.00 &   74.16 &    3.66 \\
+    DP\_MMNL\_2PT &     0.69 &    -- &    60743.3 &    3251.81 &  100.00 &    0.00 &   74.16 &    3.66 \\
+    \midrule
+    ADP\_MNL     &     0.96 &    -- &    60728.3 &    3503.46 &   99.96 &    1.33 &   67.89 &    3.86 \\
+    ADP\_MMNL\_5PT &     1.03 &    -- &    60728.3 &    3503.46 &   99.96 &    1.33 &   67.89 &    3.86 \\
+    ADP\_MMNL\_2PT &     1.00 &    -- &    60748.3 &    3505.24 &   99.99 &    1.34 &   67.93 &    3.87 \\
+    ADP\_ENV     &    28.35 &    -- &    58821.0 &    2732.06 &   96.88 &    1.43 &   68.43 &    2.24 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    DQN          &    34.08 &     4.48 &    46510.3 &    5137.40 &   76.61 &    7.90 &   82.85 &    5.12 \\
+    ARS          &    14.97 &     0.54 &    50061.0 &    7369.24 &   82.27 &   10.17 &   78.81 &   10.37 \\
+    A2C          &    35.36 &     4.03 &    57345.0 &    4385.21 &   94.38 &    4.66 &   80.86 &    3.55 \\
+    TRPO         &    35.48 &     2.77 &    57133.0 &    3306.40 &   94.07 &    2.69 &   81.33 &    5.99 \\
+    PPO          &    66.56 &     5.51 &    55758.7 &    5099.00 &   91.67 &    5.03 &   83.46 &    5.67 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    DQN          &   168.63 &    21.52 &    46388.0 &    5973.77 &   76.43 &    9.22 &   81.12 &    6.96 \\
+    ARS          &    74.93 &     2.88 &    54056.3 &    4966.84 &   89.00 &    6.65 &   77.73 &    6.17 \\
+    A2C          &   179.07 &    18.18 &    58533.7 &    3936.17 &   96.33 &    3.01 &   79.21 &    2.73 \\
+    TRPO         &   174.63 &    13.34 &    59688.7 &    3534.92 &   98.26 &    2.54 &   75.17 &    6.08 \\
+    PPO          &   323.35 &    27.18 &    57806.3 &    3539.37 &   95.15 &    2.32 &   81.59 &    3.91 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    DQN          &   338.97 &    42.96 &    44891.7 &    5671.72 &   74.30 &   11.34 &   81.23 &    7.52 \\
+    ARS          &   150.16 &     5.47 &    56230.0 &    4385.45 &   92.57 &    5.20 &   75.46 &    6.41 \\
+    A2C          &   360.05 &    35.38 &    58439.3 &    3914.74 &   96.18 &    3.02 &   79.21 &    2.73 \\
+    TRPO         &   345.59 &    23.33 &    60507.0 &    3439.91 &   99.61 &    1.67 &   71.32 &    5.35 \\
+    PPO          &   647.50 &    52.20 &    58024.7 &    3465.83 &   95.52 &    2.30 &   81.12 &    4.71 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{samepage}
+

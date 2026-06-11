@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=cpu
+#SBATCH --partition=cpu-single
 #SBATCH --job-name=rl_choice_phase1
 #SBATCH --array=3,7,11,15,19,23,27,31,35,39,43,47,51,55,59,63,67,71
-#SBATCH --time=72:00:00
+#SBATCH --time=36:00:00
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=10G
+#SBATCH --mem=4G
 #SBATCH --output=src/slurm/logs/%x_%A_%a.out
 #SBATCH --error=src/slurm/logs/%x_%A_%a.err
 

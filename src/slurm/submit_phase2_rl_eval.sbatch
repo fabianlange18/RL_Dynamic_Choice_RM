@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=cpu
+#SBATCH --partition=cpu-single
 #SBATCH --job-name=rl_choice_phase2
 #SBATCH --array=3,7,11,15,19,23,27,31,35,39,43,47,51,55,59,63,67,71
 #SBATCH --time=72:00:00

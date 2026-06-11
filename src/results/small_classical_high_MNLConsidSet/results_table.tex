@@ -1,0 +1,67 @@
+
+\begin{samepage}
+\begin{center}
+  \small
+  \begin{tabular}{l|r|r|r}
+    \toprule
+    \multicolumn{4}{c}{\textbf{Preprocessing Evaluation: GT MNL with Consideration Set - high sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Metric & \textbf{MNL} & \textbf{MMNL 5PT} & \textbf{MMNL 2PT} \\
+    \midrule
+    Obs. Sampling Time & \multicolumn{3}{c}{1.10 s} \\
+    Estim. $\lambda$ & \multicolumn{3}{c}{0.503463} \\
+    Estim. Time & 0.03s & 0.88s & 0.34s \\
+    Estim. $\beta$ & -0.005148 & \makecell[tr]{-0.0051, -0.0051, -0.0051 \\ -0.0051, -0.0051} & -0.0051, -0.0051 \\
+    Estim. Weights & - & \makecell[tr]{0.1210, 0.1181, 0.5609 \\ 0.1000, 0.1000} & 0.7843, 0.2157 \\
+    Log Likelihood & -14426.08 & -14426.08 & -14426.08 \\
+    AIC & 28854.17 & 28870.17 & 28858.17 \\
+    BIC & 28861.41 & 28935.34 & 28879.89 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\begin{center}
+  \small
+  \begin{tabular}{l|rr|rr|rr|rr}
+    \toprule
+    \multicolumn{9}{c}{\textbf{Results: GT MNL with Consideration Set - high sensitivity - all sets - small (Sample Size: 15)}} \\
+    \midrule
+    Method & \multicolumn{2}{c|}{Training Time (s)} & \multicolumn{2}{c|}{Reward} & \multicolumn{2}{c|}{\% of DP} & \multicolumn{2}{c}{Load Factor (\%)} \\
+    & Mean & Std & Mean & Std & Mean & Std & Mean & Std \\
+    \midrule
+    DP\_MNL      &     0.66 &    -- &    36198.7 &    3197.08 & 100.00* &    0.00 &   70.70 &    5.34 \\
+    DP\_MMNL\_5PT &     0.75 &    -- &    36198.7 &    3197.08 &  100.00 &    0.00 &   70.70 &    5.34 \\
+    DP\_MMNL\_2PT &     0.73 &    -- &    36198.7 &    3197.08 &  100.00 &    0.00 &   70.70 &    5.34 \\
+    \midrule
+    ADP\_MNL     &     0.97 &    -- &    36183.0 &    3286.70 &   99.94 &    1.38 &   63.60 &    4.68 \\
+    ADP\_MMNL\_5PT &     1.06 &    -- &    36185.7 &    3292.61 &   99.95 &    1.39 &   63.60 &    4.68 \\
+    ADP\_MMNL\_2PT &     1.06 &    -- &    36185.7 &    3292.61 &   99.95 &    1.39 &   63.60 &    4.68 \\
+    ADP\_ENV     &    29.17 &    -- &    35521.3 &    3132.31 &   98.13 &    0.69 &   71.21 &    5.25 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 100.000 steps}} \\
+    \midrule
+    DQN          &    27.99 &     2.20 &    28492.3 &    5625.54 &   78.25 &   11.04 &   58.88 &    9.69 \\
+    ARS          &    13.23 &     1.56 &    28607.7 &    4484.51 &   78.84 &    8.73 &   58.67 &   11.04 \\
+    A2C          &    29.50 &     2.25 &    35494.7 &    3246.59 &   98.07 &    2.76 &   73.51 &    6.00 \\
+    TRPO         &    33.62 &     1.90 &    36204.3 &    3122.95 &  100.03 &    1.35 &   73.95 &    5.19 \\
+    PPO          &    62.85 &     3.20 &    36153.0 &    3230.30 &   99.87 &    1.45 &   75.46 &    6.26 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 500.000 steps}} \\
+    \midrule
+    DQN          &   140.46 &    11.80 &    28898.7 &    4684.52 &   79.74 &    9.90 &   57.73 &   14.30 \\
+    ARS          &    65.79 &     6.99 &    32339.3 &    3036.25 &   89.38 &    4.13 &   67.10 &    6.94 \\
+    A2C          &   153.58 &     8.66 &    35682.3 &    3277.33 &   98.57 &    2.40 &   73.80 &    6.12 \\
+    TRPO         &   160.66 &     9.14 &    36095.7 &    3295.61 &   99.70 &    1.65 &   73.12 &    6.51 \\
+    PPO          &   298.82 &     8.42 &    36190.0 &    3196.57 &   99.98 &    1.47 &   75.82 &    5.68 \\
+    \midrule
+    \multicolumn{9}{l}{\textit{RL methods trained for 1.000.000 steps}} \\
+    \midrule
+    DQN          &   283.14 &    16.15 &    27961.3 &    4009.08 &   77.58 &   11.02 &   60.61 &    7.98 \\
+    ARS          &   129.81 &    11.20 &    33144.3 &    2698.59 &   91.72 &    4.33 &   68.43 &    4.42 \\
+    A2C          &   315.04 &    12.36 &    35662.3 &    3256.25 &   98.52 &    2.36 &   73.77 &    6.08 \\
+    TRPO         &   319.01 &    19.10 &    36005.0 &    3189.92 &   99.47 &    1.08 &   71.78 &    7.46 \\
+    PPO          &   599.77 &    22.83 &    36165.0 &    3175.03 &   99.92 &    1.44 &   75.42 &    5.58 \\
+    \bottomrule
+  \end{tabular}
+\end{center}
+\end{samepage}
+
